@@ -26,6 +26,7 @@ const config: Config = {
           ink: "#25282d",
           body: "#4b5058",
           mute: "#9aa0a8",
+          sub: "#6b7078",
           line: "#d4d8dd",
           field: "#eff0f2",
           panel: "#e6e9ec",

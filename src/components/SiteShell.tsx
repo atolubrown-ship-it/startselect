@@ -44,7 +44,7 @@ export default function SiteShell({ children, onHome }: { children: ReactNode; o
       <IconDefs />
       <Header ref={headerRef} menuOpen={menuOpen} onToggleMenu={() => setMenuOpen((v) => !v)} />
       <MenuPanel open={menuOpen} onClose={() => setMenuOpen(false)} onHome={onHome} />
-      <main id="main" className="mx-auto w-full max-w-6xl flex-1 px-4 pb-4 pt-5 sm:px-6">
+      <main id="main" className="mx-auto w-full max-w-6xl flex-1 px-4 pb-4 pt-3 sm:px-6">
         {children}
       </main>
       <Footer />

@@ -5,7 +5,7 @@ type IconProps = SVGProps<SVGSVGElement>;
 export function MenuIcon(props: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" {...props}>
-      <path d="M2 6h20M2 12h20M2 18h20" stroke="currentColor" strokeWidth="2.2" strokeLinecap="butt" />
+      <path d="M3 6.5h18M3 12h18M3 17.5h18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
     </svg>
   );
 }
@@ -44,7 +44,7 @@ export function ShieldAlertIcon(props: IconProps) {
 export function CheckIcon(props: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" {...props}>
-      <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -55,10 +55,10 @@ export function PinIcon(props: IconProps) {
       <path
         d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 6.5 5.5 5.5 0 0 1 21.5 12c-2.5 4.5-9.5 9-9.5 9z"
         stroke="currentColor"
-        strokeWidth="1.6"
+        strokeWidth="1.8"
         strokeLinejoin="round"
       />
-      <circle cx="12" cy="11" r="2.2" stroke="currentColor" strokeWidth="1.6" />
+      <circle cx="12" cy="11" r="2.2" stroke="currentColor" strokeWidth="1.8" />
     </svg>
   );
 }
@@ -66,8 +66,8 @@ export function PinIcon(props: IconProps) {
 export function DeviceIcon(props: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" {...props}>
-      <rect x="3" y="4.5" width="14" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.6" />
-      <path d="M8 17.5h4M10 14.5v3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <rect x="3" y="4.5" width="14" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M8 17.5h4M10 14.5v3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
     </svg>
   );
 }
@@ -75,8 +75,8 @@ export function DeviceIcon(props: IconProps) {
 export function ClockIcon(props: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" {...props}>
-      <circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="1.6" />
-      <path d="M12 7.5V12l3 2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M12 7.5V12l3 2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -100,8 +100,8 @@ export function IconDefs() {
 export function SearchIcon(props: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" {...props}>
-      <circle cx="10.5" cy="10.5" r="6.5" stroke="currentColor" strokeWidth="2.4" />
-      <path d="M15.5 15.5L21 21" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+      <circle cx="10.5" cy="10.5" r="6.5" stroke="currentColor" strokeWidth="2" />
+      <path d="M15.5 15.5L20.5 20.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
     </svg>
   );
 }
@@ -115,10 +115,10 @@ export function AccountIcon(props: IconProps) {
         </clipPath>
       </defs>
       <g clipPath="url(#q-acct-clip)">
-        <path d="M2 40c2-11 9-14 18-14s16 3 18 14z" fill="#6fe8c8" stroke="#1f2328" strokeWidth="2.6" />
+        <path d="M2 40c2-11 9-14 18-14s16 3 18 14z" fill="#6fe8c8" stroke="#1f2328" strokeWidth="2.4" />
       </g>
-      <circle cx="20" cy="15.5" r="5" fill="#6fe8c8" stroke="#1f2328" strokeWidth="2.6" />
-      <circle cx="20" cy="20" r="17" stroke="#1f2328" strokeWidth="2.8" />
+      <circle cx="20" cy="15.5" r="5" fill="#6fe8c8" stroke="#1f2328" strokeWidth="2.4" />
+      <circle cx="20" cy="20" r="17" stroke="#1f2328" strokeWidth="2.4" />
     </svg>
   );
 }
@@ -129,7 +129,7 @@ export function CartIcon(props: IconProps) {
       <path
         d="M2.5 3.5h3l2.4 11.2a1.6 1.6 0 0 0 1.6 1.3h8.2a1.6 1.6 0 0 0 1.6-1.2L21 7.5H6.4"
         stroke="currentColor"
-        strokeWidth="2.2"
+        strokeWidth="1.8"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -158,7 +158,7 @@ export function ChevronDownIcon(props: IconProps) {
 export function ChevronUpIcon(props: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" {...props}>
-      <path d="M5 15l7-7 7 7" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M5 15l7-7 7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -215,7 +215,7 @@ export function LockFillIcon(props: IconProps) {
       />
       <rect x="4" y="10" width="16" height="12" rx="3" fill="url(#q-grad)" />
       <circle cx="12" cy="15.2" r="1.5" fill="#fff" />
-      <path d="M12 15.5v3" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M12 15.5v3" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" />
     </svg>
   );
 }
@@ -234,8 +234,8 @@ export function ShieldFillIcon(props: IconProps) {
 export function InstagramIcon(props: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" {...props}>
-      <rect x="3" y="3" width="18" height="18" rx="5.2" stroke="currentColor" strokeWidth="2.2" />
-      <circle cx="12" cy="12" r="4.1" stroke="currentColor" strokeWidth="2.2" />
+      <rect x="3" y="3" width="18" height="18" rx="5.2" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="12" cy="12" r="4.1" stroke="currentColor" strokeWidth="1.8" />
       <circle cx="17.4" cy="6.6" r="1.3" fill="currentColor" />
     </svg>
   );
@@ -273,8 +273,8 @@ export function YouTubeIcon(props: IconProps) {
 export function TwitchIcon(props: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" {...props}>
-      <path d="M5 3h16v11l-4 4h-4l-3 3v-3H5z" stroke="currentColor" strokeWidth="2.2" strokeLinejoin="round" />
-      <path d="M11 8v4M16 8v4" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+      <path d="M5 3h16v11l-4 4h-4l-3 3v-3H5z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+      <path d="M11 8v4M16 8v4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
     </svg>
   );
 }

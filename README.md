@@ -1,5 +1,10 @@
 # Quilo — Security Alert (Stage 1)
 
+> UI refinement: header, hamburger/search row, type scale, spacing, icons and
+> footer tuned to a mobile reference. Shared type/button styles live in
+> `src/app/globals.css` (`.q-h1`, `.q-h2`, `.q-body`, `.q-sub`, `.q-btn`…);
+> all icons share a 1.8 stroke in `src/components/icons.tsx`.
+
 > Layout update: shared site shell (`SiteShell`, `Header`, `MenuPanel`, `Footer` in
 > `src/components`) now wraps every screen, so the alert and "This wasn't me"
 > views share one header, hamburger menu and footer.
