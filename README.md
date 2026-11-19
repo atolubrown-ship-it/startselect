@@ -29,7 +29,8 @@ branding.
 Admin can change: company name, logo (upload / replace / remove / size /
 show-hide name), primary + secondary colour, header style, button shape,
 demonstration location / device / date-time, app promotion heading + text +
-download link, footer legal links and social links.
+download link + badge image, menu country / language chips and the menu
+sign-in button (text, link, show/hide), menu icon gradient colour, footer legal links and social links.
 
 ---
 

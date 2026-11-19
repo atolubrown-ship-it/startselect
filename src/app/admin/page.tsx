@@ -6,9 +6,12 @@ import BrandLogo from "@/components/BrandLogo";
 import { HEADER_VARIANTS } from "@/components/headerStyles";
 import { useSettings } from "@/components/SettingsProvider";
 import { AccountIcon, CartIcon, MenuIcon, SearchIcon } from "@/components/icons";
+import { COUNTRIES, LANGUAGES, countryName, flagEmoji } from "@/lib/countries";
 import { fileToLogoDataUrl } from "@/lib/image";
 import { useAdminAuth } from "@/lib/useAdminAuth";
 import {
+  BADGE_HEIGHT_MAX,
+  BADGE_HEIGHT_MIN,
   LEGAL_KEYS,
   LOGO_HEIGHT_MAX,
   LOGO_HEIGHT_MIN,
@@ -27,6 +30,8 @@ import {
 
 const INPUT =
   "h-12 w-full rounded-xl border border-q-line bg-white px-4 text-[16px] leading-6 text-q-ink outline-none placeholder:text-q-mute focus:border-q-blue";
+const SELECT =
+  "h-12 w-full rounded-xl border border-q-line bg-white px-4 text-[16px] leading-6 text-q-ink outline-none focus:border-q-blue";
 const TEXTAREA =
   "min-h-[96px] w-full resize-y rounded-xl border border-q-line bg-white px-4 py-3 text-[16px] leading-6 text-q-ink outline-none placeholder:text-q-mute focus:border-q-blue";
 const BTN_SECONDARY =
@@ -246,6 +251,9 @@ function AdminPanel({ email, onSignOut }: { email: string; onSignOut: () => void
   const { settings, loaded, syncState, syncError, refresh, save } = useSettings();
   const [draft, setDraft] = useState<SiteSettings>(settings);
   const [pendingLogo, setPendingLogo] = useState<Blob | null>(null);
+  const [pendingBadge, setPendingBadge] = useState<Blob | null>(null);
+  const [badgeBusy, setBadgeBusy] = useState(false);
+  const badgeFileRef = useRef<HTMLInputElement>(null);
   const [synced, setSynced] = useState(false);
   const [status, setStatus] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
   const [logoBusy, setLogoBusy] = useState(false);
@@ -258,6 +266,7 @@ function AdminPanel({ email, onSignOut }: { email: string; onSignOut: () => void
     if (ready && !synced) {
       setDraft(settings);
       setPendingLogo(null);
+      setPendingBadge(null);
       setSynced(true);
     }
   }, [ready, synced, settings]);
@@ -286,6 +295,28 @@ function AdminPanel({ email, onSignOut }: { email: string; onSignOut: () => void
     }
   };
 
+  const onBadgeFile = async (file: File | undefined) => {
+    if (!file) return;
+    setBadgeBusy(true);
+    setStatus(null);
+    try {
+      const dataUrl = await fileToLogoDataUrl(file, 640);
+      const blob = await (await fetch(dataUrl)).blob();
+      setPendingBadge(blob);
+      set("appBadgeUrl", dataUrl); // local preview only — uploaded to Storage when you tap Save
+    } catch (err) {
+      setStatus({ kind: "error", text: err instanceof Error ? err.message : "Couldn't use that image." });
+    } finally {
+      setBadgeBusy(false);
+      if (badgeFileRef.current) badgeFileRef.current.value = "";
+    }
+  };
+
+  const onRemoveBadge = () => {
+    setPendingBadge(null);
+    set("appBadgeUrl", null);
+  };
+
   const onRemoveLogo = () => {
     setPendingLogo(null);
     set("logoUrl", null);
@@ -295,11 +326,12 @@ function AdminPanel({ email, onSignOut }: { email: string; onSignOut: () => void
     if (saving) return;
     setSaving(true);
     setStatus(null);
-    const res = await save(draft, pendingLogo);
+    const res = await save(draft, { logo: pendingLogo, badge: pendingBadge });
     setSaving(false);
     if (res.ok) {
       setDraft(res.settings);
       setPendingLogo(null);
+      setPendingBadge(null);
       setStatus({ kind: "ok", text: "Saved. Your changes are now live for every visitor." });
     } else {
       setStatus({ kind: "error", text: res.error });
@@ -309,6 +341,7 @@ function AdminPanel({ email, onSignOut }: { email: string; onSignOut: () => void
   const onDiscard = () => {
     setDraft(settings);
     setPendingLogo(null);
+    setPendingBadge(null);
     setStatus(null);
   };
 
@@ -425,6 +458,7 @@ function AdminPanel({ email, onSignOut }: { email: string; onSignOut: () => void
         <Card title="Appearance">
           <ColorField label="Primary brand colour" value={draft.primaryColor} onChange={(v) => set("primaryColor", v)} />
           <ColorField label="Secondary brand colour" value={draft.secondaryColor} onChange={(v) => set("secondaryColor", v)} />
+          <ColorField label="Menu icon gradient end colour" value={draft.accentColor} onChange={(v) => set("accentColor", v)} />
           <Segmented<HeaderStyle>
             label="Header appearance"
             value={draft.headerStyle}
@@ -513,8 +547,158 @@ function AdminPanel({ email, onSignOut }: { email: string; onSignOut: () => void
           </Field>
         </Card>
 
+        {/* Menu settings */}
+        <Card title="Menu" hint="The country / language chips and the sign-in button in the hamburger menu.">
+          <label className="flex min-h-[44px] items-center gap-3 text-[14px] text-q-ink">
+            <input
+              type="checkbox"
+              checked={draft.showPreferences}
+              onChange={(e) => set("showPreferences", e.target.checked)}
+              className="h-5 w-5 accent-[var(--q-primary)]"
+            />
+            Show the preferences section
+          </label>
+          <Field label="Preferences heading" htmlFor="prefs-heading">
+            <input
+              id="prefs-heading"
+              type="text"
+              value={draft.prefsHeading}
+              maxLength={40}
+              onChange={(e) => set("prefsHeading", e.target.value)}
+              className={INPUT}
+            />
+          </Field>
+          <Field
+            label="Country"
+            htmlFor="prefs-country"
+            help={`Shown as: ${flagEmoji(draft.countryCode)} ${countryName(draft.countryCode)}`}
+          >
+            <select
+              id="prefs-country"
+              value={draft.countryCode}
+              onChange={(e) => set("countryCode", e.target.value)}
+              className={SELECT}
+            >
+              {COUNTRIES.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {flagEmoji(c.code)} {c.name}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Language" htmlFor="prefs-language" help="This is the label shown on the chip; the site text itself stays as written.">
+            <select
+              id="prefs-language"
+              value={draft.languageName}
+              onChange={(e) => set("languageName", e.target.value)}
+              className={SELECT}
+            >
+              {LANGUAGES.map((l) => (
+                <option key={l} value={l}>
+                  {l}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Note under the chips" htmlFor="prefs-note" help="Leave empty to hide the note.">
+            <textarea
+              id="prefs-note"
+              value={draft.prefsNote}
+              maxLength={200}
+              onChange={(e) => set("prefsNote", e.target.value)}
+              className={TEXTAREA}
+            />
+          </Field>
+
+          <label className="flex min-h-[44px] items-center gap-3 text-[14px] text-q-ink">
+            <input
+              type="checkbox"
+              checked={draft.showSignIn}
+              onChange={(e) => set("showSignIn", e.target.checked)}
+              className="h-5 w-5 accent-[var(--q-primary)]"
+            />
+            Show the sign-in button
+          </label>
+          <Field label="Sign-in button text" htmlFor="signin-label">
+            <input
+              id="signin-label"
+              type="text"
+              value={draft.signInLabel}
+              maxLength={30}
+              onChange={(e) => set("signInLabel", e.target.value)}
+              className={INPUT}
+              placeholder="Hello"
+            />
+          </Field>
+          <Field label="Sign-in button link" htmlFor="signin-url" help="Optional. Empty means the button just closes the menu.">
+            <input
+              id="signin-url"
+              type="url"
+              inputMode="url"
+              autoCapitalize="off"
+              autoCorrect="off"
+              value={draft.signInUrl}
+              onChange={(e) => set("signInUrl", e.target.value)}
+              onBlur={(e) => set("signInUrl", fixUrl(e.target.value))}
+              className={INPUT}
+              placeholder="https://"
+            />
+          </Field>
+        </Card>
+
         {/* Footer settings */}
         <Card title="Footer" hint="Optional. Leave a link empty to keep it inactive.">
+          <Field
+            label="Rating label"
+            htmlFor="rating-label"
+            help="Optional rating block above the footer links. Leave the label or score empty to hide it. Only enter ratings that are real."
+          >
+            <input
+              id="rating-label"
+              type="text"
+              value={draft.ratingLabel}
+              maxLength={40}
+              onChange={(e) => set("ratingLabel", e.target.value)}
+              className={INPUT}
+              placeholder="e.g. Excellent"
+            />
+          </Field>
+          <Field label="Rating score (0 to 5)" htmlFor="rating-score">
+            <input
+              id="rating-score"
+              type="number"
+              inputMode="decimal"
+              min={0}
+              max={5}
+              step={0.1}
+              value={draft.ratingScore === 0 ? "" : draft.ratingScore}
+              onChange={(e) => set("ratingScore", Math.min(5, Math.max(0, Number(e.target.value) || 0)))}
+              className={INPUT}
+              placeholder="e.g. 4.5"
+            />
+          </Field>
+          <Field label="Rating count" htmlFor="rating-count">
+            <input
+              id="rating-count"
+              type="text"
+              value={draft.ratingCount}
+              maxLength={40}
+              onChange={(e) => set("ratingCount", e.target.value)}
+              className={INPUT}
+              placeholder="e.g. 1,200 reviews"
+            />
+          </Field>
+          <Field label="Rating source name" htmlFor="rating-source">
+            <input
+              id="rating-source"
+              type="text"
+              value={draft.ratingSource}
+              maxLength={40}
+              onChange={(e) => set("ratingSource", e.target.value)}
+              className={INPUT}
+              placeholder="Name of the review site"
+            />
+          </Field>
           <Field label="App promotion heading" htmlFor="promo-heading">
             <input
               id="promo-heading"
@@ -534,7 +718,61 @@ function AdminPanel({ email, onSignOut }: { email: string; onSignOut: () => void
               className={TEXTAREA}
             />
           </Field>
-          <Field label="App download link" htmlFor="app-url" help="Used by the “Get the app” badge. Empty shows “Coming soon”.">
+          <div>
+            <p className="mb-1.5 text-[14px] font-medium leading-5 text-q-ink">App download badge image</p>
+            <div className="flex min-h-[96px] items-center justify-center rounded-xl border border-dashed border-q-line bg-q-panel p-4">
+              {draft.appBadgeUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={draft.appBadgeUrl}
+                  alt="App download badge preview"
+                  style={{ height: draft.appBadgeHeight, width: "auto", maxWidth: "100%" }}
+                  className="block"
+                />
+              ) : (
+                <span className="q-sub">Using the default badge</span>
+              )}
+            </div>
+            <p className="q-sub mt-1.5">
+              {pendingBadge
+                ? "New image selected. Tap Save changes to upload it."
+                : "Upload your own badge artwork (PNG, JPG or SVG) to replace the default badge. Only use artwork you're allowed to use."}
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <label className="inline-flex min-h-[44px] cursor-pointer items-center justify-center rounded-xl bg-q-blue px-4 text-[14px] font-semibold text-[color:var(--q-primary-ink)] hover:bg-q-blue-dark">
+                {badgeBusy ? "Processing…" : draft.appBadgeUrl ? "Replace image" : "Upload image"}
+                <input
+                  ref={badgeFileRef}
+                  type="file"
+                  accept="image/*"
+                  className="sr-only"
+                  onChange={(e) => onBadgeFile(e.target.files?.[0])}
+                />
+              </label>
+              {draft.appBadgeUrl && (
+                <button type="button" onClick={onRemoveBadge} className={BTN_SECONDARY}>
+                  Remove image
+                </button>
+              )}
+            </div>
+            {draft.appBadgeUrl && (
+              <div className="mt-4">
+                <Field label={`Badge size · ${draft.appBadgeHeight}px`} htmlFor="badge-size">
+                  <input
+                    id="badge-size"
+                    type="range"
+                    min={BADGE_HEIGHT_MIN}
+                    max={BADGE_HEIGHT_MAX}
+                    step={2}
+                    value={draft.appBadgeHeight}
+                    onChange={(e) => set("appBadgeHeight", Number(e.target.value))}
+                    className="h-11 w-full accent-[var(--q-primary)]"
+                  />
+                </Field>
+              </div>
+            )}
+          </div>
+          <Field label="App download link" htmlFor="app-url" help="Where the badge links to. Leave empty for no link.">
             <input
               id="app-url"
               type="url"

@@ -90,7 +90,8 @@ export function IconDefs() {
       <defs>
         <linearGradient id="q-grad" x1="0" y1="1" x2="1" y2="0">
           <stop offset="0%" style={{ stopColor: "var(--q-secondary)" }} />
-          <stop offset="100%" style={{ stopColor: "var(--q-primary)" }} />
+          <stop offset="55%" style={{ stopColor: "var(--q-primary)" }} />
+          <stop offset="100%" style={{ stopColor: "var(--q-accent)" }} />
         </linearGradient>
       </defs>
     </svg>
@@ -230,6 +231,55 @@ export function ShieldFillIcon(props: IconProps) {
     <svg viewBox="0 0 24 24" aria-hidden="true" {...props}>
       <path d="M12 2l8.5 3.6v5.7c0 5.1-3.5 9.1-8.5 10.7-5-1.6-8.5-5.6-8.5-10.7V5.6L12 2z" fill="url(#q-grad)" />
       <path d="M8.2 12.2l2.8 2.8 4.8-5.2" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+    </svg>
+  );
+}
+
+/* Generic payment-type glyphs (no third-party brand marks) */
+
+export function CardIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" {...props}>
+      <rect x="2.5" y="5.5" width="19" height="13" rx="2.5" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M2.5 10h19" stroke="currentColor" strokeWidth="1.8" />
+    </svg>
+  );
+}
+
+export function DebitIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" {...props}>
+      <rect x="2.5" y="5.5" width="19" height="13" rx="2.5" stroke="currentColor" strokeWidth="1.8" />
+      <rect x="5.5" y="9.5" width="5" height="3.6" rx="1" fill="currentColor" />
+      <path d="M14 15.5h4.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function WalletIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" {...props}>
+      <path d="M4.5 7.5V6.8A2.3 2.3 0 0 1 6.8 4.5H17v3" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+      <rect x="2.5" y="7.5" width="19" height="12" rx="2.5" stroke="currentColor" strokeWidth="1.8" />
+      <circle cx="17" cy="13.5" r="1.3" fill="currentColor" />
+    </svg>
+  );
+}
+
+export function BankIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" {...props}>
+      <path d="M3 9.5L12 4l9 5.5H3z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+      <path d="M5.5 11.5v6M10 11.5v6M14 11.5v6M18.5 11.5v6M3 20h18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function DocIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" {...props}>
+      <path d="M7 3.5h7.5L19 8v12.5H7z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+      <path d="M14.5 3.5V8H19M10 12.5h5M10 16h5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }

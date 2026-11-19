@@ -10,6 +10,8 @@
  *     a flash of default branding on the next visit. It is never the source of truth.
  */
 
+import { COUNTRIES, LANGUAGES } from "./countries";
+
 export const CACHE_KEY = "quilo.siteSettings.cache.v1";
 
 export const SOCIAL_KEYS = ["instagram", "facebook", "tiktok", "youtube", "twitch", "linkedin"] as const;
@@ -33,17 +35,42 @@ export type SiteSettings = {
   // Appearance
   primaryColor: string;
   secondaryColor: string;
+  /** Third colour of the menu-icon gradient (violet → blue → this). */
+  accentColor: string;
   headerStyle: HeaderStyle;
   buttonShape: ButtonShape;
+  // Menu: preferences chips + sign-in button
+  showPreferences: boolean;
+  prefsHeading: string;
+  /** Two-letter code from COUNTRIES (or "WW" for Worldwide). */
+  countryCode: string;
+  /** One of LANGUAGES. */
+  languageName: string;
+  /** Small note under the chips. Empty hides it. */
+  prefsNote: string;
+  showSignIn: boolean;
+  signInLabel: string;
+  /** Optional link for the sign-in button. Empty = it only closes the menu. */
+  signInUrl: string;
   // Sample alert details (demonstration data)
   alertLocation: string;
   alertDevice: string;
   /** Local date-time, "YYYY-MM-DDTHH:mm". */
   alertDateTime: string;
   // Footer links
+  /** Optional rating block in the footer. Hidden unless label AND score are set. */
+  ratingLabel: string;
+  /** 0–5, one decimal. */
+  ratingScore: number;
+  ratingCount: string;
+  ratingSource: string;
   appPromoHeading: string;
   /** May contain {name}, which is replaced by the company name. */
   appPromoText: string;
+  /** Optional custom image for the app-download badge (Supabase Storage URL). `null` = default badge. */
+  appBadgeUrl: string | null;
+  /** Height of the custom badge image in px. */
+  appBadgeHeight: number;
   appStoreUrl: string;
   socials: Record<SocialKey, string>;
   footerLinks: Record<LegalKey, string>;
@@ -51,6 +78,8 @@ export type SiteSettings = {
 
 export const LOGO_HEIGHT_MIN = 20;
 export const LOGO_HEIGHT_MAX = 72;
+export const BADGE_HEIGHT_MIN = 32;
+export const BADGE_HEIGHT_MAX = 80;
 
 export const DEFAULT_SETTINGS: SiteSettings = {
   siteName: "Quilo",
@@ -59,13 +88,28 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   showNameWithLogo: true,
   primaryColor: "#4a72c4",
   secondaryColor: "#7c3aed",
+  accentColor: "#6fe8c8",
   headerStyle: "light",
   buttonShape: "rounded",
+  showPreferences: true,
+  prefsHeading: "Your preferences",
+  countryCode: "GB",
+  languageName: "English",
+  prefsNote: "Some offers and features may not be available in all countries.",
+  showSignIn: true,
+  signInLabel: "Hello",
+  signInUrl: "",
   alertLocation: "Oregon, USA (approximate)",
   alertDevice: "iPhone 16 Plus",
   alertDateTime: "2026-11-19T15:42",
+  ratingLabel: "",
+  ratingScore: 0,
+  ratingCount: "",
+  ratingSource: "",
   appPromoHeading: "Download the app",
   appPromoText: "Manage your account security on the go with the {name} app.",
+  appBadgeUrl: null,
+  appBadgeHeight: 52,
   appStoreUrl: "",
   socials: { instagram: "", facebook: "", tiktok: "", youtube: "", twitch: "", linkedin: "" },
   footerLinks: { terms: "", privacy: "", cookies: "", accessibility: "", sitemap: "" },
@@ -84,6 +128,11 @@ function text(v: unknown, fallback: string, max: number): string {
   if (typeof v !== "string") return fallback;
   const t = v.trim().slice(0, max);
   return t || fallback;
+}
+
+/** Like text(), but an empty string is a valid value (for optional fields). */
+function optText(v: unknown, fallback: string, max: number): string {
+  return typeof v === "string" ? v.trim().slice(0, max) : fallback;
 }
 
 /** Only plain http(s) links are allowed in href attributes (blocks javascript: etc.). */
@@ -121,6 +170,7 @@ export function sanitizeSettings(input: unknown, fallback: SiteSettings): SiteSe
   if (has("logoUrl")) logo = safeHttpsUrl(input.logoUrl) || null;
 
   const height = Number(input.logoHeight);
+  const badgeHeight = Number(input.appBadgeHeight);
   const socialsIn = isObj(input.socials) ? input.socials : {};
   const socials = { ...fallback.socials };
   for (const k of SOCIAL_KEYS) if (k in socialsIn) socials[k] = safeUrl(socialsIn[k]);
@@ -140,6 +190,24 @@ export function sanitizeSettings(input: unknown, fallback: SiteSettings): SiteSe
       typeof input.secondaryColor === "string" && HEX.test(input.secondaryColor)
         ? input.secondaryColor.toLowerCase()
         : fallback.secondaryColor,
+    accentColor:
+      typeof input.accentColor === "string" && HEX.test(input.accentColor)
+        ? input.accentColor.toLowerCase()
+        : fallback.accentColor,
+    showPreferences: typeof input.showPreferences === "boolean" ? input.showPreferences : fallback.showPreferences,
+    prefsHeading: text(input.prefsHeading, fallback.prefsHeading, 40),
+    countryCode:
+      typeof input.countryCode === "string" && COUNTRIES.some((c) => c.code === input.countryCode)
+        ? input.countryCode
+        : fallback.countryCode,
+    languageName:
+      typeof input.languageName === "string" && LANGUAGES.includes(input.languageName)
+        ? input.languageName
+        : fallback.languageName,
+    prefsNote: optText(input.prefsNote, fallback.prefsNote, 200),
+    showSignIn: typeof input.showSignIn === "boolean" ? input.showSignIn : fallback.showSignIn,
+    signInLabel: text(input.signInLabel, fallback.signInLabel, 30),
+    signInUrl: has("signInUrl") ? safeUrl(input.signInUrl) : fallback.signInUrl,
     headerStyle:
       input.headerStyle === "light" || input.headerStyle === "grey" || input.headerStyle === "brand"
         ? input.headerStyle
@@ -151,8 +219,18 @@ export function sanitizeSettings(input: unknown, fallback: SiteSettings): SiteSe
     alertLocation: text(input.alertLocation, fallback.alertLocation, 120),
     alertDevice: text(input.alertDevice, fallback.alertDevice, 120),
     alertDateTime: text(input.alertDateTime, fallback.alertDateTime, 40),
+    ratingLabel: optText(input.ratingLabel, fallback.ratingLabel, 40),
+    ratingScore: Number.isFinite(Number(input.ratingScore))
+      ? Math.min(5, Math.max(0, Math.round(Number(input.ratingScore) * 10) / 10))
+      : fallback.ratingScore,
+    ratingCount: optText(input.ratingCount, fallback.ratingCount, 40),
+    ratingSource: optText(input.ratingSource, fallback.ratingSource, 40),
     appPromoHeading: text(input.appPromoHeading, fallback.appPromoHeading, 80),
     appPromoText: text(input.appPromoText, fallback.appPromoText, 200),
+    appBadgeUrl: has("appBadgeUrl") ? safeHttpsUrl(input.appBadgeUrl) || null : fallback.appBadgeUrl,
+    appBadgeHeight: Number.isFinite(badgeHeight)
+      ? Math.min(BADGE_HEIGHT_MAX, Math.max(BADGE_HEIGHT_MIN, Math.round(badgeHeight)))
+      : fallback.appBadgeHeight,
     appStoreUrl: has("appStoreUrl") ? safeUrl(input.appStoreUrl) : fallback.appStoreUrl,
     socials,
     footerLinks,
@@ -192,6 +270,7 @@ export function themeVars(s: SiteSettings): Record<string, string> {
     "--q-primary-dark": darken(s.primaryColor, 0.14),
     "--q-primary-ink": readableOn(s.primaryColor),
     "--q-secondary": s.secondaryColor,
+    "--q-accent": s.accentColor,
     "--q-btn-radius": RADIUS[s.buttonShape],
   };
 }

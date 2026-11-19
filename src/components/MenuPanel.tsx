@@ -10,6 +10,7 @@ import {
   ShieldFillIcon,
 } from "@/components/icons";
 import { useSettings } from "@/components/SettingsProvider";
+import { countryName, flagEmoji } from "@/lib/countries";
 
 type MenuPanelProps = {
   open: boolean;
@@ -93,7 +94,7 @@ export default function MenuPanel({ open, onClose, onHome }: MenuPanelProps) {
             onClose();
           }}
           className="block rounded-2xl p-[2px]"
-          style={{ backgroundImage: "linear-gradient(90deg, var(--q-secondary), var(--q-primary))" }}
+          style={{ backgroundImage: "linear-gradient(90deg, var(--q-secondary), var(--q-primary) 55%, var(--q-accent))" }}
         >
           <span className="q-nav flex min-h-[56px] items-center gap-4 rounded-[14px] bg-white px-4 py-3">
             <ShieldFillIcon className="h-7 w-7 shrink-0" />
@@ -106,37 +107,48 @@ export default function MenuPanel({ open, onClose, onHome }: MenuPanelProps) {
           <PlainRow label={`About ${name}`} onClick={onClose} />
         </ul>
 
-        <Divider />
+        {settings.showPreferences && (
+          <>
+            <Divider />
 
-        <h3 className="q-h3">Your preferences</h3>
-        <div className="mt-4 flex flex-wrap gap-3">
-          <a href="#" onClick={(e) => e.preventDefault()} className="q-nav flex min-h-[44px] items-center rounded-full border border-q-line px-5">
-            Worldwide
-          </a>
-          <a href="#" onClick={(e) => e.preventDefault()} className="q-nav flex min-h-[44px] items-center rounded-full border border-q-line px-5">
-            English
-          </a>
-        </div>
-        <p className="q-sub mt-4">
-          Tap here to change region/language. Note: some features may not be available in all regions.
-        </p>
+            <h3 className="q-h3">{settings.prefsHeading}</h3>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <span className="q-nav flex min-h-[44px] items-center gap-3 rounded-full border border-q-line px-5">
+                <span aria-hidden="true" className="text-[20px] leading-none">
+                  {flagEmoji(settings.countryCode)}
+                </span>
+                {countryName(settings.countryCode)}
+              </span>
+              <span className="q-nav flex min-h-[44px] items-center rounded-full border border-q-line px-5">
+                {settings.languageName}
+              </span>
+            </div>
+            {settings.prefsNote && <p className="q-sub mt-4">{settings.prefsNote}</p>}
+          </>
+        )}
 
-        <Divider />
+        {settings.showSignIn && (
+          <>
+            <Divider />
 
-        <a
-          href="#"
-          onClick={(e) => {
-            e.preventDefault();
-            onClose();
-          }}
-          className="q-btn q-btn-primary gap-3"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
-            <circle cx="12" cy="7.5" r="4.5" fill="currentColor" />
-            <path d="M3.5 21c0-4.8 3.8-7.5 8.5-7.5s8.5 2.7 8.5 7.5z" fill="currentColor" />
-          </svg>
-          Sign in to {name}
-        </a>
+            <a
+              href={settings.signInUrl || "#"}
+              target={settings.signInUrl ? "_blank" : undefined}
+              rel={settings.signInUrl ? "noopener noreferrer" : undefined}
+              onClick={(e) => {
+                if (!settings.signInUrl) e.preventDefault();
+                onClose();
+              }}
+              className="q-btn q-btn-primary gap-3"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="7.5" r="4.5" fill="currentColor" />
+                <path d="M3.5 21c0-4.8 3.8-7.5 8.5-7.5s8.5 2.7 8.5 7.5z" fill="currentColor" />
+              </svg>
+              {settings.signInLabel}
+            </a>
+          </>
+        )}
       </nav>
     </div>
   );

@@ -11,7 +11,7 @@ import {
 } from "react";
 import { CACHE_KEY, DEFAULT_SETTINGS, sanitizeSettings, themeVars, type SiteSettings } from "@/lib/settings";
 import { getSupabase } from "@/lib/supabase";
-import { fetchRemoteSettings, saveRemoteSettings, type SaveResult } from "@/lib/remote";
+import { fetchRemoteSettings, saveRemoteSettings, type ImageUploads, type SaveResult } from "@/lib/remote";
 
 type SyncState = "loading" | "ok" | "error" | "unconfigured";
 
@@ -26,7 +26,7 @@ type SettingsContextValue = {
   /** Re-reads the shared settings from Supabase. */
   refresh: () => Promise<void>;
   /** Saves to Supabase (admins only — enforced by the database). */
-  save: (next: SiteSettings, logoBlob: Blob | null) => Promise<SaveResult>;
+  save: (next: SiteSettings, uploads: ImageUploads) => Promise<SaveResult>;
 };
 
 const SettingsContext = createContext<SettingsContextValue | null>(null);
@@ -101,7 +101,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   }, [settings]);
 
   const save = useCallback(
-    async (next: SiteSettings, logoBlob: Blob | null): Promise<SaveResult> => {
+    async (next: SiteSettings, uploads: ImageUploads): Promise<SaveResult> => {
       const sb = getSupabase();
       if (!sb) {
         return {
@@ -109,7 +109,10 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
           error: "Supabase isn't configured yet. Add the two Supabase variables in Vercel and redeploy.",
         };
       }
-      const res = await saveRemoteSettings(sb, next, logoBlob, settings.logoUrl);
+      const res = await saveRemoteSettings(sb, next, uploads, {
+        logoUrl: settings.logoUrl,
+        appBadgeUrl: settings.appBadgeUrl,
+      });
       if (res.ok) {
         setSettings(res.settings);
         writeCache(res.settings);
@@ -118,7 +121,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       }
       return res;
     },
-    [settings.logoUrl],
+    [settings.logoUrl, settings.appBadgeUrl],
   );
 
   const value = useMemo(

@@ -11,8 +11,12 @@ import {
   TwitchIcon,
   LinkedInIcon,
   PhoneIcon,
+  CardIcon,
+  DebitIcon,
+  WalletIcon,
+  BankIcon,
+  DocIcon,
 } from "@/components/icons";
-import BrandLogo from "@/components/BrandLogo";
 import { useSettings } from "@/components/SettingsProvider";
 import { fillName, type LegalKey, type SocialKey } from "@/lib/settings";
 
@@ -54,6 +58,42 @@ const SOCIALS: { key: SocialKey; label: string; Icon: (p: React.SVGProps<SVGSVGE
   { key: "linkedin", label: "LinkedIn", Icon: LinkedInIcon },
 ];
 
+/** Generic payment-type chips (neutral glyphs, no third-party brand marks). */
+const PAYMENTS: { label: string; Icon: (p: React.SVGProps<SVGSVGElement>) => JSX.Element }[] = [
+  { label: "Credit card", Icon: CardIcon },
+  { label: "Debit card", Icon: DebitIcon },
+  { label: "Digital wallet", Icon: WalletIcon },
+  { label: "Mobile payment", Icon: PhoneIcon },
+  { label: "Direct debit", Icon: DocIcon },
+  { label: "Bank transfer", Icon: BankIcon },
+];
+
+const STAR = "M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8z";
+
+/** Five stars in the brand colour; fractional scores fill the last star partially. */
+function Stars({ score }: { score: number }) {
+  const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
+  return (
+    <span role="img" aria-label={`Rated ${score} out of 5`} className="inline-flex items-center gap-1">
+      {[0, 1, 2, 3, 4].map((i) => {
+        const fill = Math.max(0, Math.min(1, score - i)) * 100;
+        const id = `${uid}-${i}`;
+        return (
+          <svg key={i} viewBox="0 0 24 24" className="h-6 w-6" aria-hidden="true">
+            <defs>
+              <linearGradient id={id}>
+                <stop offset={`${fill}%`} style={{ stopColor: "var(--q-primary)" }} />
+                <stop offset={`${fill}%`} style={{ stopColor: "#c9cfd6" }} />
+              </linearGradient>
+            </defs>
+            <path d={STAR} fill={`url(#${id})`} />
+          </svg>
+        );
+      })}
+    </span>
+  );
+}
+
 const LEGAL: { key: LegalKey; label: string }[] = [
   { key: "terms", label: "Terms & Conditions" },
   { key: "privacy", label: "Privacy Policy" },
@@ -68,6 +108,7 @@ const LEGAL_LINK = "q-sub flex min-h-[44px] items-center hover:text-q-ink";
 export default function Footer() {
   const { settings } = useSettings();
   const name = settings.siteName;
+  const showRating = !!settings.ratingLabel && settings.ratingScore > 0;
   const [showTop, setShowTop] = useState(false);
 
   useEffect(() => {
@@ -87,24 +128,51 @@ export default function Footer() {
     </span>
   );
 
+  // An image uploaded in the admin replaces the generated badge entirely.
+  const customBadge = settings.appBadgeUrl ? (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={settings.appBadgeUrl}
+      alt={`Get the ${name} app`}
+      style={{ height: settings.appBadgeHeight, width: "auto", maxWidth: "100%" }}
+      className="block"
+    />
+  ) : null;
+  const badgeContent = customBadge ?? badge;
+
   return (
     <footer className="mt-12 text-q-ink">
-      {/* A — Supporting information */}
-      <section aria-labelledby="footer-info" className="bg-q-panel">
+      {/* A — Payment methods + rating */}
+      <section aria-label="Payment methods and rating" className="bg-q-panel">
         <div className={`${GRID} py-8 md:py-10`}>
-          <div className="text-q-ink">
-            <BrandLogo scale={0.85} />
-          </div>
-          <h2 id="footer-info" className="q-h3 mt-5">
-            Account security, made simple
-          </h2>
-          <p className="q-sub mt-2 max-w-md">
-            {name} will never ask for your password or a verification code on this page. If something looks
-            unfamiliar, review your recent sign-ins and let us know.
-          </p>
-          <a href="#main" className="mt-1 inline-flex min-h-[44px] items-center text-[14px] font-medium text-q-blue hover:underline">
-            Review this alert
-          </a>
+          <ul className="flex flex-wrap items-center justify-center gap-x-[9px] gap-y-2">
+            {PAYMENTS.map(({ label, Icon }) => (
+              <li
+                key={label}
+                title={label}
+                className="flex h-[22px] w-[32px] items-center justify-center rounded-[3px] border border-q-line bg-white text-q-ink"
+              >
+                <Icon className="h-[14px] w-[14px]" />
+                <span className="sr-only">{label}</span>
+              </li>
+            ))}
+            <li className="ml-3 text-[14px] leading-5 text-q-ink">+4 more</li>
+          </ul>
+
+          {showRating && (
+            <div className="mt-6 flex flex-col items-center gap-2 text-q-ink">
+              <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
+                <span className="text-[18px] leading-6">{settings.ratingLabel}</span>
+                <Stars score={settings.ratingScore} />
+              </div>
+              {(settings.ratingCount || settings.ratingSource) && (
+                <p className="flex items-center justify-center gap-2 text-[15px] leading-6">
+                  {settings.ratingCount && <span>{settings.ratingCount}</span>}
+                  {settings.ratingSource && <span className="font-semibold">{settings.ratingSource}</span>}
+                </p>
+              )}
+            </div>
+          )}
         </div>
       </section>
 
@@ -150,13 +218,10 @@ export default function Footer() {
             <div className="mt-5 flex flex-col items-center md:items-start">
               {settings.appStoreUrl ? (
                 <a href={settings.appStoreUrl} target="_blank" rel="noopener noreferrer" aria-label={`Get the ${name} app`}>
-                  {badge}
+                  {badgeContent}
                 </a>
               ) : (
-                <>
-                  <span aria-disabled="true">{badge}</span>
-                  <span className="q-sub mt-2">Coming soon</span>
-                </>
+                <span aria-disabled={customBadge ? undefined : "true"}>{badgeContent}</span>
               )}
             </div>
           </section>

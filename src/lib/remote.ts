@@ -59,53 +59,78 @@ export async function fetchRemoteSettings(sb: SupabaseClient): Promise<LoadResul
 
 const PUBLIC_MARKER = `/storage/v1/object/public/${LOGO_BUCKET}/`;
 
-/** Our own logo files only: "logo-<timestamp>.png|jpg". Returns the object path or null. */
-export function logoPathFromUrl(url: string | null | undefined): string | null {
+/** Our own uploaded files only ("logo-<timestamp>.png|jpg" or "badge-<timestamp>.png|jpg"). Returns the object path or null. */
+export function assetPathFromUrl(url: string | null | undefined): string | null {
   if (!url) return null;
   const i = url.indexOf(PUBLIC_MARKER);
   if (i === -1) return null;
   const name = decodeURIComponent(url.slice(i + PUBLIC_MARKER.length).split("?")[0]);
-  return /^logo-\d+\.(png|jpg)$/.test(name) ? name : null;
+  return /^(logo|badge)-\d+\.(png|jpg)$/.test(name) ? name : null;
+}
+
+export type ImageUploads = { logo?: Blob | null; badge?: Blob | null };
+export type PreviousImages = { logoUrl: string | null; appBadgeUrl: string | null };
+
+type UploadResult = { ok: true; path: string; url: string } | { ok: false; error: string };
+
+async function uploadImage(sb: SupabaseClient, prefix: "logo" | "badge", blob: Blob): Promise<UploadResult> {
+  const ext = blob.type === "image/jpeg" ? "jpg" : "png";
+  const path = `${prefix}-${Date.now()}.${ext}`;
+  const up = await withTimeout(
+    sb.storage.from(LOGO_BUCKET).upload(path, blob, {
+      contentType: ext === "jpg" ? "image/jpeg" : "image/png",
+      cacheControl: "31536000",
+      upsert: false,
+    }),
+    20000,
+  );
+  if (up.error) return { ok: false, error: friendlyError(up.error.message, "The image couldn't be uploaded.") };
+  return { ok: true, path, url: sb.storage.from(LOGO_BUCKET).getPublicUrl(path).data.publicUrl };
 }
 
 /**
- * Saves settings to the shared row. If `logoBlob` is given it is uploaded to
- * Storage first (under a fresh file name, so browsers never show a stale logo),
- * and the old logo file is removed after a successful save.
+ * Saves settings to the shared row. New images (logo / app badge) are uploaded
+ * to Storage first under fresh file names (so browsers never show a stale
+ * image); replaced or removed image files are deleted after a successful save,
+ * and files uploaded for a save that fails are cleaned up again.
  */
 export async function saveRemoteSettings(
   sb: SupabaseClient,
   next: SiteSettings,
-  logoBlob: Blob | null,
-  previousLogoUrl: string | null,
+  uploads: ImageUploads,
+  previous: PreviousImages,
 ): Promise<SaveResult> {
   let logoUrl = next.logoUrl;
-  let uploadedPath: string | null = null;
+  let appBadgeUrl = next.appBadgeUrl;
+  const uploaded: string[] = [];
+  const cleanUploaded = async () => {
+    if (uploaded.length) await sb.storage.from(LOGO_BUCKET).remove(uploaded).catch(() => undefined);
+  };
 
   try {
-    if (logoBlob) {
-      const ext = logoBlob.type === "image/jpeg" ? "jpg" : "png";
-      const path = `logo-${Date.now()}.${ext}`;
-      const up = await withTimeout(
-        sb.storage.from(LOGO_BUCKET).upload(path, logoBlob, {
-          contentType: ext === "jpg" ? "image/jpeg" : "image/png",
-          cacheControl: "31536000",
-          upsert: false,
-        }),
-        20000,
-      );
-      if (up.error) return { ok: false, error: friendlyError(up.error.message, "The logo couldn't be uploaded.") };
-      uploadedPath = path;
-      logoUrl = sb.storage.from(LOGO_BUCKET).getPublicUrl(path).data.publicUrl;
+    if (uploads.logo) {
+      const r = await uploadImage(sb, "logo", uploads.logo);
+      if (!r.ok) return { ok: false, error: r.error };
+      uploaded.push(r.path);
+      logoUrl = r.url;
+    }
+    if (uploads.badge) {
+      const r = await uploadImage(sb, "badge", uploads.badge);
+      if (!r.ok) {
+        await cleanUploaded();
+        return { ok: false, error: r.error };
+      }
+      uploaded.push(r.path);
+      appBadgeUrl = r.url;
     }
 
-    const clean = sanitizeSettings({ ...next, logoUrl }, DEFAULT_SETTINGS);
+    const clean = sanitizeSettings({ ...next, logoUrl, appBadgeUrl }, DEFAULT_SETTINGS);
 
     // RLS silently filters rows a user may not update, so we ask for the row back
     // and treat "no rows" as "not allowed".
     const res = await withTimeout(Promise.resolve(sb.from("site_settings").update({ data: clean }).eq("id", 1).select("id")));
     if (res.error || !res.data || res.data.length === 0) {
-      if (uploadedPath) await sb.storage.from(LOGO_BUCKET).remove([uploadedPath]).catch(() => undefined);
+      await cleanUploaded();
       return {
         ok: false,
         error: res.error
@@ -114,15 +139,16 @@ export async function saveRemoteSettings(
       };
     }
 
-    // Best-effort tidy-up of the replaced / removed logo file.
-    const oldPath = logoPathFromUrl(previousLogoUrl);
-    if (oldPath && clean.logoUrl !== previousLogoUrl) {
-      await sb.storage.from(LOGO_BUCKET).remove([oldPath]).catch(() => undefined);
-    }
+    // Best-effort tidy-up of replaced / removed image files.
+    const stale = [
+      previous.logoUrl !== clean.logoUrl ? assetPathFromUrl(previous.logoUrl) : null,
+      previous.appBadgeUrl !== clean.appBadgeUrl ? assetPathFromUrl(previous.appBadgeUrl) : null,
+    ].filter((x): x is string => !!x);
+    if (stale.length) await sb.storage.from(LOGO_BUCKET).remove(stale).catch(() => undefined);
 
     return { ok: true, settings: clean };
   } catch (e) {
-    if (uploadedPath) await sb.storage.from(LOGO_BUCKET).remove([uploadedPath]).catch(() => undefined);
+    await cleanUploaded();
     return { ok: false, error: friendlyError(e instanceof Error ? e.message : undefined, "Couldn't save your changes.") };
   }
 }
