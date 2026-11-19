@@ -650,7 +650,7 @@ export default function AdminPage() {
       return (
         <StatusScreen title="Supabase isn't connected yet">
           <p>
-            Add <code>NEXT_PUBLIC_SUPABASE_URL</code> and <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code> in your Vercel
+            Add <code>NEXT_SUPABASE_URL</code> and <code>NEXT_SUPABASE_ANON_KEY</code> in your Vercel
             project settings, then redeploy. The rest of the site keeps working with its default branding meanwhile.
           </p>
         </StatusScreen>

@@ -66,9 +66,10 @@ Do these in order. Nothing needs a computer or terminal.
 
 1. Safari → **vercel.com** → your project → **Settings** →
    **Environment Variables**.
-2. Add `NEXT_PUBLIC_SUPABASE_URL` = your Project URL.
-3. Add `NEXT_PUBLIC_SUPABASE_ANON_KEY` = your anon/publishable key.
-4. Tap **Save**.
+2. Add `NEXT_SUPABASE_URL` = your Project URL.
+3. Add `NEXT_SUPABASE_ANON_KEY` = your anon/publishable key.
+4. Tap **Save**. (Type the names exactly as shown. Tick all environments, or at least Production.)
+5. **Redeploy** afterwards — these values are read when the site is built, so a deployment made before you added them won't see them.
 
 ### 5. Upload the project to GitHub
 

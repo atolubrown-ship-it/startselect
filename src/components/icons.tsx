@@ -117,13 +117,12 @@ export function AccountIcon(props: IconProps) {
       <g clipPath="url(#q-acct-clip)">
         <path
           d="M2 40c2-11 9-14 18-14s16 3 18 14z"
-          fill="var(--q-secondary)"
-          fillOpacity="0.3"
+          fill="#6fe8c8"
           stroke="currentColor"
           strokeWidth="2.4"
         />
       </g>
-      <circle cx="20" cy="15.5" r="5" fill="var(--q-secondary)" fillOpacity="0.3" stroke="currentColor" strokeWidth="2.4" />
+      <circle cx="20" cy="15.5" r="5" fill="#6fe8c8" stroke="currentColor" strokeWidth="2.4" />
       <circle cx="20" cy="20" r="17" stroke="currentColor" strokeWidth="2.4" />
     </svg>
   );

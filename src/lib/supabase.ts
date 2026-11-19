@@ -6,19 +6,23 @@ export const LOGO_BUCKET = "branding";
 let client: SupabaseClient | null | undefined;
 
 /**
- * Browser Supabase client, or `null` when the two public environment variables
- * are missing. Callers must handle `null` — the site keeps working with its
- * default branding instead of crashing.
+ * Browser Supabase client, or `null` when the two environment variables
+ * NEXT_SUPABASE_URL and NEXT_SUPABASE_ANON_KEY are missing.
+ * (next.config.mjs passes them to the browser; the names must match exactly and
+ * must be written literally as process.env.NAME so Next can inline them.)
+ *
+ * Callers must handle `null` — the site keeps working with its default
+ * branding instead of crashing.
  *
  * Only the public URL and the public "anon" (publishable) key are used here.
- * Never put a service-role / secret key in a NEXT_PUBLIC_ variable.
+ * Never put a service-role / secret key in either variable — both reach the browser.
  */
 export function getSupabase(): SupabaseClient | null {
   if (typeof window === "undefined") return null;
   if (client !== undefined) return client;
 
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const url = process.env.NEXT_SUPABASE_URL;
+  const key = process.env.NEXT_SUPABASE_ANON_KEY;
 
   if (!url || !key || !/^https:\/\/.+/i.test(url.trim())) {
     client = null;

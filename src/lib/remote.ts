@@ -41,7 +41,7 @@ export function friendlyError(message: string | undefined, fallback: string): st
   if (m.includes("row-level security") || m.includes("not authorized") || m.includes("permission denied"))
     return "This account isn't allowed to change settings.";
   if (m.includes("jwt") || m.includes("invalid api key") || m.includes("apikey"))
-    return "The Supabase key looks wrong. Check NEXT_PUBLIC_SUPABASE_ANON_KEY in Vercel.";
+    return "The Supabase key looks wrong. Check NEXT_SUPABASE_ANON_KEY in Vercel.";
   if (m.includes("payload too large") || m.includes("exceeded the maximum")) return "That logo file is too large.";
   return fallback;
 }
