@@ -28,7 +28,7 @@ export type SiteSettings = {
   logoUrl: string | null;
   /** Logo height in px (the header grows with it). */
   logoHeight: number;
-  /** Show the company name next to an uploaded logo. */
+  /** Legacy field, no longer used: an uploaded logo now always replaces the icon and name. */
   showNameWithLogo: boolean;
   // Appearance
   primaryColor: string;

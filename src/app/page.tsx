@@ -11,7 +11,6 @@ import {
   DeviceIcon,
   ClockIcon,
   ChevronLeftIcon,
-  InfoIcon,
 } from "@/components/icons";
 
 type View = "alert" | "recognized" | "notme";
@@ -95,10 +94,6 @@ function AlertScreen({ onRecognized, onNotMe }: { onRecognized: () => void; onNo
             />
           </div>
         </div>
-        <p className="mt-3 flex items-start gap-2 rounded-xl bg-q-field px-4 py-3 text-[13px] leading-5 text-q-sub">
-          <InfoIcon className="mt-0.5 h-4 w-4 shrink-0" />
-          <span>Sample details for demonstration only. This is not verified live account activity.</span>
-        </p>
       </section>
 
       {/* Actions */}

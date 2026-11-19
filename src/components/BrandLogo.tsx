@@ -28,7 +28,10 @@ function DefaultMark({ size }: { size: number }) {
 }
 
 /**
- * The one place the logo and company name are rendered. Header, footer and any
+ * The one place the logo and company name are rendered. An uploaded logo
+ * replaces the default icon AND the default name completely; with no uploaded
+ * logo, the default Quilo icon and company name are shown.
+ * Header, footer and any
  * other branding use this component, so a change saved in the Admin Portal
  * shows up everywhere at once.
  */
@@ -38,7 +41,7 @@ export default function BrandLogo({ settings, scale = 1, className = "" }: Brand
   const ready = settings ? true : ctx.loaded;
 
   const height = Math.round(s.logoHeight * scale);
-  const showName = !s.logoUrl || s.showNameWithLogo;
+  const custom = !!s.logoUrl;
 
   return (
     <span
@@ -49,14 +52,15 @@ export default function BrandLogo({ settings, scale = 1, className = "" }: Brand
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={s.logoUrl}
-          alt={showName ? "" : s.siteName}
+          alt={s.siteName}
           style={{ height, width: "auto", maxWidth: "min(55vw, 220px)", objectFit: "contain" }}
           className="shrink-0"
         />
       ) : (
         <DefaultMark size={height} />
       )}
-      {showName && (
+      {/* Default icon + name only when no custom logo has been uploaded */}
+      {!custom && (
         <span
           className="truncate font-bold leading-none tracking-[-0.02em]"
           style={{ fontSize: Math.max(14, Math.round(height * 0.78)) }}

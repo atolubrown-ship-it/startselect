@@ -78,11 +78,11 @@ export default function Footer() {
   }, []);
 
   const badge = (
-    <span className="inline-flex h-12 items-center gap-3 rounded-xl bg-q-night px-4 text-white">
-      <PhoneIcon className="h-6 w-6 shrink-0" />
-      <span className="flex flex-col text-left leading-tight">
-        <span className="text-[10px] font-medium uppercase tracking-[0.08em] text-white/70">Get the app</span>
-        <span className="max-w-[180px] truncate text-[16px] font-semibold">{name} app</span>
+    <span className="inline-flex h-[52px] min-w-[168px] items-center gap-3 rounded-[10px] border border-[#a6a6a6] bg-black px-4 text-white">
+      <PhoneIcon className="h-7 w-7 shrink-0" />
+      <span className="flex min-w-0 flex-col text-left leading-none">
+        <span className="text-[10px] font-medium tracking-[0.06em] text-white">Download on the</span>
+        <span className="mt-1 max-w-[190px] truncate text-[20px] font-semibold tracking-[-0.01em]">{name} app</span>
       </span>
     </span>
   );

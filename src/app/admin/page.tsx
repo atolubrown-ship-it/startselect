@@ -383,8 +383,8 @@ function AdminPanel({ email, onSignOut }: { email: string; onSignOut: () => void
               {pendingLogo
                 ? "New logo selected. Tap Save changes to upload it."
                 : draft.logoUrl
-                  ? "Preview of your uploaded logo."
-                  : "Showing the built-in placeholder. Upload your own logo to replace it."}
+                  ? "Preview. Your logo replaces the default icon and name everywhere."
+                  : "Showing the default icon and name. Upload your own logo to replace both."}
             </p>
 
             <div className="mt-3 flex flex-wrap gap-2">
@@ -419,16 +419,6 @@ function AdminPanel({ email, onSignOut }: { email: string; onSignOut: () => void
               className="h-11 w-full accent-[var(--q-primary)]"
             />
           </Field>
-
-          <label className="flex min-h-[44px] items-center gap-3 text-[14px] text-q-ink">
-            <input
-              type="checkbox"
-              checked={draft.showNameWithLogo}
-              onChange={(e) => set("showNameWithLogo", e.target.checked)}
-              className="h-5 w-5 accent-[var(--q-primary)]"
-            />
-            Show the company name next to an uploaded logo
-          </label>
         </Card>
 
         {/* Appearance */}
