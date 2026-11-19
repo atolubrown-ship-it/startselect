@@ -28,7 +28,12 @@ export default function SecurityAlertPage() {
       <Header menuOpen={menuOpen} onToggleMenu={() => setMenuOpen((v) => !v)} />
       <MenuPanel open={menuOpen} onClose={() => setMenuOpen(false)} />
 
-      <main className="mx-auto max-w-md px-5 py-8">
+      <main id="main" className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
+        <div className="mx-auto max-w-xl">
+        <div className="mb-6 md:hidden">
+          <label htmlFor="mobile-help-search" className="sr-only">Search security help</label>
+          <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-500"><span aria-hidden="true">⌕</span><input id="mobile-help-search" placeholder="Search security help" className="w-full bg-transparent outline-none placeholder:text-slate-400" /></div>
+        </div>
         {view === "alert" && (
           <AlertScreen
             onRecognized={() => setView("recognized")}
@@ -37,8 +42,21 @@ export default function SecurityAlertPage() {
         )}
         {view === "recognized" && <RecognizedScreen onBack={() => setView("alert")} />}
         {view === "notme" && <NotMeScreen onBack={() => setView("alert")} />}
+        </div>
       </main>
+      <Footer />
     </div>
+  );
+}
+
+function Footer() {
+  return (
+    <footer className="mt-12 border-t border-slate-200 bg-slate-50">
+      <div className="mx-auto flex max-w-6xl flex-col gap-5 px-4 py-7 text-sm sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <div><p className="font-semibold text-slate-800">Quilo · Security demo</p><p className="mt-1 text-xs text-slate-500">Illustrative interface using sample sign-in details.</p></div>
+        <nav aria-label="Footer" className="flex flex-wrap gap-x-5 gap-y-2 text-slate-600"><a href="#main" className="hover:text-slate-900">Alert overview</a><a href="#help-search" className="hover:text-slate-900">Help</a><a href="#main" className="hover:text-slate-900">Privacy information</a></nav>
+      </div>
+    </footer>
   );
 }
 
