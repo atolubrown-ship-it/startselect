@@ -1,0 +1,44 @@
+name: Extract Quilo ZIP into repository
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract project ZIP
+        run: |
+          set -e
+          ZIP_FILE=$(find . -maxdepth 2 -name "quilo-alert.zip" -print -quit)
+          if [ -z "$ZIP_FILE" ]; then
+            echo "Could not find quilo-alert.zip. Upload it to the repository first."
+            exit 1
+          fi
+          mkdir -p /tmp/quilo-extract
+          unzip -q "$ZIP_FILE" -d /tmp/quilo-extract
+          PROJECT_DIR=$(find /tmp/quilo-extract -mindepth 1 -maxdepth 1 -type d -print -quit)
+          if [ -z "$PROJECT_DIR" ]; then
+            echo "ZIP did not contain a project folder."
+            exit 1
+          fi
+          cp -a "$PROJECT_DIR"/. .
+          rm -f "$ZIP_FILE"
+
+      - name: Commit extracted project files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Extract Quilo project files from ZIP"
+            git push
+          fi
