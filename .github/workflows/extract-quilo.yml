@@ -1,7 +1,12 @@
-name: Extract Quilo ZIP into repository
+name: Extract ZIP into repository
 
 on:
   workflow_dispatch:
+    inputs:
+      zip_file:
+        description: "Specific .zip filename to extract (leave blank to auto-detect the first .zip found in the repo root)"
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -16,19 +21,39 @@ jobs:
       - name: Extract project ZIP
         run: |
           set -e
-          ZIP_FILE=$(find . -maxdepth 2 -name "quilo-alert.zip" -print -quit)
-          if [ -z "$ZIP_FILE" ]; then
-            echo "Could not find quilo-alert.zip. Upload it to the repository first."
-            exit 1
+
+          if [ -n "${{ inputs.zip_file }}" ]; then
+            ZIP_FILE="${{ inputs.zip_file }}"
+            if [ ! -f "$ZIP_FILE" ]; then
+              echo "Could not find $ZIP_FILE in the repository."
+              exit 1
+            fi
+          else
+            ZIP_FILE=$(find . -maxdepth 2 -name "*.zip" -print -quit)
+            if [ -z "$ZIP_FILE" ]; then
+              echo "No .zip file found in the repository. Upload one first, or pass zip_file explicitly."
+              exit 1
+            fi
           fi
-          mkdir -p /tmp/quilo-extract
-          unzip -q "$ZIP_FILE" -d /tmp/quilo-extract
-          PROJECT_DIR=$(find /tmp/quilo-extract -mindepth 1 -maxdepth 1 -type d -print -quit)
-          if [ -z "$PROJECT_DIR" ]; then
-            echo "ZIP did not contain a project folder."
-            exit 1
+
+          echo "Extracting: $ZIP_FILE"
+
+          mkdir -p /tmp/zip-extract
+          unzip -q "$ZIP_FILE" -d /tmp/zip-extract
+
+          # If the zip contains a single top-level folder, extract its contents
+          # into the repo root; otherwise copy whatever was extracted as-is.
+          TOP_LEVEL_ENTRIES=$(find /tmp/zip-extract -mindepth 1 -maxdepth 1 | wc -l)
+          if [ "$TOP_LEVEL_ENTRIES" -eq 1 ]; then
+            SOURCE_DIR=$(find /tmp/zip-extract -mindepth 1 -maxdepth 1 -type d -print -quit)
+            if [ -z "$SOURCE_DIR" ]; then
+              SOURCE_DIR=/tmp/zip-extract
+            fi
+          else
+            SOURCE_DIR=/tmp/zip-extract
           fi
-          cp -a "$PROJECT_DIR"/. .
+
+          cp -a "$SOURCE_DIR"/. .
           rm -f "$ZIP_FILE"
 
       - name: Commit extracted project files
@@ -39,6 +64,6 @@ jobs:
           if git diff --cached --quiet; then
             echo "No changes to commit."
           else
-            git commit -m "Extract Quilo project files from ZIP"
+            git commit -m "Extract project files from ZIP"
             git push
           fi
