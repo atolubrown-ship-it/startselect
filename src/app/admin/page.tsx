@@ -254,6 +254,8 @@ function AdminPanel({ email, onSignOut }: { email: string; onSignOut: () => void
   const [pendingBadge, setPendingBadge] = useState<Blob | null>(null);
   const [badgeBusy, setBadgeBusy] = useState(false);
   const badgeFileRef = useRef<HTMLInputElement>(null);
+  const [pendingPay, setPendingPay] = useState<Record<number, Blob>>({});
+  const [payBusy, setPayBusy] = useState<number | null>(null);
   const [synced, setSynced] = useState(false);
   const [status, setStatus] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
   const [logoBusy, setLogoBusy] = useState(false);
@@ -267,6 +269,7 @@ function AdminPanel({ email, onSignOut }: { email: string; onSignOut: () => void
       setDraft(settings);
       setPendingLogo(null);
       setPendingBadge(null);
+      setPendingPay({});
       setSynced(true);
     }
   }, [ready, synced, settings]);
@@ -312,6 +315,37 @@ function AdminPanel({ email, onSignOut }: { email: string; onSignOut: () => void
     }
   };
 
+  const setPayment = (i: number, patch: Partial<SiteSettings["payments"][number]>) => {
+    setDraft((d) => ({ ...d, payments: d.payments.map((p, j) => (j === i ? { ...p, ...patch } : p)) }));
+    setStatus(null);
+  };
+
+  const onPayFile = async (i: number, file: File | undefined, input: HTMLInputElement | null) => {
+    if (!file) return;
+    setPayBusy(i);
+    setStatus(null);
+    try {
+      const dataUrl = await fileToLogoDataUrl(file, 240);
+      const blob = await (await fetch(dataUrl)).blob();
+      setPendingPay((p) => ({ ...p, [i]: blob }));
+      setPayment(i, { imageUrl: dataUrl }); // local preview only — uploaded when you tap Save
+    } catch (err) {
+      setStatus({ kind: "error", text: err instanceof Error ? err.message : "Couldn't use that image." });
+    } finally {
+      setPayBusy(null);
+      if (input) input.value = "";
+    }
+  };
+
+  const onRemovePay = (i: number) => {
+    setPendingPay((p) => {
+      const next = { ...p };
+      delete next[i];
+      return next;
+    });
+    setPayment(i, { imageUrl: null });
+  };
+
   const onRemoveBadge = () => {
     setPendingBadge(null);
     set("appBadgeUrl", null);
@@ -326,12 +360,13 @@ function AdminPanel({ email, onSignOut }: { email: string; onSignOut: () => void
     if (saving) return;
     setSaving(true);
     setStatus(null);
-    const res = await save(draft, { logo: pendingLogo, badge: pendingBadge });
+    const res = await save(draft, { logo: pendingLogo, badge: pendingBadge, payments: pendingPay });
     setSaving(false);
     if (res.ok) {
       setDraft(res.settings);
       setPendingLogo(null);
       setPendingBadge(null);
+      setPendingPay({});
       setStatus({ kind: "ok", text: "Saved. Your changes are now live for every visitor." });
     } else {
       setStatus({ kind: "error", text: res.error });
@@ -342,6 +377,7 @@ function AdminPanel({ email, onSignOut }: { email: string; onSignOut: () => void
     setDraft(settings);
     setPendingLogo(null);
     setPendingBadge(null);
+    setPendingPay({});
     setStatus(null);
   };
 
@@ -644,6 +680,92 @@ function AdminPanel({ email, onSignOut }: { email: string; onSignOut: () => void
               placeholder="https://"
             />
           </Field>
+          <div>
+            <ColorField
+              label="Sign-in button colour"
+              value={draft.signInColor || draft.primaryColor}
+              onChange={(hex) => set("signInColor", hex)}
+            />
+            <p className="q-sub mt-1.5">
+              {draft.signInColor ? "Custom colour in use. The text colour adjusts automatically." : "Currently using your primary colour."}
+            </p>
+            {draft.signInColor && (
+              <button type="button" onClick={() => set("signInColor", "")} className={`${BTN_SECONDARY} mt-2`}>
+                Use primary colour
+              </button>
+            )}
+          </div>
+        </Card>
+
+        {/* Payment icons */}
+        <Card
+          title="Payment icons"
+          hint="Six slots shown above the footer links. Upload your own image for each one (only artwork you're allowed to use). Empty slots show a neutral icon."
+        >
+          {draft.payments.map((p, i) => (
+            <div key={i} className="rounded-xl border border-q-line bg-white p-3">
+              <div className="flex items-center gap-3">
+                <div className="flex h-[44px] w-[64px] shrink-0 items-center justify-center overflow-hidden rounded-md border border-q-line bg-white">
+                  {p.imageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={p.imageUrl} alt={`${p.label} preview`} className="h-full w-full object-contain" />
+                  ) : (
+                    <span className="q-sub text-center">Blank</span>
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <label htmlFor={`pay-label-${i}`} className="mb-1 block text-[13px] font-medium text-q-ink">
+                    Slot {i + 1} name
+                  </label>
+                  <input
+                    id={`pay-label-${i}`}
+                    type="text"
+                    value={p.label}
+                    maxLength={30}
+                    onChange={(e) => setPayment(i, { label: e.target.value })}
+                    className={INPUT}
+                  />
+                </div>
+              </div>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <label className="inline-flex min-h-[44px] cursor-pointer items-center justify-center rounded-xl bg-q-blue px-4 text-[14px] font-semibold text-[color:var(--q-primary-ink)] hover:bg-q-blue-dark">
+                  {payBusy === i ? "Processing…" : p.imageUrl ? "Replace image" : "Upload image"}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="sr-only"
+                    onChange={(e) => onPayFile(i, e.target.files?.[0], e.target)}
+                  />
+                </label>
+                {p.imageUrl && (
+                  <button type="button" onClick={() => onRemovePay(i)} className={BTN_SECONDARY}>
+                    Remove image
+                  </button>
+                )}
+                <label className="flex min-h-[44px] items-center gap-2 text-[14px] text-q-ink">
+                  <input
+                    type="checkbox"
+                    checked={p.show}
+                    onChange={(e) => setPayment(i, { show: e.target.checked })}
+                    className="h-5 w-5 accent-[var(--q-primary)]"
+                  />
+                  Show
+                </label>
+              </div>
+              {pendingPay[i] && <p className="q-sub mt-1.5">New image selected. Tap Save changes to upload it.</p>}
+            </div>
+          ))}
+          <Field label="Text after the icons" htmlFor="pay-more" help="For example “+4 more”. Leave empty to hide it.">
+            <input
+              id="pay-more"
+              type="text"
+              value={draft.paymentMoreText}
+              maxLength={20}
+              onChange={(e) => set("paymentMoreText", e.target.value)}
+              className={INPUT}
+              placeholder="+4 more"
+            />
+          </Field>
         </Card>
 
         {/* Footer settings */}
@@ -699,6 +821,7 @@ function AdminPanel({ email, onSignOut }: { email: string; onSignOut: () => void
               placeholder="Name of the review site"
             />
           </Field>
+          <ColorField label="Rating star colour" value={draft.ratingColor} onChange={(hex) => set("ratingColor", hex)} />
           <Field label="App promotion heading" htmlFor="promo-heading">
             <input
               id="promo-heading"

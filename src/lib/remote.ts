@@ -59,23 +59,23 @@ export async function fetchRemoteSettings(sb: SupabaseClient): Promise<LoadResul
 
 const PUBLIC_MARKER = `/storage/v1/object/public/${LOGO_BUCKET}/`;
 
-/** Our own uploaded files only ("logo-<timestamp>.png|jpg" or "badge-<timestamp>.png|jpg"). Returns the object path or null. */
+/** Our own uploaded files only ("logo-<ts>", "badge-<ts>" or "pay-<ts>-<slot>" with .png|jpg). Returns the object path or null. */
 export function assetPathFromUrl(url: string | null | undefined): string | null {
   if (!url) return null;
   const i = url.indexOf(PUBLIC_MARKER);
   if (i === -1) return null;
   const name = decodeURIComponent(url.slice(i + PUBLIC_MARKER.length).split("?")[0]);
-  return /^(logo|badge)-\d+\.(png|jpg)$/.test(name) ? name : null;
+  return /^(?:(?:logo|badge)-\d+|pay-\d+-\d)\.(?:png|jpg)$/.test(name) ? name : null;
 }
 
-export type ImageUploads = { logo?: Blob | null; badge?: Blob | null };
-export type PreviousImages = { logoUrl: string | null; appBadgeUrl: string | null };
+export type ImageUploads = { logo?: Blob | null; badge?: Blob | null; payments?: Record<number, Blob> };
+export type PreviousImages = { logoUrl: string | null; appBadgeUrl: string | null; paymentUrls: (string | null)[] };
 
 type UploadResult = { ok: true; path: string; url: string } | { ok: false; error: string };
 
-async function uploadImage(sb: SupabaseClient, prefix: "logo" | "badge", blob: Blob): Promise<UploadResult> {
+async function uploadImage(sb: SupabaseClient, prefix: "logo" | "badge" | "pay", blob: Blob, suffix = ""): Promise<UploadResult> {
   const ext = blob.type === "image/jpeg" ? "jpg" : "png";
-  const path = `${prefix}-${Date.now()}.${ext}`;
+  const path = `${prefix}-${Date.now()}${suffix}.${ext}`;
   const up = await withTimeout(
     sb.storage.from(LOGO_BUCKET).upload(path, blob, {
       contentType: ext === "jpg" ? "image/jpeg" : "image/png",
@@ -102,6 +102,7 @@ export async function saveRemoteSettings(
 ): Promise<SaveResult> {
   let logoUrl = next.logoUrl;
   let appBadgeUrl = next.appBadgeUrl;
+  const payments = next.payments.map((p) => ({ ...p }));
   const uploaded: string[] = [];
   const cleanUploaded = async () => {
     if (uploaded.length) await sb.storage.from(LOGO_BUCKET).remove(uploaded).catch(() => undefined);
@@ -124,7 +125,19 @@ export async function saveRemoteSettings(
       appBadgeUrl = r.url;
     }
 
-    const clean = sanitizeSettings({ ...next, logoUrl, appBadgeUrl }, DEFAULT_SETTINGS);
+    for (const [key, blob] of Object.entries(uploads.payments ?? {})) {
+      const i = Number(key);
+      if (!blob || !payments[i]) continue;
+      const r = await uploadImage(sb, "pay", blob, `-${i}`);
+      if (!r.ok) {
+        await cleanUploaded();
+        return { ok: false, error: r.error };
+      }
+      uploaded.push(r.path);
+      payments[i].imageUrl = r.url;
+    }
+
+    const clean = sanitizeSettings({ ...next, logoUrl, appBadgeUrl, payments }, DEFAULT_SETTINGS);
 
     // RLS silently filters rows a user may not update, so we ask for the row back
     // and treat "no rows" as "not allowed".
@@ -143,6 +156,7 @@ export async function saveRemoteSettings(
     const stale = [
       previous.logoUrl !== clean.logoUrl ? assetPathFromUrl(previous.logoUrl) : null,
       previous.appBadgeUrl !== clean.appBadgeUrl ? assetPathFromUrl(previous.appBadgeUrl) : null,
+      ...previous.paymentUrls.map((u, i) => (u !== (clean.payments[i]?.imageUrl ?? null) ? assetPathFromUrl(u) : null)),
     ].filter((x): x is string => !!x);
     if (stale.length) await sb.storage.from(LOGO_BUCKET).remove(stale).catch(() => undefined);
 

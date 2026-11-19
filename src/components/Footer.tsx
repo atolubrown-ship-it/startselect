@@ -58,36 +58,38 @@ const SOCIALS: { key: SocialKey; label: string; Icon: (p: React.SVGProps<SVGSVGE
   { key: "linkedin", label: "LinkedIn", Icon: LinkedInIcon },
 ];
 
-/** Generic payment-type chips (neutral glyphs, no third-party brand marks). */
-const PAYMENTS: { label: string; Icon: (p: React.SVGProps<SVGSVGElement>) => JSX.Element }[] = [
-  { label: "Credit card", Icon: CardIcon },
-  { label: "Debit card", Icon: DebitIcon },
-  { label: "Digital wallet", Icon: WalletIcon },
-  { label: "Mobile payment", Icon: PhoneIcon },
-  { label: "Direct debit", Icon: DocIcon },
-  { label: "Bank transfer", Icon: BankIcon },
+/** Neutral glyphs shown in a payment slot until an image is uploaded in the admin. */
+const PAYMENT_GLYPHS: ((p: React.SVGProps<SVGSVGElement>) => JSX.Element)[] = [
+  CardIcon,
+  DebitIcon,
+  WalletIcon,
+  PhoneIcon,
+  DocIcon,
+  BankIcon,
 ];
 
 const STAR = "M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8z";
 
-/** Five stars in the brand colour; fractional scores fill the last star partially. */
-function Stars({ score }: { score: number }) {
-  const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
+/**
+ * Five square tiles with a white star each. Fractional scores fill the last
+ * tile partially (e.g. 4.5 = half). The tile colour comes from the admin.
+ */
+function Stars({ score, color }: { score: number; color: string }) {
   return (
     <span role="img" aria-label={`Rated ${score} out of 5`} className="inline-flex items-center gap-1">
       {[0, 1, 2, 3, 4].map((i) => {
         const fill = Math.max(0, Math.min(1, score - i)) * 100;
-        const id = `${uid}-${i}`;
         return (
-          <svg key={i} viewBox="0 0 24 24" className="h-6 w-6" aria-hidden="true">
-            <defs>
-              <linearGradient id={id}>
-                <stop offset={`${fill}%`} style={{ stopColor: "var(--q-primary)" }} />
-                <stop offset={`${fill}%`} style={{ stopColor: "#c9cfd6" }} />
-              </linearGradient>
-            </defs>
-            <path d={STAR} fill={`url(#${id})`} />
-          </svg>
+          <span
+            key={i}
+            aria-hidden="true"
+            className="flex h-6 w-6 items-center justify-center"
+            style={{ background: `linear-gradient(90deg, ${color} ${fill}%, #dcdce6 ${fill}%)` }}
+          >
+            <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]">
+              <path d={STAR} fill="#ffffff" />
+            </svg>
+          </span>
         );
       })}
     </span>
@@ -146,29 +148,45 @@ export default function Footer() {
       <section aria-label="Payment methods and rating" className="bg-q-panel">
         <div className={`${GRID} py-8 md:py-10`}>
           <ul className="flex flex-wrap items-center justify-center gap-x-[9px] gap-y-2">
-            {PAYMENTS.map(({ label, Icon }) => (
-              <li
-                key={label}
-                title={label}
-                className="flex h-[22px] w-[32px] items-center justify-center rounded-[3px] border border-q-line bg-white text-q-ink"
-              >
-                <Icon className="h-[14px] w-[14px]" />
-                <span className="sr-only">{label}</span>
-              </li>
-            ))}
-            <li className="ml-3 text-[14px] leading-5 text-q-ink">+4 more</li>
+            {settings.payments.map((p, i) => {
+              if (!p.show) return null;
+              const Glyph = PAYMENT_GLYPHS[i] ?? CardIcon;
+              return p.imageUrl ? (
+                <li key={i} title={p.label} className="flex h-[22px] w-[32px] items-center justify-center overflow-hidden rounded-[3px] bg-white">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={p.imageUrl} alt={p.label} className="h-full w-full object-contain" />
+                </li>
+              ) : (
+                <li
+                  key={i}
+                  title={p.label}
+                  className="flex h-[22px] w-[32px] items-center justify-center rounded-[3px] border border-q-line bg-white text-q-ink"
+                >
+                  <Glyph className="h-[14px] w-[14px]" />
+                  <span className="sr-only">{p.label}</span>
+                </li>
+              );
+            })}
+            {settings.paymentMoreText && <li className="ml-3 text-[14px] leading-5 text-q-ink">{settings.paymentMoreText}</li>}
           </ul>
 
           {showRating && (
             <div className="mt-6 flex flex-col items-center gap-2 text-q-ink">
               <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
                 <span className="text-[18px] leading-6">{settings.ratingLabel}</span>
-                <Stars score={settings.ratingScore} />
+                <Stars score={settings.ratingScore} color={settings.ratingColor} />
               </div>
               {(settings.ratingCount || settings.ratingSource) && (
                 <p className="flex items-center justify-center gap-2 text-[15px] leading-6">
                   {settings.ratingCount && <span>{settings.ratingCount}</span>}
-                  {settings.ratingSource && <span className="font-semibold">{settings.ratingSource}</span>}
+                  {settings.ratingSource && (
+                    <span className="inline-flex items-center gap-1 font-semibold">
+                      <svg viewBox="0 0 24 24" className="h-6 w-6" aria-hidden="true">
+                        <path d={STAR} fill={settings.ratingColor} />
+                      </svg>
+                      {settings.ratingSource}
+                    </span>
+                  )}
                 </p>
               )}
             </div>

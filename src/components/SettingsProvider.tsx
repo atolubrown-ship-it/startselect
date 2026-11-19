@@ -112,6 +112,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       const res = await saveRemoteSettings(sb, next, uploads, {
         logoUrl: settings.logoUrl,
         appBadgeUrl: settings.appBadgeUrl,
+        paymentUrls: settings.payments.map((x) => x.imageUrl),
       });
       if (res.ok) {
         setSettings(res.settings);
@@ -121,7 +122,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       }
       return res;
     },
-    [settings.logoUrl, settings.appBadgeUrl],
+    [settings.logoUrl, settings.appBadgeUrl, settings.payments],
   );
 
   const value = useMemo(

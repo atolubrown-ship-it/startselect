@@ -52,6 +52,8 @@ export type SiteSettings = {
   signInLabel: string;
   /** Optional link for the sign-in button. Empty = it only closes the menu. */
   signInUrl: string;
+  /** Sign-in button colour (hex). Empty = use the primary colour. */
+  signInColor: string;
   // Sample alert details (demonstration data)
   alertLocation: string;
   alertDevice: string;
@@ -64,6 +66,12 @@ export type SiteSettings = {
   ratingScore: number;
   ratingCount: string;
   ratingSource: string;
+  /** Colour of the rating star tiles and the small star beside the source name. */
+  ratingColor: string;
+  /** Payment icon slots in the footer. An uploaded image replaces the neutral glyph. */
+  payments: PaymentSlot[];
+  /** Text after the payment icons, e.g. "+4 more". Empty hides it. */
+  paymentMoreText: string;
   appPromoHeading: string;
   /** May contain {name}, which is replaced by the company name. */
   appPromoText: string;
@@ -75,6 +83,9 @@ export type SiteSettings = {
   socials: Record<SocialKey, string>;
   footerLinks: Record<LegalKey, string>;
 };
+
+export type PaymentSlot = { label: string; imageUrl: string | null; show: boolean };
+export const PAYMENT_SLOTS = 6;
 
 export const LOGO_HEIGHT_MIN = 20;
 export const LOGO_HEIGHT_MAX = 72;
@@ -99,6 +110,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   showSignIn: true,
   signInLabel: "Hello",
   signInUrl: "",
+  signInColor: "",
   alertLocation: "Oregon, USA (approximate)",
   alertDevice: "iPhone 16 Plus",
   alertDateTime: "2026-11-19T15:42",
@@ -106,6 +118,16 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   ratingScore: 0,
   ratingCount: "",
   ratingSource: "",
+  ratingColor: "#2f7d4f",
+  payments: [
+    { label: "Credit card", imageUrl: null, show: true },
+    { label: "Debit card", imageUrl: null, show: true },
+    { label: "Digital wallet", imageUrl: null, show: true },
+    { label: "Mobile payment", imageUrl: null, show: true },
+    { label: "Direct debit", imageUrl: null, show: true },
+    { label: "Bank transfer", imageUrl: null, show: true },
+  ],
+  paymentMoreText: "+4 more",
   appPromoHeading: "Download the app",
   appPromoText: "Manage your account security on the go with the {name} app.",
   appBadgeUrl: null,
@@ -178,6 +200,20 @@ export function sanitizeSettings(input: unknown, fallback: SiteSettings): SiteSe
   const footerLinks = { ...fallback.footerLinks };
   for (const k of LEGAL_KEYS) if (k in linksIn) footerLinks[k] = safeUrl(linksIn[k]);
 
+  const paymentsIn = Array.isArray(input.payments) ? input.payments : [];
+  const payments: PaymentSlot[] = fallback.payments.slice(0, PAYMENT_SLOTS).map((base, i) => {
+    const raw = paymentsIn[i];
+    if (!isObj(raw)) return base;
+    return {
+      label: text(raw.label, base.label, 30),
+      imageUrl: "imageUrl" in raw ? safeHttpsUrl(raw.imageUrl) || null : base.imageUrl,
+      show: typeof raw.show === "boolean" ? raw.show : base.show,
+    };
+  });
+
+  const hexOrEmpty = (v: unknown, fb: string) =>
+    typeof v === "string" ? (v.trim() === "" ? "" : HEX.test(v.trim()) ? v.trim().toLowerCase() : fb) : fb;
+
   return {
     siteName: text(input.siteName, fallback.siteName, 60),
     logoUrl: logo,
@@ -208,6 +244,7 @@ export function sanitizeSettings(input: unknown, fallback: SiteSettings): SiteSe
     showSignIn: typeof input.showSignIn === "boolean" ? input.showSignIn : fallback.showSignIn,
     signInLabel: text(input.signInLabel, fallback.signInLabel, 30),
     signInUrl: has("signInUrl") ? safeUrl(input.signInUrl) : fallback.signInUrl,
+    signInColor: hexOrEmpty(input.signInColor, fallback.signInColor),
     headerStyle:
       input.headerStyle === "light" || input.headerStyle === "grey" || input.headerStyle === "brand"
         ? input.headerStyle
@@ -225,6 +262,12 @@ export function sanitizeSettings(input: unknown, fallback: SiteSettings): SiteSe
       : fallback.ratingScore,
     ratingCount: optText(input.ratingCount, fallback.ratingCount, 40),
     ratingSource: optText(input.ratingSource, fallback.ratingSource, 40),
+    ratingColor:
+      typeof input.ratingColor === "string" && HEX.test(input.ratingColor)
+        ? input.ratingColor.toLowerCase()
+        : fallback.ratingColor,
+    payments,
+    paymentMoreText: optText(input.paymentMoreText, fallback.paymentMoreText, 20),
     appPromoHeading: text(input.appPromoHeading, fallback.appPromoHeading, 80),
     appPromoText: text(input.appPromoText, fallback.appPromoText, 200),
     appBadgeUrl: has("appBadgeUrl") ? safeHttpsUrl(input.appBadgeUrl) || null : fallback.appBadgeUrl,
@@ -252,7 +295,7 @@ function darken(hex: string, amount: number): string {
 }
 
 /** Dark ink or white — whichever has the better contrast on `hex`. */
-function readableOn(hex: string): string {
+export function readableOn(hex: string): string {
   const [r, g, b] = rgb(hex).map((c) => {
     const s = c / 255;
     return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);

@@ -1,5 +1,11 @@
 # Quilo — version history
 
+## v3.7.0
+- Rating block: five square tiles with a white star each (last tile partly filled, e.g. 4.5), plus a small star beside the source name. Colour editable in Admin → Footer ("Rating star colour").
+- New Admin card "Payment icons": six slots, each with upload/replace/remove image, a name, and a show toggle; editable "+4 more" text. Empty slots keep the neutral glyph.
+- Admin → Menu: "Sign-in button colour" (text colour adjusts automatically; reset to use the primary colour).
+- Storage: payment images saved as `pay-<time>-<slot>`; replaced/removed ones are deleted after a successful save. No SQL change.
+
 ## v3.6.0
 - Menu icons and the highlighted menu row use a violet → blue → mint gradient (mint end colour is editable in Admin → Appearance).
 - Menu "Your preferences": flag + country chip and language chip, controlled from Admin → Menu.

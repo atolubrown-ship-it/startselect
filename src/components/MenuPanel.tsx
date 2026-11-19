@@ -11,6 +11,7 @@ import {
 } from "@/components/icons";
 import { useSettings } from "@/components/SettingsProvider";
 import { countryName, flagEmoji } from "@/lib/countries";
+import { readableOn } from "@/lib/settings";
 
 type MenuPanelProps = {
   open: boolean;
@@ -139,7 +140,12 @@ export default function MenuPanel({ open, onClose, onHome }: MenuPanelProps) {
                 if (!settings.signInUrl) e.preventDefault();
                 onClose();
               }}
-              className="q-btn q-btn-primary gap-3"
+              className={`q-btn q-btn-primary gap-3 ${settings.signInColor ? "hover:brightness-95 active:brightness-95" : ""}`}
+              style={
+                settings.signInColor
+                  ? { backgroundColor: settings.signInColor, color: readableOn(settings.signInColor) }
+                  : undefined
+              }
             >
               <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
                 <circle cx="12" cy="7.5" r="4.5" fill="currentColor" />
