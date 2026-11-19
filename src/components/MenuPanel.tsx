@@ -9,6 +9,7 @@ import {
   LockFillIcon,
   ShieldFillIcon,
 } from "@/components/icons";
+import { useSettings } from "@/components/SettingsProvider";
 
 type MenuPanelProps = {
   open: boolean;
@@ -58,6 +59,8 @@ function PlainRow({ label, onClick }: { label: string; onClick: () => void }) {
 }
 
 export default function MenuPanel({ open, onClose, onHome }: MenuPanelProps) {
+  const { settings } = useSettings();
+  const name = settings.siteName;
   return (
     <div
       id="site-menu"
@@ -89,7 +92,8 @@ export default function MenuPanel({ open, onClose, onHome }: MenuPanelProps) {
             e.preventDefault();
             onClose();
           }}
-          className="block rounded-2xl bg-gradient-to-r from-[#6c5ce7] via-[#5b8def] to-[#6fe8c8] p-[2px]"
+          className="block rounded-2xl p-[2px]"
+          style={{ backgroundImage: "linear-gradient(90deg, var(--q-secondary), var(--q-primary))" }}
         >
           <span className="q-nav flex min-h-[56px] items-center gap-4 rounded-[14px] bg-white px-4 py-3">
             <ShieldFillIcon className="h-7 w-7 shrink-0" />
@@ -99,7 +103,7 @@ export default function MenuPanel({ open, onClose, onHome }: MenuPanelProps) {
         </a>
 
         <ul className="mt-3">
-          <PlainRow label="About Quilo" onClick={onClose} />
+          <PlainRow label={`About ${name}`} onClick={onClose} />
         </ul>
 
         <Divider />
@@ -125,13 +129,13 @@ export default function MenuPanel({ open, onClose, onHome }: MenuPanelProps) {
             e.preventDefault();
             onClose();
           }}
-          className="q-btn gap-3 bg-q-yellow text-q-ink"
+          className="q-btn q-btn-primary gap-3"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
             <circle cx="12" cy="7.5" r="4.5" fill="currentColor" />
             <path d="M3.5 21c0-4.8 3.8-7.5 8.5-7.5s8.5 2.7 8.5 7.5z" fill="currentColor" />
           </svg>
-          Sign in to Quilo
+          Sign in to {name}
         </a>
       </nav>
     </div>

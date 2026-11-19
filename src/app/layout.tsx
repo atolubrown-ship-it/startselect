@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { SettingsProvider } from "@/components/SettingsProvider";
 
 export const metadata: Metadata = {
   title: "Quilo — Security Alert",
@@ -23,7 +24,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap"
         />
       </head>
-      <body className="min-h-screen bg-white font-sans text-q-ink antialiased">{children}</body>
+      <body className="min-h-screen bg-white font-sans text-q-ink antialiased">
+        <SettingsProvider>{children}</SettingsProvider>
+      </body>
     </html>
   );
 }

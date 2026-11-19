@@ -2,6 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Brand variables — overwritten at runtime from the Admin Portal settings. */
+:root {
+  --q-primary: #4a72c4;
+  --q-primary-dark: #3f65b0;
+  --q-primary-ink: #ffffff;
+  --q-secondary: #7c3aed;
+  --q-btn-radius: 12px;
+}
+
 html,
 body {
   background-color: #ffffff;
@@ -18,34 +27,41 @@ html {
 
 /*
  * Quilo type + control scale (single source of truth)
- *   h1 30/36 bold · h2 22/28 semibold · h3 18/24 semibold
- *   body 16/26 · supporting 14/22 muted · button 16 semibold
+ *   h1 26/32 bold · h2 20/26 semibold · h3 16/22 semibold
+ *   body 15/24 · supporting 13/20 muted · nav 15/22 · button 15 semibold
+ * Form inputs stay at 16px so iOS Safari doesn't zoom the page on focus.
  * Spacing follows a 4px grid: 4 · 8 · 12 · 16 · 24 · 32 · 48.
  */
 @layer components {
   .q-h1 {
-    @apply text-[30px] font-bold leading-[36px] tracking-[-0.015em] text-q-ink sm:text-[32px] sm:leading-[40px];
+    @apply text-[26px] font-bold leading-[32px] tracking-[-0.015em] text-q-ink sm:text-[30px] sm:leading-[36px];
   }
   .q-h2 {
-    @apply text-[22px] font-semibold leading-[28px] tracking-[-0.005em] text-q-ink;
+    @apply text-[20px] font-semibold leading-[26px] tracking-[-0.005em] text-q-ink;
   }
   .q-h3 {
-    @apply text-[18px] font-semibold leading-6 text-q-ink;
+    @apply text-[16px] font-semibold leading-[22px] text-q-ink;
   }
   .q-body {
-    @apply text-[16px] leading-[26px] text-q-body;
+    @apply text-[15px] leading-[24px] text-q-body;
   }
   .q-sub {
-    @apply text-[14px] leading-[22px] text-q-sub;
+    @apply text-[13px] leading-[20px] text-q-sub;
   }
   .q-nav {
-    @apply text-[16px] leading-6 text-q-ink;
+    @apply text-[15px] leading-[22px] text-q-ink;
   }
   .q-btn {
-    @apply inline-flex min-h-[48px] w-full items-center justify-center rounded-xl px-5 py-3 text-[16px] font-semibold leading-6 transition-colors;
+    @apply inline-flex min-h-[48px] w-full items-center justify-center px-5 py-3 text-[15px] font-semibold leading-6 transition-colors;
+    border-radius: var(--q-btn-radius, 12px);
   }
   .q-btn-primary {
-    @apply bg-q-blue text-white hover:bg-q-blue-dark active:bg-q-blue-dark;
+    background-color: var(--q-primary);
+    color: var(--q-primary-ink);
+  }
+  .q-btn-primary:hover,
+  .q-btn-primary:active {
+    background-color: var(--q-primary-dark);
   }
   .q-btn-secondary {
     @apply border border-q-line bg-white text-q-ink hover:bg-q-field active:bg-q-field;
@@ -78,6 +94,6 @@ html {
 }
 
 :focus-visible {
-  outline: 2px solid #4a72c4;
+  outline: 2px solid var(--q-primary);
   outline-offset: 2px;
 }

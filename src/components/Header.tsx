@@ -2,6 +2,9 @@
 
 import { forwardRef } from "react";
 import { MenuIcon, CloseIcon, SearchIcon, AccountIcon, CartIcon } from "@/components/icons";
+import BrandLogo from "@/components/BrandLogo";
+import { HEADER_VARIANTS } from "@/components/headerStyles";
+import { useSettings } from "@/components/SettingsProvider";
 
 type HeaderProps = {
   menuOpen: boolean;
@@ -10,49 +13,39 @@ type HeaderProps = {
 
 /**
  * Header proportions (mobile, 4px grid):
- *   row 1  — 44px: logo mark 32px + wordmark 26px on the left, account + cart
- *            (24–26px icons inside 44px touch targets) on the right
+ *   row 1  — min 44px: logo on the left (height set in the Admin Portal),
+ *            account + cart (24px icons inside 44px touch targets) on the right
  *   gap    — 8px
  *   row 2  — 44px: hamburger (24px icon) + rounded search field
  * Both rows share the 16px page margin; icon artwork (not its touch target)
- * lines up with that margin.
+ * lines up with that margin. Colours come from the header style setting.
  */
 const Header = forwardRef<HTMLElement, HeaderProps>(function Header({ menuOpen, onToggleMenu }, ref) {
+  const { settings } = useSettings();
+  const variant = HEADER_VARIANTS[settings.headerStyle];
+
   return (
     <header
       ref={ref}
-      className="sticky top-0 z-40 border-b border-q-line bg-white"
-      style={{ paddingTop: "env(safe-area-inset-top)" }}
+      className={`sticky top-0 z-40 border-b ${variant.bar}`}
+      style={{ paddingTop: "env(safe-area-inset-top)", ...variant.style }}
     >
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-4 pb-3 pt-4 sm:px-6 md:flex-nowrap md:py-3">
-        {/* Logo — fixed-size mark keeps its 1:1 ratio; wordmark shares its centre line */}
-        <a href="#main" className="flex h-11 shrink-0 items-center gap-2.5" aria-label="Quilo home">
-          <svg
-            width="32"
-            height="32"
-            viewBox="0 0 44 44"
-            fill="none"
-            aria-hidden="true"
-            className="h-8 w-8 shrink-0"
-          >
-            <path
-              d="M22 3.5l16 9.2v18.6L22 40.5 6 31.3V12.7L22 3.5z"
-              stroke="#25282d"
-              strokeWidth="2.8"
-              strokeLinejoin="round"
-            />
-            <circle cx="22" cy="22" r="6" fill="#7c3aed" />
-            <circle cx="22" cy="22" r="2.2" fill="#6fe8c8" />
-          </svg>
-          <span className="text-[26px] font-bold leading-none tracking-[-0.02em] text-q-ink">Quilo</span>
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-4 pb-3 pt-3 sm:px-6 md:flex-nowrap md:py-3">
+        {/* Logo + company name (shared component) */}
+        <a
+          href="#main"
+          className="flex min-h-[44px] min-w-0 shrink items-center"
+          aria-label={`${settings.siteName} home`}
+        >
+          <BrandLogo />
         </a>
 
         {/* Account + cart — evenly spaced, last icon's artwork sits on the right margin */}
-        <div className="-mr-2.5 ml-auto flex items-center md:order-3">
+        <div className="-mr-2.5 ml-auto flex shrink-0 items-center md:order-3">
           <a href="#" aria-label="Account" className="flex h-11 w-11 items-center justify-center">
-            <AccountIcon className="h-[26px] w-[26px]" />
+            <AccountIcon className="h-6 w-6" />
           </a>
-          <a href="#" aria-label="Cart" className="flex h-11 w-11 items-center justify-center text-q-ink">
+          <a href="#" aria-label="Cart" className="flex h-11 w-11 items-center justify-center">
             <CartIcon className="h-6 w-6" />
           </a>
         </div>
@@ -65,19 +58,21 @@ const Header = forwardRef<HTMLElement, HeaderProps>(function Header({ menuOpen, 
             aria-expanded={menuOpen}
             aria-controls="site-menu"
             onClick={onToggleMenu}
-            className="-ml-2.5 flex h-11 w-11 shrink-0 items-center justify-center text-q-ink"
+            className="-ml-2.5 flex h-11 w-11 shrink-0 items-center justify-center"
           >
             {menuOpen ? <CloseIcon className="h-6 w-6" /> : <MenuIcon className="h-6 w-6" />}
           </button>
-          <div className="flex h-11 min-w-0 flex-1 items-center gap-3 rounded-full bg-q-field px-4 md:max-w-xl">
-            <SearchIcon className="h-[18px] w-[18px] shrink-0 text-q-ink" />
-            <label htmlFor="help-search" className="sr-only">
-              Search security help
+          <div
+            className={`flex h-11 min-w-0 flex-1 items-center gap-3 rounded-full px-4 text-q-ink md:max-w-xl ${variant.field}`}
+          >
+            <SearchIcon className="h-[18px] w-[18px] shrink-0" />
+            <label htmlFor="site-search" className="sr-only">
+              Search for
             </label>
             <input
-              id="help-search"
+              id="site-search"
               type="search"
-              placeholder="Search for help"
+              placeholder="Search for"
               className="h-full w-full min-w-0 bg-transparent text-[16px] leading-6 text-q-ink outline-none placeholder:text-q-mute"
             />
           </div>

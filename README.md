@@ -1,50 +1,134 @@
-# Quilo — Security Alert (Stage 1)
+# Quilo — Security Alert
 
-> UI refinement: header, hamburger/search row, type scale, spacing, icons and
-> footer tuned to a mobile reference. Shared type/button styles live in
-> `src/app/globals.css` (`.q-h1`, `.q-h2`, `.q-body`, `.q-sub`, `.q-btn`…);
-> all icons share a 1.8 stroke in `src/components/icons.tsx`.
+A small mobile-first demonstration web app: a sample "new sign-in detected"
+alert, a "This wasn't me" response screen, a hamburger menu and a shared
+header/footer. **Informational demo only** — it has no customer login, no
+password or verification-code fields, and does not connect to anyone's real
+account.
 
-> Layout update: shared site shell (`SiteShell`, `Header`, `MenuPanel`, `Footer` in
-> `src/components`) now wraps every screen, so the alert and "This wasn't me"
-> views share one header, hamburger menu and footer.
+Built with Next.js (App Router), TypeScript and Tailwind CSS. Settings are
+stored centrally in **Supabase** so every visitor and device sees the same
+branding.
 
-A small, focused mobile-first web app: a "new sign-in detected" alert, a
-"this wasn't me" response flow, and a hamburger menu. **Frontend only** —
-no login form, no password or verification-code field, no backend. Next.js
-(App Router) + TypeScript + Tailwind CSS.
+---
 
-## Screens
+## How settings work
 
-- **Alert** — sign-in details (location, device, time) with "Yes, this was
-  me" / "This wasn't me" actions.
-- **Recognized** — simple confirmation when the user recognizes the sign-in.
-- **This wasn't me** — numbered next-step guidance (none of which collects
-  any credentials on this page) and a back button.
-- **Hamburger menu** — slides in from the right with placeholder links, closes
-  on backdrop tap or by tapping the hamburger again.
+- The website reads one shared row from the Supabase table `site_settings`.
+- The **Admin portal** (`/admin`) signs in with a **Supabase Auth** account and
+  saves changes to that row. The logo is uploaded to Supabase **Storage**
+  (bucket `branding`) and only its public link is stored in the settings.
+- Permissions are enforced **by the database** (Row Level Security), not by the
+  page: visitors can only read; only users listed in `admin_users` can change
+  settings or upload/replace/delete the logo.
+- If Supabase isn't configured yet, or is unreachable, the site still works
+  with its default branding (name "Quilo", built-in logo mark).
+- Only the **public** Supabase URL and **anon/publishable** key are used in the
+  frontend. Never use a `service_role` / secret key here.
 
-All data (location, device, time) is hard-coded placeholder text in
-`src/app/page.tsx`.
+Admin can change: company name, logo (upload / replace / remove / size /
+show-hide name), primary + secondary colour, header style, button shape,
+demonstration location / device / date-time, app promotion heading + text +
+download link, footer legal links and social links.
 
-## Uploading to GitHub from your iPhone (no terminal)
+---
 
-1. In Safari, go to **github.com** and sign in.
-2. Tap **+** (top right) → **New repository**. Name it (e.g. `quilo-alert`),
-   leave it empty (don't add a README there), and tap **Create repository**.
-3. On the new repo's page, tap **Add file → Upload files**.
-4. From the file I sent you, open the Files app, locate the project folder,
-   and upload its contents — keep the folder structure intact (drag the
-   whole unzipped folder in, or select all files/folders at once so the
-   paths like `src/app/page.tsx` are preserved).
-5. Scroll down and tap **Commit changes**.
+## Setup from your iPhone (Safari only)
 
-## Deploying on Vercel from your iPhone
+Do these in order. Nothing needs a computer or terminal.
 
-1. Go to **vercel.com** in Safari and sign in (you can use your GitHub
-   account).
-2. Tap **Add New → Project**.
-3. Select the repo you just created.
-4. Leave the defaults (Vercel auto-detects Next.js) and tap **Deploy**.
-5. You'll get a preview link like `quilo-alert.vercel.app` — open it on
-   your phone to see it live. Future GitHub commits redeploy automatically.
+### 1. Create the database tables (Supabase)
+
+1. Safari → **supabase.com/dashboard** → open your project.
+2. Open the menu (☰) → **SQL Editor** → **New query**.
+3. Paste the whole contents of `quilo-backend.sql` → tap **Run**.
+   It is safe to run again later.
+
+### 2. Create your admin login (Supabase)
+
+1. Menu → **Authentication** → **Users** → **Add user** → **Create new user**.
+2. Enter your email + a strong password, switch on **Auto Confirm User**, tap
+   **Create user**.
+3. Menu → **SQL Editor** → **New query**, paste this (change the email to yours)
+   and tap **Run**:
+
+   `insert into public.admin_users (user_id) select id from auth.users where email = 'you@example.com' on conflict do nothing;`
+
+### 3. Copy your two public Supabase values
+
+1. Menu → **Project Settings** → **API** (called **API Keys** in newer
+   dashboards).
+2. Copy the **Project URL** (starts with `https://`).
+3. Copy the **anon / publishable** key. Do **not** copy the `service_role` /
+   secret key.
+
+### 4. Add them to Vercel
+
+1. Safari → **vercel.com** → your project → **Settings** →
+   **Environment Variables**.
+2. Add `NEXT_PUBLIC_SUPABASE_URL` = your Project URL.
+3. Add `NEXT_PUBLIC_SUPABASE_ANON_KEY` = your anon/publishable key.
+4. Tap **Save**.
+
+### 5. Upload the project to GitHub
+
+Download the ZIP and unzip it in the Files app. Then either:
+
+- **Replace the whole project:** repo → **Add file** → **Upload files** →
+  choose the unzipped files. (Safari can't pick folders, so use the second
+  option for files inside folders.)
+- **Only the changed files (reliable on iPhone):** for each file below, open it
+  in GitHub → tap the pencil ✏️ → select all → paste the new contents →
+  **Commit changes**. For a **new** file use **Add file → Create new file**
+  and type the full path in the name box (typing `/` makes folders).
+
+  | File | Status |
+  | --- | --- |
+  | `package.json` | changed (adds the Supabase library) |
+  | `src/lib/settings.ts` | changed |
+  | `src/components/SettingsProvider.tsx` | changed |
+  | `src/components/BrandLogo.tsx` | changed |
+  | `src/components/Footer.tsx` | changed |
+  | `src/app/admin/page.tsx` | changed |
+  | `src/lib/supabase.ts` | **new** |
+  | `src/lib/remote.ts` | **new** |
+  | `src/lib/useAdminAuth.ts` | **new** |
+  | `quilo-backend.sql` | **new** (reference copy) |
+  | `public/site-settings.json` | no longer used — you can delete it |
+
+Vercel then deploys automatically. If you added the Vercel variables **after**
+a deployment already existed, open **Deployments** → latest → **⋯** →
+**Redeploy** (variables only apply to new deployments).
+
+### 6. Sign in and customise
+
+Open `https://YOUR-SITE.vercel.app/admin`, sign in with the email and password
+from step 2, change what you like and tap **Save changes**.
+
+---
+
+## Troubleshooting
+
+| You see | Meaning / fix |
+| --- | --- |
+| "Supabase isn't connected yet" on /admin | The two Vercel variables are missing or the site wasn't redeployed after adding them. |
+| "The settings table isn't set up yet" | Run `quilo-backend.sql` (step 1). |
+| "No admin access" | You signed in with an account that isn't in `admin_users` — run the step 2 SQL with that email. |
+| "That email or password isn't right" | Check the user in Supabase → Authentication → Users (reset the password there if needed). |
+| "This email isn't confirmed" | In Supabase → Authentication → Users, confirm the user (or recreate with Auto Confirm User on). |
+| Logo upload says bucket not found | Run `quilo-backend.sql` again. |
+| Saved, but a visitor still sees old branding | The page shows its last-saved copy for a moment, then updates; a refresh fixes it. |
+
+---
+
+## Project layout (for reference)
+
+- `src/lib/settings.ts` — settings model, defaults, validation, theme variables
+- `src/lib/supabase.ts` — public Supabase client (returns `null` if not configured)
+- `src/lib/remote.ts` — load/save settings + logo upload to Storage
+- `src/lib/useAdminAuth.ts` — admin sign-in state (Supabase Auth)
+- `src/components/SettingsProvider.tsx` — shared settings for the whole app
+- `src/components/BrandLogo.tsx`, `Header.tsx`, `MenuPanel.tsx`, `Footer.tsx`, `SiteShell.tsx` — shared UI
+- `src/app/page.tsx` — the alert + response screens
+- `src/app/admin/page.tsx` — Admin portal
+- `quilo-backend.sql` — database + Storage + security rules

@@ -21,8 +21,9 @@ const config: Config = {
         },
         // Site-shell palette (header, menu, footer, buttons)
         q: {
-          blue: "#4a72c4",
-          "blue-dark": "#3d62b0",
+          // Driven by the Admin Portal via CSS variables (defaults live in globals.css)
+          blue: "var(--q-primary)",
+          "blue-dark": "var(--q-primary-dark)",
           ink: "#25282d",
           body: "#4b5058",
           mute: "#9aa0a8",

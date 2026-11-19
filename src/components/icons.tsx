@@ -89,8 +89,8 @@ export function IconDefs() {
     <svg width="0" height="0" aria-hidden="true" focusable="false" style={{ position: "absolute" }}>
       <defs>
         <linearGradient id="q-grad" x1="0" y1="1" x2="1" y2="0">
-          <stop offset="0%" stopColor="#7c3aed" />
-          <stop offset="100%" stopColor="#4f8df0" />
+          <stop offset="0%" style={{ stopColor: "var(--q-secondary)" }} />
+          <stop offset="100%" style={{ stopColor: "var(--q-primary)" }} />
         </linearGradient>
       </defs>
     </svg>
@@ -115,10 +115,16 @@ export function AccountIcon(props: IconProps) {
         </clipPath>
       </defs>
       <g clipPath="url(#q-acct-clip)">
-        <path d="M2 40c2-11 9-14 18-14s16 3 18 14z" fill="#6fe8c8" stroke="#1f2328" strokeWidth="2.4" />
+        <path
+          d="M2 40c2-11 9-14 18-14s16 3 18 14z"
+          fill="var(--q-secondary)"
+          fillOpacity="0.3"
+          stroke="currentColor"
+          strokeWidth="2.4"
+        />
       </g>
-      <circle cx="20" cy="15.5" r="5" fill="#6fe8c8" stroke="#1f2328" strokeWidth="2.4" />
-      <circle cx="20" cy="20" r="17" stroke="#1f2328" strokeWidth="2.4" />
+      <circle cx="20" cy="15.5" r="5" fill="var(--q-secondary)" fillOpacity="0.3" stroke="currentColor" strokeWidth="2.4" />
+      <circle cx="20" cy="20" r="17" stroke="currentColor" strokeWidth="2.4" />
     </svg>
   );
 }
@@ -225,6 +231,25 @@ export function ShieldFillIcon(props: IconProps) {
     <svg viewBox="0 0 24 24" aria-hidden="true" {...props}>
       <path d="M12 2l8.5 3.6v5.7c0 5.1-3.5 9.1-8.5 10.7-5-1.6-8.5-5.6-8.5-10.7V5.6L12 2z" fill="url(#q-grad)" />
       <path d="M8.2 12.2l2.8 2.8 4.8-5.2" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+    </svg>
+  );
+}
+
+export function PhoneIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" {...props}>
+      <rect x="6.5" y="2.5" width="11" height="19" rx="2.6" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M10.5 18.5h3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function InfoIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" {...props}>
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M12 11v5.2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <circle cx="12" cy="7.8" r="1.1" fill="currentColor" />
     </svg>
   );
 }

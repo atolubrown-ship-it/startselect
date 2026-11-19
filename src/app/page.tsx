@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import SiteShell from "@/components/SiteShell";
+import { useSettings } from "@/components/SettingsProvider";
+import { formatAlertDateTime } from "@/lib/settings";
 import {
   ShieldAlertIcon,
   CheckIcon,
@@ -9,15 +11,10 @@ import {
   DeviceIcon,
   ClockIcon,
   ChevronLeftIcon,
+  InfoIcon,
 } from "@/components/icons";
 
 type View = "alert" | "recognized" | "notme";
-
-const LOGIN_DETAILS = {
-  location: "Lagos, Nigeria (approximate)",
-  device: "Chrome on Windows 11",
-  time: "Nov 19, 2026 · 3:42 PM WAT",
-};
 
 export default function SecurityAlertPage() {
   const [view, setView] = useState<View>("alert");
@@ -49,7 +46,7 @@ function Breadcrumb({ view, onBack }: { view: View; onBack: () => void }) {
     <button
       type="button"
       onClick={atHome ? () => window.scrollTo({ top: 0, behavior: "smooth" }) : onBack}
-      className="-ml-2 flex h-11 items-center gap-1 pr-3 text-[15px] font-medium uppercase leading-6 tracking-[0.04em] text-q-ink"
+      className="-ml-2 flex h-11 items-center gap-1 pr-3 text-[13px] font-medium uppercase leading-5 tracking-[0.05em] text-q-ink"
     >
       <ChevronLeftIcon className="h-5 w-5 text-q-sub" />
       {atHome ? "Home" : "Security alert"}
@@ -65,23 +62,21 @@ function DetailRow({ icon, label, value }: { icon: React.ReactNode; label: strin
       </span>
       <div className="min-w-0">
         <p className="q-sub">{label}</p>
-        <p className="text-[16px] font-medium leading-6 text-q-ink">{value}</p>
+        <p className="text-[15px] font-medium leading-6 text-q-ink">{value}</p>
       </div>
     </div>
   );
 }
 
 function AlertScreen({ onRecognized, onNotMe }: { onRecognized: () => void; onNotMe: () => void }) {
+  const { settings } = useSettings();
   return (
-    <div className="pt-6">
+    <div className="pt-4">
       {/* Heading group */}
-      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
-        <ShieldAlertIcon className="h-6 w-6" />
-      </div>
-      <h1 className="q-h1 mt-4">Security alert</h1>
+      <h1 className="q-h1">Security alert</h1>
       <p className="q-body mt-3">
-        We noticed a sign-in to your Quilo account from a location and device we don&apos;t recognize. If this was
-        you, you don&apos;t need to do anything.
+        We noticed a sign-in to your {settings.siteName} account from a location and device we don&apos;t recognize.
+        If this was you, you don&apos;t need to do anything.
       </p>
 
       {/* Sign-in details group */}
@@ -91,13 +86,18 @@ function AlertScreen({ onRecognized, onNotMe }: { onRecognized: () => void; onNo
         </h2>
         <div className="mt-3 rounded-2xl border border-q-line bg-white px-4">
           <div className="divide-y divide-q-field">
-            <DetailRow icon={<PinIcon className="h-5 w-5" />} label="Location" value={LOGIN_DETAILS.location} />
-            <DetailRow icon={<DeviceIcon className="h-5 w-5" />} label="Device & browser" value={LOGIN_DETAILS.device} />
-            <DetailRow icon={<ClockIcon className="h-5 w-5" />} label="Date & time" value={LOGIN_DETAILS.time} />
+            <DetailRow icon={<PinIcon className="h-5 w-5" />} label="Location" value={settings.alertLocation} />
+            <DetailRow icon={<DeviceIcon className="h-5 w-5" />} label="Device" value={settings.alertDevice} />
+            <DetailRow
+              icon={<ClockIcon className="h-5 w-5" />}
+              label="Date"
+              value={formatAlertDateTime(settings.alertDateTime)}
+            />
           </div>
         </div>
-        <p className="mt-3 flex items-start gap-2 rounded-xl bg-amber-50 px-4 py-3 text-[14px] font-medium leading-[22px] text-amber-800">
-          This location doesn&apos;t match where you usually sign in from.
+        <p className="mt-3 flex items-start gap-2 rounded-xl bg-q-field px-4 py-3 text-[13px] leading-5 text-q-sub">
+          <InfoIcon className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>Sample details for demonstration only. This is not verified live account activity.</span>
         </p>
       </section>
 
@@ -155,7 +155,7 @@ function NotMeScreen({ onBack }: { onBack: () => void }) {
       <ul className="mt-6 flex flex-col gap-3">
         {NEXT_STEPS.map((text, i) => (
           <li key={i} className="flex items-start gap-4 rounded-2xl border border-q-line p-4">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-50 text-[14px] font-bold text-q-blue">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-50 text-[13px] font-bold text-q-blue">
               {i + 1}
             </span>
             <p className="q-body">{text}</p>
