@@ -1,29 +1,69 @@
 "use client";
 
-import { MenuIcon, CloseIcon } from "@/components/icons";
+import { forwardRef } from "react";
+import { MenuIcon, CloseIcon, SearchIcon, AccountIcon, CartIcon } from "@/components/icons";
 
-export default function Header({ menuOpen, onToggleMenu }: { menuOpen: boolean; onToggleMenu: () => void }) {
+type HeaderProps = {
+  menuOpen: boolean;
+  onToggleMenu: () => void;
+};
+
+const Header = forwardRef<HTMLElement, HeaderProps>(function Header({ menuOpen, onToggleMenu }, ref) {
   return (
-    <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
-      <div className="mx-auto flex min-h-[68px] max-w-6xl items-center gap-4 px-4 sm:px-6">
-        <a href="#main" className="flex shrink-0 items-center gap-2.5" aria-label="Quilo security demo home">
-          <svg width="28" height="28" viewBox="0 0 32 32" aria-hidden="true">
-            <polygon points="16,2 28,9 28,23 16,30 4,23 4,9" fill="none" stroke="#2563EB" strokeWidth="2.2" />
-            <circle cx="16" cy="16" r="4" fill="#7C3AED" />
+    <header ref={ref} className="sticky top-0 z-40 border-b border-q-line bg-white">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 px-4 pt-3 sm:px-6 md:flex-nowrap md:py-3">
+        {/* Logo */}
+        <a href="#main" className="flex shrink-0 items-center gap-2.5" aria-label="Quilo home">
+          <svg width="44" height="44" viewBox="0 0 44 44" fill="none" aria-hidden="true">
+            <path
+              d="M22 3.5l16 9.2v18.6L22 40.5 6 31.3V12.7L22 3.5z"
+              stroke="#25282d"
+              strokeWidth="2.6"
+              strokeLinejoin="round"
+            />
+            <circle cx="22" cy="22" r="6" fill="#7c3aed" />
+            <circle cx="22" cy="22" r="2.2" fill="#6fe8c8" />
           </svg>
-          <span className="text-lg font-extrabold tracking-tight text-slate-900">Quilo</span>
-          <span className="hidden rounded-full bg-slate-100 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500 sm:inline-flex">Security demo</span>
+          <span className="text-[30px] font-bold leading-none tracking-tight text-q-ink">Quilo</span>
         </a>
-        <div className="ml-auto hidden w-full max-w-sm md:block">
-          <label htmlFor="help-search" className="sr-only">Search security help</label>
-          <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500">
-            <span aria-hidden="true">⌕</span><input id="help-search" placeholder="Search security help" className="w-full bg-transparent outline-none placeholder:text-slate-400" />
+
+        {/* Account + cart */}
+        <div className="ml-auto flex items-center gap-1 md:order-3">
+          <a href="#" aria-label="Account" className="flex h-11 w-11 items-center justify-center">
+            <AccountIcon className="h-[34px] w-[34px]" />
+          </a>
+          <a href="#" aria-label="Cart" className="flex h-11 w-11 items-center justify-center text-q-ink">
+            <CartIcon className="h-[30px] w-[30px]" />
+          </a>
+        </div>
+
+        {/* Hamburger + search */}
+        <div className="order-last flex w-full items-center gap-3 pb-3 pt-1 md:order-2 md:flex-1 md:py-0 md:pt-0">
+          <button
+            type="button"
+            aria-label={menuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={menuOpen}
+            onClick={onToggleMenu}
+            className="-ml-1 flex h-11 w-11 shrink-0 items-center justify-center text-q-ink"
+          >
+            {menuOpen ? <CloseIcon className="h-[26px] w-[26px]" /> : <MenuIcon className="h-[26px] w-[26px]" />}
+          </button>
+          <div className="flex h-11 min-w-0 flex-1 items-center gap-3 rounded-full bg-q-field px-4 md:max-w-xl">
+            <SearchIcon className="h-5 w-5 shrink-0 text-q-ink" />
+            <label htmlFor="help-search" className="sr-only">
+              Search security help
+            </label>
+            <input
+              id="help-search"
+              type="search"
+              placeholder="Search for help"
+              className="w-full min-w-0 bg-transparent text-[17px] text-q-ink outline-none placeholder:text-q-mute"
+            />
           </div>
         </div>
-        <button aria-label={menuOpen ? "Close menu" : "Open menu"} onClick={onToggleMenu} className="ml-auto flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50 md:ml-3">
-          {menuOpen ? <CloseIcon className="h-[18px] w-[18px]" /> : <MenuIcon className="h-[18px] w-[18px]" />}
-        </button>
       </div>
     </header>
   );
-}
+});
+
+export default Header;

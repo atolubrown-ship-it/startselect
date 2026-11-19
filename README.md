@@ -1,5 +1,9 @@
 # Quilo — Security Alert (Stage 1)
 
+> Layout update: shared site shell (`SiteShell`, `Header`, `MenuPanel`, `Footer` in
+> `src/components`) now wraps every screen, so the alert and "This wasn't me"
+> views share one header, hamburger menu and footer.
+
 A small, focused mobile-first web app: a "new sign-in detected" alert, a
 "this wasn't me" response flow, and a hamburger menu. **Frontend only** —
 no login form, no password or verification-code field, no backend. Next.js

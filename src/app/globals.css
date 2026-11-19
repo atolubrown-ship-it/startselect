@@ -7,6 +7,41 @@ body {
   background-color: #ffffff;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-padding-top: var(--header-h, 112px);
+}
+
 * {
   -webkit-tap-highlight-color: transparent;
+}
+
+/* Soft cross-fade when switching between the alert / response views */
+@keyframes q-view-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.q-view-in {
+  animation: q-view-in 220ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .q-view-in {
+    animation: none;
+  }
+  * {
+    transition-duration: 0.01ms !important;
+  }
+}
+
+:focus-visible {
+  outline: 2px solid #4a72c4;
+  outline-offset: 2px;
 }
