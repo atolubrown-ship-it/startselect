@@ -153,7 +153,7 @@ function NotMeScreen({ onBack }: { onBack: () => void }) {
             )}
           </>
         ) : (
-          <p className="q-body mt-2">Follow the verification instructions sent through your account&apos;s official email service. This demo does not request or process verification codes.</p>
+          <p className="q-body mt-2">Follow the verification instructions sent through your account&apos;s official email service.</p>
         )}
       </section>
 
