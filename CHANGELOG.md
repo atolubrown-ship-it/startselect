@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.8.0
+- "This wasn't me" screen: the "Continue to password reset" link is replaced by a reset-password form (current password, new password with strength meter, confirm, show/hide eyes, "Change password" button).
+- The form is a design preview: nothing typed is sent, saved or stored. Connect `handleSubmit` in `src/components/ResetPasswordForm.tsx` to your own backend to make it real.
+- Admin → Recovery: the official HTTPS page is now an optional "Forgot your current password?" link under the form.
+- New files: `src/components/ResetPasswordForm.tsx`; `src/components/icons.tsx` gains eye icons. No SQL change.
+
 ## 3.7.3
 - Removed the three numbered recovery instructions, red security icon, and safety disclaimer from the "This wasn't me" screen.
 - Added an admin-selected recovery presentation: password-reset guidance linking to an administrator-configured official HTTPS destination, or email-verification guidance.

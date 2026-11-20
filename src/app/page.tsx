@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import SiteShell from "@/components/SiteShell";
+import ResetPasswordForm from "@/components/ResetPasswordForm";
 import { useSettings } from "@/components/SettingsProvider";
 import { formatAlertDateTime } from "@/lib/settings";
 import {
@@ -137,25 +138,16 @@ function NotMeScreen({ onBack }: { onBack: () => void }) {
         We&apos;ve recorded that you don&apos;t recognize this sign-in.
       </p>
 
-      <section aria-labelledby="recovery-heading" className="mt-7 rounded-2xl border border-q-line bg-white p-5">
-        <h2 id="recovery-heading" className="text-[18px] font-semibold text-q-ink">
-          {settings.recoveryMode === "password-reset" ? "Reset your password" : "Verify your email"}
-        </h2>
-        {settings.recoveryMode === "password-reset" ? (
-          <>
-            <p className="q-body mt-2">Continue to the official account page to change your password securely.</p>
-            {settings.recoveryUrl ? (
-              <a href={settings.recoveryUrl} target="_blank" rel="noopener noreferrer" className="q-btn q-btn-primary mt-4 inline-flex w-full">
-                Continue to password reset
-              </a>
-            ) : (
-              <p className="q-sub mt-3">The account administrator has not configured a password-reset destination yet.</p>
-            )}
-          </>
-        ) : (
+      {settings.recoveryMode === "password-reset" ? (
+        <ResetPasswordForm forgotUrl={settings.recoveryUrl || undefined} />
+      ) : (
+        <section aria-labelledby="recovery-heading" className="mt-7 rounded-2xl border border-q-line bg-white p-5">
+          <h2 id="recovery-heading" className="text-[18px] font-semibold text-q-ink">
+            Verify your email
+          </h2>
           <p className="q-body mt-2">Follow the verification instructions sent through your account&apos;s official email service.</p>
-        )}
-      </section>
+        </section>
+      )}
 
       <section aria-labelledby="existing-login-heading" className="mt-7 rounded-2xl bg-[#e7ebee] px-4 py-5 sm:px-6">
         <h2 id="existing-login-heading" className="mb-4 text-center text-[18px] font-semibold leading-6 text-[#30343a]">

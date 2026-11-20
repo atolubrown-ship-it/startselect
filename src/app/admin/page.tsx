@@ -700,7 +700,7 @@ function AdminPanel({ email, onSignOut }: { email: string; onSignOut: () => void
         {/* Recovery and existing-login appearance */}
         <Card
           title="Recovery & login appearance"
-          hint="Choose which informational recovery panel visitors see. Login buttons are visual-only demonstrations and do not authenticate or collect credentials."
+          hint="Choose which recovery panel visitors see. The password form is a design preview and sends or stores nothing. Login buttons are visual-only demonstrations."
         >
           <Field label="Recovery presentation" htmlFor="recovery-mode">
             <select
@@ -709,12 +709,12 @@ function AdminPanel({ email, onSignOut }: { email: string; onSignOut: () => void
               onChange={(e) => set("recoveryMode", e.target.value as SiteSettings["recoveryMode"])}
               className={SELECT}
             >
-              <option value="password-reset">Password reset guidance</option>
+              <option value="password-reset">Password reset form (preview)</option>
               <option value="email-verification">Email verification guidance</option>
             </select>
           </Field>
           {draft.recoveryMode === "password-reset" && (
-            <Field label="Official password-reset page" htmlFor="recovery-url" help="Use your own official HTTPS account page. Visitors are sent there;">
+            <Field label="“Forgot your current password?” link" htmlFor="recovery-url" help="Optional. Your own official HTTPS page. Leave empty to hide the link.">
               <input
                 id="recovery-url"
                 type="url"

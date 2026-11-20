@@ -130,5 +130,6 @@ from step 2, change what you like and tap **Save changes**.
 - `src/components/SettingsProvider.tsx` — shared settings for the whole app
 - `src/components/BrandLogo.tsx`, `Header.tsx`, `MenuPanel.tsx`, `Footer.tsx`, `SiteShell.tsx` — shared UI
 - `src/app/page.tsx` — the alert + response screens
+- `src/components/ResetPasswordForm.tsx` — reset-password form (preview only)
 - `src/app/admin/page.tsx` — Admin portal
 - `quilo-backend.sql` — database + Storage + security rules

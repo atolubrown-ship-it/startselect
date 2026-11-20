@@ -59,7 +59,7 @@ export type SiteSettings = {
   alertDevice: string;
   /** Local date-time, "YYYY-MM-DDTHH:mm". */
   alertDateTime: string;
-  /** Admin-selected informational recovery presentation; never collects credentials. */
+  /** Admin-selected recovery presentation. "password-reset" shows the preview-only reset form (nothing is sent or stored). */
   recoveryMode: "password-reset" | "email-verification";
   recoveryUrl: string;
   loginButtonWidth: number;
