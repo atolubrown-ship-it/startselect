@@ -1,5 +1,8 @@
 # Quilo — version history
 
+## v3.7.1
+- Payment icons: each slot can now use an uploaded image or a pasted https image link.
+
 ## v3.7.0
 - Rating block: five square tiles with a white star each (last tile partly filled, e.g. 4.5), plus a small star beside the source name. Colour editable in Admin → Footer ("Rating star colour").
 - New Admin card "Payment icons": six slots, each with upload/replace/remove image, a name, and a show toggle; editable "+4 more" text. Empty slots keep the neutral glyph.

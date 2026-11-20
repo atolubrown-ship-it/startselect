@@ -700,7 +700,7 @@ function AdminPanel({ email, onSignOut }: { email: string; onSignOut: () => void
         {/* Payment icons */}
         <Card
           title="Payment icons"
-          hint="Six slots shown above the footer links. Upload your own image for each one (only artwork you're allowed to use). Empty slots show a neutral icon."
+          hint="Six slots shown above the footer links. Upload an image or paste an https image link for each one (only artwork you're allowed to use). Empty slots show a neutral icon."
         >
           {draft.payments.map((p, i) => (
             <div key={i} className="rounded-xl border border-q-line bg-white p-3">
@@ -751,6 +751,33 @@ function AdminPanel({ email, onSignOut }: { email: string; onSignOut: () => void
                   />
                   Show
                 </label>
+              </div>
+              <div className="mt-3">
+                <label htmlFor={`pay-link-${i}`} className="mb-1 block text-[13px] font-medium text-q-ink">
+                  Or paste an image link
+                </label>
+                <input
+                  id={`pay-link-${i}`}
+                  type="url"
+                  inputMode="url"
+                  autoCapitalize="off"
+                  autoCorrect="off"
+                  value={p.imageUrl && !p.imageUrl.startsWith("data:") && !pendingPay[i] ? p.imageUrl : ""}
+                  onChange={(e) => {
+                    const v = e.target.value.trim();
+                    if (pendingPay[i]) onRemovePay(i);
+                    setPayment(i, { imageUrl: v || null });
+                  }}
+                  onBlur={(e) => {
+                    const v = fixUrl(e.target.value);
+                    if (v && v !== e.target.value) setPayment(i, { imageUrl: v });
+                  }}
+                  className={INPUT}
+                  placeholder="https://…/image.png"
+                />
+                {p.imageUrl && !p.imageUrl.startsWith("data:") && !p.imageUrl.toLowerCase().startsWith("https://") && (
+                  <p className="q-sub mt-1.5 text-red-700">The link must start with https://</p>
+                )}
               </div>
               {pendingPay[i] && <p className="q-sub mt-1.5">New image selected. Tap Save changes to upload it.</p>}
             </div>
