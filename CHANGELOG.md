@@ -1,5 +1,12 @@
 # Quilo — version history
 
+## v3.8.0
+- "This wasn't me" screen: removed the red icon and its background box, and removed the old grey "never ask…" disclaimer box.
+- New "Recover your account" section: admin-configurable password-recovery and email-verification guidance, each a link to your own page, with a preferred method shown first. Never shows or collects a verification code.
+- New "Or use an existing login" section: Google, Facebook and Apple buttons, each individually shown/hidden from the admin. These are demonstration buttons only — labelled "Demo", not connected to any real sign-in, and do not collect credentials.
+- New Admin card "Account Recovery Settings" controlling all of the above.
+- No SQL change needed.
+
 ## v3.7.1
 - Payment icons: each slot can now use an uploaded image or a pasted https image link.
 

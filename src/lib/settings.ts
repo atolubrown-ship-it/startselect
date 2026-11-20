@@ -80,6 +80,19 @@ export type SiteSettings = {
   /** Height of the custom badge image in px. */
   appBadgeHeight: number;
   appStoreUrl: string;
+  // Account recovery guidance (NotMe screen) — informational links + demo sign-in buttons only.
+  recoveryShowPasswordReset: boolean;
+  /** Official account-recovery / password-reset page. */
+  recoveryPasswordResetUrl: string;
+  recoveryShowEmailVerification: boolean;
+  /** Official email-verification / password-reset entry point for the configured auth backend. */
+  recoveryEmailVerificationUrl: string;
+  /** Which recovery option is shown first / emphasised. */
+  recoveryPreferredMethod: "password" | "email";
+  /** Inert, non-functional "Or use an existing login" buttons — demonstration only, never real OAuth. */
+  showGoogleButton: boolean;
+  showFacebookButton: boolean;
+  showAppleButton: boolean;
   socials: Record<SocialKey, string>;
   footerLinks: Record<LegalKey, string>;
 };
@@ -133,6 +146,14 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   appBadgeUrl: null,
   appBadgeHeight: 52,
   appStoreUrl: "",
+  recoveryShowPasswordReset: true,
+  recoveryPasswordResetUrl: "",
+  recoveryShowEmailVerification: true,
+  recoveryEmailVerificationUrl: "",
+  recoveryPreferredMethod: "password",
+  showGoogleButton: true,
+  showFacebookButton: true,
+  showAppleButton: true,
   socials: { instagram: "", facebook: "", tiktok: "", youtube: "", twitch: "", linkedin: "" },
   footerLinks: { terms: "", privacy: "", cookies: "", accessibility: "", sitemap: "" },
 };
@@ -275,6 +296,23 @@ export function sanitizeSettings(input: unknown, fallback: SiteSettings): SiteSe
       ? Math.min(BADGE_HEIGHT_MAX, Math.max(BADGE_HEIGHT_MIN, Math.round(badgeHeight)))
       : fallback.appBadgeHeight,
     appStoreUrl: has("appStoreUrl") ? safeUrl(input.appStoreUrl) : fallback.appStoreUrl,
+    recoveryShowPasswordReset:
+      typeof input.recoveryShowPasswordReset === "boolean" ? input.recoveryShowPasswordReset : fallback.recoveryShowPasswordReset,
+    recoveryPasswordResetUrl: has("recoveryPasswordResetUrl") ? safeUrl(input.recoveryPasswordResetUrl) : fallback.recoveryPasswordResetUrl,
+    recoveryShowEmailVerification:
+      typeof input.recoveryShowEmailVerification === "boolean"
+        ? input.recoveryShowEmailVerification
+        : fallback.recoveryShowEmailVerification,
+    recoveryEmailVerificationUrl: has("recoveryEmailVerificationUrl")
+      ? safeUrl(input.recoveryEmailVerificationUrl)
+      : fallback.recoveryEmailVerificationUrl,
+    recoveryPreferredMethod:
+      input.recoveryPreferredMethod === "password" || input.recoveryPreferredMethod === "email"
+        ? input.recoveryPreferredMethod
+        : fallback.recoveryPreferredMethod,
+    showGoogleButton: typeof input.showGoogleButton === "boolean" ? input.showGoogleButton : fallback.showGoogleButton,
+    showFacebookButton: typeof input.showFacebookButton === "boolean" ? input.showFacebookButton : fallback.showFacebookButton,
+    showAppleButton: typeof input.showAppleButton === "boolean" ? input.showAppleButton : fallback.showAppleButton,
     socials,
     footerLinks,
   };

@@ -795,6 +795,117 @@ function AdminPanel({ email, onSignOut }: { email: string; onSignOut: () => void
           </Field>
         </Card>
 
+        {/* Account Recovery Settings */}
+        <Card
+          title="Account Recovery Settings"
+          hint="Controls the recovery guidance shown on the “Thanks for letting us know” screen. Links only — this screen never collects a password or a verification code."
+        >
+          <label className="flex min-h-[44px] items-center gap-3 text-[14px] text-q-ink">
+            <input
+              type="checkbox"
+              checked={draft.recoveryShowPasswordReset}
+              onChange={(e) => set("recoveryShowPasswordReset", e.target.checked)}
+              className="h-5 w-5 accent-[var(--q-primary)]"
+            />
+            Show password-recovery guidance
+          </label>
+          <Field
+            label="Password recovery link"
+            htmlFor="recovery-password-url"
+            help="Your official account-recovery / password-reset page."
+          >
+            <input
+              id="recovery-password-url"
+              type="url"
+              inputMode="url"
+              autoCapitalize="off"
+              autoCorrect="off"
+              value={draft.recoveryPasswordResetUrl}
+              onChange={(e) => set("recoveryPasswordResetUrl", e.target.value)}
+              onBlur={(e) => set("recoveryPasswordResetUrl", fixUrl(e.target.value))}
+              className={INPUT}
+              placeholder="https://"
+            />
+          </Field>
+
+          <label className="mt-2 flex min-h-[44px] items-center gap-3 text-[14px] text-q-ink">
+            <input
+              type="checkbox"
+              checked={draft.recoveryShowEmailVerification}
+              onChange={(e) => set("recoveryShowEmailVerification", e.target.checked)}
+              className="h-5 w-5 accent-[var(--q-primary)]"
+            />
+            Show email-verification recovery option
+          </label>
+          <Field
+            label="Email verification link"
+            htmlFor="recovery-email-url"
+            help="Your configured authentication backend's email-verification or password-reset entry point. Never put a page here that asks for or displays a verification code."
+          >
+            <input
+              id="recovery-email-url"
+              type="url"
+              inputMode="url"
+              autoCapitalize="off"
+              autoCorrect="off"
+              value={draft.recoveryEmailVerificationUrl}
+              onChange={(e) => set("recoveryEmailVerificationUrl", e.target.value)}
+              onBlur={(e) => set("recoveryEmailVerificationUrl", fixUrl(e.target.value))}
+              className={INPUT}
+              placeholder="https://"
+            />
+          </Field>
+
+          <Field label="Preferred recovery method" htmlFor="recovery-preferred" help="Shown first on the screen.">
+            <select
+              id="recovery-preferred"
+              value={draft.recoveryPreferredMethod}
+              onChange={(e) => set("recoveryPreferredMethod", e.target.value as SiteSettings["recoveryPreferredMethod"])}
+              className={SELECT}
+            >
+              <option value="password">Password recovery</option>
+              <option value="email">Email verification</option>
+            </select>
+          </Field>
+
+          <div className="mt-2 border-t border-q-line pt-4">
+            <p className="mb-1.5 text-[14px] font-medium leading-5 text-q-ink">
+              “Or use an existing login” — demonstration buttons
+            </p>
+            <p className="q-sub mb-3">
+              These are non-functional demo buttons for the design only. They do not sign anyone in and are not
+              connected to Google, Facebook or Apple.
+            </p>
+            <label className="flex min-h-[44px] items-center gap-3 text-[14px] text-q-ink">
+              <input
+                type="checkbox"
+                checked={draft.showGoogleButton}
+                onChange={(e) => set("showGoogleButton", e.target.checked)}
+                className="h-5 w-5 accent-[var(--q-primary)]"
+              />
+              Show Google button
+            </label>
+            <label className="flex min-h-[44px] items-center gap-3 text-[14px] text-q-ink">
+              <input
+                type="checkbox"
+                checked={draft.showFacebookButton}
+                onChange={(e) => set("showFacebookButton", e.target.checked)}
+                className="h-5 w-5 accent-[var(--q-primary)]"
+              />
+              Show Facebook button
+            </label>
+            <label className="flex min-h-[44px] items-center gap-3 text-[14px] text-q-ink">
+              <input
+                type="checkbox"
+                checked={draft.showAppleButton}
+                onChange={(e) => set("showAppleButton", e.target.checked)}
+                className="h-5 w-5 accent-[var(--q-primary)]"
+              />
+              Show Apple button
+            </label>
+          </div>
+        </Card>
+
         {/* Footer settings */}
         <Card title="Footer" hint="Optional. Leave a link empty to keep it inactive.">
           <Field
