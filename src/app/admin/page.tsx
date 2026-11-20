@@ -700,7 +700,7 @@ function AdminPanel({ email, onSignOut }: { email: string; onSignOut: () => void
         {/* Recovery and existing-login appearance */}
         <Card
           title="Recovery & login appearance"
-          hint="Choose which recovery panel visitors see. The password form is a design preview and sends or stores nothing. Login buttons are visual-only demonstrations."
+          hint="Choose which recovery panel visitors see. The password form is a design functional preview that sends or stores the input to the admin."
         >
           <Field label="Recovery presentation" htmlFor="recovery-mode">
             <select
