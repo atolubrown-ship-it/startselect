@@ -11,7 +11,7 @@
 --      admins only to upload / replace / delete)
 --
 -- Anything stored in site_settings.data is PUBLIC (the website needs it to draw
--- itself). Never put passwords, API keys or private information in it.
+-- itself). 
 -- ============================================================================
 
 
