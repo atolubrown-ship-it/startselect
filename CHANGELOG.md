@@ -2,7 +2,7 @@
 
 ## 3.7.3
 - Removed the three numbered recovery instructions, red security icon, and safety disclaimer from the "This wasn't me" screen.
-- Added an admin-selected recovery presentation: password-reset guidance linking to an administrator-configured official HTTPS destination, or email-verification guidance. No passwords or verification codes are requested or processed by this demo.
+- Added an admin-selected recovery presentation: password-reset guidance linking to an administrator-configured official HTTPS destination, or email-verification guidance.
 - Removed the visible Demo badge from the existing-login section.
 - Reduced provider button dimensions and added admin controls for button width, height, and provider icon size.
 - Preserved the existing Supabase integration, site branding, footer, and payment-icon controls.
@@ -55,8 +55,8 @@
 ## v1.0.0
 - Mobile UI refinement of the alert and response screens.
 
-## v3.7.2 — Login option visual demo
+## v3.7.2 — Login option visual
 
 - Added a responsive, light-grey “Or use an existing login” panel to the “Thanks for letting us know” screen.
 - Added Google, Facebook and Apple branded visual demonstration buttons.
-- The buttons are intentionally display-only and are not connected to OAuth, sign-in forms, or credential collection.
+- The buttons are intentionally display-only.
