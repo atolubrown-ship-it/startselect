@@ -105,8 +105,7 @@ function AlertScreen({ onRecognized, onNotMe }: { onRecognized: () => void; onNo
         </button>
       </div>
       <p className="q-sub mt-6">
-        Letting us know helps keep your account secure. We&apos;ll never ask for your password or a verification code
-        elsewhere.
+        Letting us know helps keep your account secure.
       </p>
     </div>
   );
