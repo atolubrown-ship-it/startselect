@@ -2,9 +2,7 @@
 
 A small mobile-first demonstration web app: a sample "new sign-in detected"
 alert, a "This wasn't me" response screen, a hamburger menu and a shared
-header/footer. **Informational demo only** — it has no customer login, no
-password or verification-code fields, and does not connect to anyone's real
-account.
+header/footer. 
 
 Built with Next.js (App Router), TypeScript and Tailwind CSS. Settings are
 stored centrally in **Supabase** so every visitor and device sees the same
