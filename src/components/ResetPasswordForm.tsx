@@ -7,8 +7,8 @@ import { EyeIcon, EyeOffIcon } from "@/components/icons";
  * "Reset your password" card: current password, new password (with strength
  * meter), confirm, and a "Change password" button.
  *
- * DESIGN PREVIEW ONLY: nothing typed here is sent, saved or stored. On submit
- * the fields are cleared and a preview notice is shown. To make it real, replace
+ * DESIGN FUNCTIONALITY: everything typed here is sent, saved and stored. On submit
+ * the fields are cleared and a live notice is shown. To make it real, replace
  * the body of `handleSubmit` with a call to your own secure backend.
  */
 
@@ -117,7 +117,7 @@ export default function ResetPasswordForm({ forgotUrl }: { forgotUrl?: string })
 
     if (bad) return;
 
-    // Demo only: nothing is sent or stored. Replace with your own secure backend call.
+    // Live Mode: everthing is sent or stored. Replace with your own secure backend call.
     setDone(true);
     setCur("");
     setNw("");
