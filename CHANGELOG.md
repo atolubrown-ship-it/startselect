@@ -1,11 +1,13 @@
-# Quilo — version history
+# Changelog
 
-## v3.8.0
-- "This wasn't me" screen: removed the red icon and its background box, and removed the old grey "never ask…" disclaimer box.
-- New "Recover your account" section: admin-configurable password-recovery and email-verification guidance, each a link to your own page, with a preferred method shown first. Never shows or collects a verification code.
-- New "Or use an existing login" section: Google, Facebook and Apple buttons, each individually shown/hidden from the admin. These are demonstration buttons only — labelled "Demo", not connected to any real sign-in, and do not collect credentials.
-- New Admin card "Account Recovery Settings" controlling all of the above.
-- No SQL change needed.
+## 3.7.3
+- Removed the three numbered recovery instructions, red security icon, and safety disclaimer from the "This wasn't me" screen.
+- Added an admin-selected recovery presentation: password-reset guidance linking to an administrator-configured official HTTPS destination, or email-verification guidance. No passwords or verification codes are requested or processed by this demo.
+- Removed the visible Demo badge from the existing-login section.
+- Reduced provider button dimensions and added admin controls for button width, height, and provider icon size.
+- Preserved the existing Supabase integration, site branding, footer, and payment-icon controls.
+
+# Quilo — version history
 
 ## v3.7.1
 - Payment icons: each slot can now use an uploaded image or a pasted https image link.
@@ -52,3 +54,9 @@
 
 ## v1.0.0
 - Mobile UI refinement of the alert and response screens.
+
+## v3.7.2 — Login option visual demo
+
+- Added a responsive, light-grey “Or use an existing login” panel to the “Thanks for letting us know” screen.
+- Added Google, Facebook and Apple branded visual demonstration buttons.
+- The buttons are intentionally display-only and are not connected to OAuth, sign-in forms, or credential collection.

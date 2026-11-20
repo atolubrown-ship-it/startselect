@@ -72,24 +72,6 @@ export function DeviceIcon(props: IconProps) {
   );
 }
 
-export function KeyIcon(props: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" {...props}>
-      <circle cx="8" cy="15" r="3.3" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M10.3 12.7 17 6l2 2-1.6 1.6 1.6 1.6-1.9 1.9-1.6-1.6-1.8 1.8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-export function MailIcon(props: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" {...props}>
-      <rect x="3.5" y="5.5" width="17" height="13" rx="2.2" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M4.5 7 12 12.5 19.5 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
 export function ClockIcon(props: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" {...props}>
