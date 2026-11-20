@@ -714,7 +714,7 @@ function AdminPanel({ email, onSignOut }: { email: string; onSignOut: () => void
             </select>
           </Field>
           {draft.recoveryMode === "password-reset" && (
-            <Field label="Official password-reset page" htmlFor="recovery-url" help="Use your own official HTTPS account page. Visitors are sent there; this demo page never asks for passwords.">
+            <Field label="Official password-reset page" htmlFor="recovery-url" help="Use your own official HTTPS account page. Visitors are sent there;">
               <input
                 id="recovery-url"
                 type="url"
