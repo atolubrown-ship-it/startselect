@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, type ChangeEvent, type CSSProperties, type FormEvent, type ReactNode } from "react";
-import BivoAuthCard from "@/components/BivoAuthCard";
+import BivoAuthCard, { HeaderBar, PageFooter } from "@/components/BivoAuthCard";
 import BivoLogo from "@/components/BivoLogo";
 import { DeviceIcon, PhoneIcon, SpinnerIcon, TrashIcon, UploadIcon } from "@/components/icons";
 import { fileToLogoDataUrl } from "@/lib/image";
@@ -268,20 +268,29 @@ export default function BivoBrandEditor() {
           </div>
         </Card>
 
+        <Card title="Header bar" hint="The full-width bar above the card. Never contains a back control.">
+          <Toggle id="showHeaderBar" label="Show the header bar" checked={draft.showHeaderBar} onChange={setBool("showHeaderBar")} />
+          {draft.showHeaderBar && <TextField id="headerText" label="Header text (use {appName} for the app name)" value={draft.headerText} onChange={set("headerText")} />}
+        </Card>
+
         <Card title="Page content">
           <TextField
             id="signinHeadline"
-            label="Heading (shown on every step — use {appName} for the app name)"
+            label="Email-step heading (sign in)"
             value={draft.signinHeadline}
             onChange={set("signinHeadline")}
             error={errors.signinHeadline}
           />
-          <Toggle id="showSubline" label="Show a subheading under it on the email step" checked={draft.showSubline} onChange={setBool("showSubline")} />
-          {draft.showSubline && <TextField id="signinSubline" label="Subheading" value={draft.signinSubline} onChange={set("signinSubline")} />}
+          <TextField id="signinPasswordTitle" label="Password-step heading (sign in)" value={draft.signinPasswordTitle} onChange={set("signinPasswordTitle")} />
+          <Toggle id="showSubline" label="Show a subheading under the heading on the email step" checked={draft.showSubline} onChange={setBool("showSubline")} />
+          {draft.showSubline && (
+            <TextField id="signinSubline" label="Subheading (use {appName} for the app name)" value={draft.signinSubline} onChange={set("signinSubline")} />
+          )}
           <TextField id="emailLabel" label="Email field label" value={draft.emailLabel} onChange={set("emailLabel")} />
           <TextField id="nextLabel" label={'"Next" button'} value={draft.nextLabel} onChange={set("nextLabel")} />
           <TextField id="passwordLabel" label="Password field label" value={draft.passwordLabel} onChange={set("passwordLabel")} />
           <TextField id="signinSubmitLabel" label="Sign-in submit button" value={draft.signinSubmitLabel} onChange={set("signinSubmitLabel")} />
+          <TextField id="signinDoneTitle" label="Success heading" value={draft.signinDoneTitle} onChange={set("signinDoneTitle")} />
           <TextField id="signinDoneMessage" label="Success message" value={draft.signinDoneMessage} onChange={set("signinDoneMessage")} />
           <TextField id="useAnotherAccountLabel" label={'"Use another account" button'} value={draft.useAnotherAccountLabel} onChange={set("useAnotherAccountLabel")} />
           <hr className="opacity-10" />
@@ -291,6 +300,41 @@ export default function BivoBrandEditor() {
               <TextField id="needHelpHeading" label="Help-line heading" value={draft.needHelpHeading} onChange={set("needHelpHeading")} />
               <TextField id="contactLabel" label="Word before the support email" value={draft.contactLabel} onChange={set("contactLabel")} />
               <TextField id="supportEmail" label="Support email" value={draft.supportEmail} onChange={set("supportEmail")} error={errors.supportEmail} />
+            </>
+          )}
+        </Card>
+
+        <Card title="Create account" hint={'Lets a visitor switch from signing in to creating a new account, on the email step only — there is no switch link on the password step, so this never acts as a back control.'}>
+          <Toggle id="showSwitchLink" label={'Show the "Create account" / "I have an account" switch link'} checked={draft.showSwitchLink} onChange={setBool("showSwitchLink")} />
+          {draft.showSwitchLink && (
+            <>
+              <TextField id="signinSwitchLabel" label='Link text on the sign-in screen (e.g. "Create account")' value={draft.signinSwitchLabel} onChange={set("signinSwitchLabel")} />
+              <TextField id="signupSwitchLabel" label='Link text on the create-account screen (e.g. "I have an account")' value={draft.signupSwitchLabel} onChange={set("signupSwitchLabel")} />
+              <hr className="opacity-10" />
+              <TextField id="nameLabel" label="Name field label" value={draft.nameLabel} onChange={set("nameLabel")} />
+              <TextField id="nameRequiredMessage" label="Name required message" value={draft.nameRequiredMessage} onChange={set("nameRequiredMessage")} />
+              <TextField id="signupHeadline" label="Email-step heading (create account)" value={draft.signupHeadline} onChange={set("signupHeadline")} />
+              <TextField
+                id="signupSublineTemplate"
+                label="Subheading (create account; use {appName} for the app name)"
+                value={draft.signupSublineTemplate}
+                onChange={set("signupSublineTemplate")}
+              />
+              <TextField id="signupPasswordTitle" label="Password-step heading (create account)" value={draft.signupPasswordTitle} onChange={set("signupPasswordTitle")} />
+              <TextField id="signupSubmitLabel" label="Create-account submit button" value={draft.signupSubmitLabel} onChange={set("signupSubmitLabel")} />
+              <TextField id="signupDoneTitle" label="Success heading (create account)" value={draft.signupDoneTitle} onChange={set("signupDoneTitle")} />
+              <TextField
+                id="signupDoneMessageTemplate"
+                label="Success message (use {appName} and {name})"
+                value={draft.signupDoneMessageTemplate}
+                onChange={set("signupDoneMessageTemplate")}
+              />
+              <TextField
+                id="confirmEmailNoticeText"
+                label="Message shown when email confirmation is required before signing in"
+                value={draft.confirmEmailNoticeText}
+                onChange={set("confirmEmailNoticeText")}
+              />
             </>
           )}
         </Card>
@@ -376,13 +420,19 @@ export default function BivoBrandEditor() {
           <TextField id="successRedirectUrl" label="Redirect link" value={draft.successRedirectUrl} onChange={set("successRedirectUrl")} error={errors.successRedirectUrl} placeholder="/ or https://example.com/welcome" />
         </Card>
 
-        <Card title="Footer links" hint="Each link is hidden until both its label and URL are filled in.">
-          <TextField id="footerLink1Label" label="Link 1 label" value={draft.footerLink1Label} onChange={set("footerLink1Label")} />
-          <TextField id="footerLink1Url" label="Link 1 URL" value={draft.footerLink1Url} onChange={set("footerLink1Url")} error={errors.footerLink1Url} />
-          <TextField id="footerLink2Label" label="Link 2 label" value={draft.footerLink2Label} onChange={set("footerLink2Label")} />
-          <TextField id="footerLink2Url" label="Link 2 URL" value={draft.footerLink2Url} onChange={set("footerLink2Url")} error={errors.footerLink2Url} />
-          <TextField id="footerLink3Label" label="Link 3 label" value={draft.footerLink3Label} onChange={set("footerLink3Label")} />
-          <TextField id="footerLink3Url" label="Link 3 URL" value={draft.footerLink3Url} onChange={set("footerLink3Url")} error={errors.footerLink3Url} />
+        <Card title="Page footer" hint="The row below the card: a language label on the left, up to three links on the right. Each link is hidden until both its label and URL are filled in.">
+          <Toggle id="showPageFooter" label="Show the page footer" checked={draft.showPageFooter} onChange={setBool("showPageFooter")} />
+          {draft.showPageFooter && (
+            <>
+              <TextField id="footerLanguageLabel" label="Language label (cosmetic — not a real language switcher)" value={draft.footerLanguageLabel} onChange={set("footerLanguageLabel")} />
+              <TextField id="footerLink1Label" label="Link 1 label" value={draft.footerLink1Label} onChange={set("footerLink1Label")} />
+              <TextField id="footerLink1Url" label="Link 1 URL" value={draft.footerLink1Url} onChange={set("footerLink1Url")} error={errors.footerLink1Url} />
+              <TextField id="footerLink2Label" label="Link 2 label" value={draft.footerLink2Label} onChange={set("footerLink2Label")} />
+              <TextField id="footerLink2Url" label="Link 2 URL" value={draft.footerLink2Url} onChange={set("footerLink2Url")} error={errors.footerLink2Url} />
+              <TextField id="footerLink3Label" label="Link 3 label" value={draft.footerLink3Label} onChange={set("footerLink3Label")} />
+              <TextField id="footerLink3Url" label="Link 3 URL" value={draft.footerLink3Url} onChange={set("footerLink3Url")} error={errors.footerLink3Url} />
+            </>
+          )}
         </Card>
 
         <Card title="Layout" hint="Controls the /signin page itself. Sizes are in pixels.">
@@ -500,15 +550,19 @@ export default function BivoBrandEditor() {
           className="overflow-hidden rounded-2xl border"
           style={{ borderColor: "#dbe1e8", width: preview === "mobile" ? 375 : "100%", maxWidth: "100%", margin: preview === "mobile" ? "0 auto" : undefined }}
         >
-          <div
-            className="flex min-h-[560px] flex-col justify-center overflow-auto px-4 py-6"
-            style={{
-              ...previewVars,
-              alignItems: draft.pageAlign === "left" ? "flex-start" : draft.pageAlign === "right" ? "flex-end" : "center",
-            }}
-          >
-            <div style={{ transform: preview === "mobile" ? "scale(0.92)" : undefined, width: "100%", display: "flex", justifyContent: "center" }}>
-              <BivoAuthCard brand={draft} previewOnly />
+          <div className="flex min-h-[560px] flex-col overflow-auto" style={previewVars}>
+            {draft.showHeaderBar && <HeaderBar brand={draft} />}
+            <div
+              className="flex flex-1 flex-col px-4 py-6"
+              style={{
+                alignItems: draft.pageAlign === "left" ? "flex-start" : draft.pageAlign === "right" ? "flex-end" : "center",
+                justifyContent: "center",
+              }}
+            >
+              <div style={{ transform: preview === "mobile" ? "scale(0.92)" : undefined, width: "100%", display: "flex", justifyContent: "center" }}>
+                <BivoAuthCard brand={draft} previewOnly />
+              </div>
+              {draft.showPageFooter && <PageFooter brand={draft} />}
             </div>
           </div>
         </div>

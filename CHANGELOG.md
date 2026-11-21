@@ -1,3 +1,16 @@
+# Quilo v4.3.3
+
+Restores the original page's look (per the attached screenshot of the pre-4.3.0 page) on top of the current `/signin`, without reintroducing any back control.
+
+- Added a full-width header bar above the card — logo + "Sign in with {appName}" + a bottom divider — and a page footer below it (a cosmetic language label on the left; up to three links on the right, defaulting to real Help/Privacy/Terms pages, not placeholders). Both are new, independent components (`HeaderBar`, `PageFooter` in `BivoAuthCard.tsx`) rendered by the real page and shown in the admin's live preview; **neither ever contains a link, icon, or button of any kind** — there is still no back control anywhere on `/signin`.
+- Restored a working "Create account" link on the email step only (never on the password step, so it still can't act as a way to step backwards once there). Clicking it switches to a real sign-up flow — a name field, Supabase's actual `auth.signUp()`, and an "I have an account" link back to sign-in — instead of a dead link. This reactivates sign-up copy/schema fields that already existed from before 4.3.0 but were unused.
+- Restored separate per-step headings ("Sign in" / "Welcome back" for signing in; "Create your account" / "Create a password" for creating an account) instead of one shared heading reused on every step, matching the original design.
+- New admin-dashboard sections at `/signin/admin`: **Header bar** (on/off, header text), **Create account** (on/off, both switch-link labels, every sign-up heading/label/message, the name field's label and required-message), and the existing **Footer links** card is now **Page footer** (on/off, language label, the same three link fields — now actually rendered on the page for the first time). No new table or migration — same `bivo_brand_settings` row.
+- Added `/signin/help` (an index linking the two existing help articles), `/signin/privacy` and `/signin/terms` — plain, honest placeholder pages (this is a fictional-brand concept, not a live product, and they say so) so the new footer's links are real, working pages rather than dead ones.
+- Kept every 4.3.1 hardening fix exactly as it arrived in this version (the `BivoSignIn.tsx` compatibility stub, fail-closed sign-in/password-reset/password-update when Supabase isn't configured, and the `private-browsing` lint fix) — nothing in this change touches that code.
+
+**Not tested against a real build** — no network access in this environment to run `npm install`/`next build`. Verified by: full manual review against the original screenshot and the project's very first `BivoSignIn.tsx` source (for exact structure/wording), a brace/bracket/paren balance check across every `.ts`/`.tsx`/`.css` file, and a `tsc --noEmit` pass — which parses every file with zero syntax errors; the only errors reported are pre-existing "cannot find module react/next/tailwindcss" from `node_modules` not being installed here, present identically on files untouched by this change. No SQL migration is needed.
+
 # Quilo v4.3.1
 
 - Fixed the stale legacy `BivoSignIn.tsx` type-check failure by replacing it with an unused compatibility stub; the active route remains `/signin` and uses `BivoAuthCard`.

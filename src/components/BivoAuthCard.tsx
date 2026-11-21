@@ -2,13 +2,15 @@
 
 import { useEffect, useState, type CSSProperties, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import BivoLogo from "@/components/BivoLogo";
 import { SpinnerIcon } from "@/components/icons";
 import { getSupabase } from "@/lib/supabase";
 import { buildBivoCssVars, buildFieldVars, fillTemplate, type BivoBrand } from "@/lib/bivoBrand";
-import { validateEmail, validatePassword } from "@/lib/bivoValidation";
+import { validateEmail, validateName, validatePassword } from "@/lib/bivoValidation";
 
 type Step = "email" | "password" | "done";
+type Mode = "signin" | "signup";
 
 /** A path on this site uses the SPA router; a full https:// link is a real navigation. */
 function goTo(href: string, router: ReturnType<typeof useRouter>) {
@@ -17,10 +19,14 @@ function goTo(href: string, router: ReturnType<typeof useRouter>) {
 }
 
 /**
- * Bivo's sign-in screen, at /signin — a single-column, Google-style flow
- * (email, then password), admin-configurable end to end at /signin/admin
- * (BivoBrandEditor.tsx). There is no sign-up path here and no back arrow
- * anywhere in the header or the steps: both were explicitly removed.
+ * Bivo's sign-in/create-account screen, at /signin — a single-column,
+ * Google-style flow (email [+ name when creating an account], then
+ * password), admin-configurable end to end at /signin/admin
+ * (BivoBrandEditor.tsx). There is no back arrow or back button anywhere in
+ * this component or in HeaderBar/PageFooter below — switching between
+ * "Sign in" and "Create account" only ever happens on the email step, via
+ * the switch link, never as a way to step backwards once on the password
+ * step.
  *
  * All styling is applied as a React inline `style`, scoped to this
  * component's own root element (buildBivoCssVars) and, per-field, to each
@@ -30,19 +36,35 @@ function goTo(href: string, router: ReturnType<typeof useRouter>) {
  */
 export default function BivoAuthCard({ brand, previewOnly = false }: { brand: BivoBrand; previewOnly?: boolean }) {
   const router = useRouter();
+  const [mode, setMode] = useState<Mode>("signin");
   const [step, setStep] = useState<Step>("email");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string; form?: string }>({});
+  const [errors, setErrors] = useState<{ name?: string; email?: string; password?: string; form?: string }>({});
   const [loading, setLoading] = useState(false);
   const [canRedirect, setCanRedirect] = useState(false);
+  const [signupPending, setSignupPending] = useState(false);
   const [resetNotice, setResetNotice] = useState<string | null>(null);
   const [resetSending, setResetSending] = useState(false);
+
+  const switchMode = () => {
+    if (previewOnly) return;
+    setMode((m) => (m === "signin" ? "signup" : "signin"));
+    setErrors({});
+  };
 
   const onEmailNext = (e: FormEvent) => {
     e.preventDefault();
     if (previewOnly) return;
+    if (mode === "signup") {
+      const nameErr = validateName(name, { required: brand.nameRequiredMessage });
+      if (nameErr) {
+        setErrors({ name: nameErr });
+        return;
+      }
+    }
     const emailErr = validateEmail(email, { required: brand.emailRequiredMessage, invalid: brand.emailInvalidMessage });
     if (emailErr) {
       setErrors({ email: emailErr });
@@ -67,13 +89,29 @@ export default function BivoAuthCard({ brand, previewOnly = false }: { brand: Bi
     setLoading(true);
     try {
       const sb = getSupabase();
-      if (!sb) {
-        throw new Error("Sign-in is temporarily unavailable. Please try again later.");
+      if (mode === "signup") {
+        if (!sb) {
+          throw new Error("Account creation is temporarily unavailable. Please try again later.");
+        }
+        const { data, error } = await sb.auth.signUp({
+          email: email.trim(),
+          password,
+          options: { data: { full_name: name.trim() } },
+        });
+        if (error) throw error;
+        const hasSession = Boolean(data.session);
+        setSignupPending(!hasSession);
+        setCanRedirect(hasSession);
+        setStep("done");
+      } else {
+        if (!sb) {
+          throw new Error("Sign-in is temporarily unavailable. Please try again later.");
+        }
+        const { error } = await sb.auth.signInWithPassword({ email: email.trim(), password });
+        if (error) throw error;
+        setCanRedirect(true);
+        setStep("done");
       }
-      const { error } = await sb.auth.signInWithPassword({ email: email.trim(), password });
-      if (error) throw error;
-      setCanRedirect(true);
-      setStep("done");
     } catch (err) {
       setErrors({ form: err instanceof Error ? err.message : brand.genericErrorMessage });
     } finally {
@@ -82,6 +120,7 @@ export default function BivoAuthCard({ brand, previewOnly = false }: { brand: Bi
   };
 
   // Admin-configured post-sign-in destination. Empty = stay on the "done" screen.
+  // Never fires while a sign-up is still pending email confirmation (no session yet).
   useEffect(() => {
     if (previewOnly || step !== "done" || !canRedirect || !brand.successRedirectUrl) return;
     const t = setTimeout(() => goTo(brand.successRedirectUrl, router), 1500);
@@ -143,18 +182,44 @@ export default function BivoAuthCard({ brand, previewOnly = false }: { brand: Bi
 
   const content = (
     <div className="bivo-animate-rise w-full" style={{ maxWidth: "var(--bivo-page-max-width)", margin: "0 auto" }}>
-      {/* Header — logo + heading only. No back control anywhere in it, on any step. */}
-      <div className={`flex items-center gap-3 ${brand.logoPosition === "center" ? "flex-col text-center" : ""}`}>
-        {brand.showLogo && <BivoLogo name={brand.appName} logoUrl={brand.logoUrl} size={brand.logoSize} />}
-        <h1 className="bivo-font-display font-medium tracking-tight" style={{ fontSize: "var(--bivo-heading-size)" }}>
-          {fillTemplate(brand.signinHeadline, { appName: brand.appName })}
-        </h1>
-      </div>
-
       <div className="mt-8">
         {step === "email" && (
           <form onSubmit={onEmailNext} noValidate className="flex flex-col" style={{ gap: "var(--bivo-field-spacing)" }}>
-            {brand.showSubline && <p className="bivo-muted-text -mt-2 mb-1">{brand.signinSubline}</p>}
+            <h1 className="bivo-font-display font-medium tracking-tight" style={{ fontSize: "var(--bivo-heading-size)" }}>
+              {mode === "signup" ? brand.signupHeadline : brand.signinHeadline}
+            </h1>
+            {brand.showSubline && (
+              <p className="bivo-muted-text -mt-2 mb-1">
+                {fillTemplate(mode === "signup" ? brand.signupSublineTemplate : brand.signinSubline, { appName: brand.appName })}
+              </p>
+            )}
+
+            {mode === "signup" && (
+              <>
+                <div className="bivo-field">
+                  <input
+                    id="name"
+                    type="text"
+                    autoComplete="name"
+                    autoFocus={!previewOnly}
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder=" "
+                    aria-invalid={!!errors.name}
+                    aria-describedby={errors.name ? "name-error" : undefined}
+                    className="bivo-input"
+                  />
+                  <label htmlFor="name" className="bivo-floating-label">
+                    {brand.nameLabel}
+                  </label>
+                </div>
+                {errors.name && (
+                  <p id="name-error" className="bivo-error">
+                    {errors.name}
+                  </p>
+                )}
+              </>
+            )}
 
             <div className="bivo-field" style={emailFieldVars}>
               <input
@@ -162,7 +227,7 @@ export default function BivoAuthCard({ brand, previewOnly = false }: { brand: Bi
                 type="email"
                 inputMode="email"
                 autoComplete="email"
-                autoFocus={!previewOnly}
+                autoFocus={!previewOnly && mode === "signin"}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder=" "
@@ -180,10 +245,20 @@ export default function BivoAuthCard({ brand, previewOnly = false }: { brand: Bi
               </p>
             )}
 
-            <div className="flex items-center justify-between pt-2">
-              {brand.showForgotEmailLink ? (
+            {mode === "signin" && brand.showForgotEmailLink && (
+              <div className="pt-1">
                 <button type="button" onClick={onForgotEmail} className="bivo-link text-sm font-medium">
                   {brand.forgotEmailLabel}
+                </button>
+              </div>
+            )}
+
+            {brand.showSecurityMessage && <SecurityMessage brand={brand} />}
+
+            <div className="flex items-center justify-between pt-2">
+              {brand.showSwitchLink ? (
+                <button type="button" onClick={switchMode} className="bivo-link text-sm font-medium">
+                  {mode === "signup" ? brand.signupSwitchLabel : brand.signinSwitchLabel}
                 </button>
               ) : (
                 <span />
@@ -192,20 +267,21 @@ export default function BivoAuthCard({ brand, previewOnly = false }: { brand: Bi
                 {brand.nextLabel}
               </button>
             </div>
-
-            {brand.showSecurityMessage && <SecurityMessage brand={brand} />}
           </form>
         )}
 
         {step === "password" && (
           <form onSubmit={onSubmit} noValidate className="flex flex-col" style={{ gap: "var(--bivo-field-spacing)" }}>
+            <h1 className="bivo-font-display font-medium tracking-tight" style={{ fontSize: "var(--bivo-heading-size)" }}>
+              {mode === "signup" ? brand.signupPasswordTitle : brand.signinPasswordTitle}
+            </h1>
             <p className="bivo-muted-text -mt-2 mb-1">{email.trim()}</p>
 
             <div className="bivo-field" style={passwordFieldVars}>
               <input
                 id="password"
                 type={showPassword ? "text" : "password"}
-                autoComplete="current-password"
+                autoComplete={mode === "signup" ? "new-password" : "current-password"}
                 autoFocus={!previewOnly}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -241,10 +317,10 @@ export default function BivoAuthCard({ brand, previewOnly = false }: { brand: Bi
                 {errors.form}
               </p>
             )}
-            {resetNotice && <p className="bivo-muted-text text-sm">{resetNotice}</p>}
+            {mode === "signin" && resetNotice && <p className="bivo-muted-text text-sm">{resetNotice}</p>}
 
             <div className="flex items-center justify-between pt-2">
-              {brand.showForgotPasswordLink ? (
+              {mode === "signin" && brand.showForgotPasswordLink ? (
                 <button type="button" onClick={() => void onForgotPassword()} disabled={resetSending} className="bivo-link text-sm font-medium">
                   {resetSending && <SpinnerIcon className="mr-1 inline h-3.5 w-3.5" />}
                   {brand.forgotPasswordLabel}
@@ -254,7 +330,7 @@ export default function BivoAuthCard({ brand, previewOnly = false }: { brand: Bi
               )}
               <button type="submit" className="bivo-btn bivo-btn-primary px-7" disabled={loading}>
                 {loading && <SpinnerIcon className="h-4 w-4" />}
-                {brand.signinSubmitLabel}
+                {mode === "signup" ? brand.signupSubmitLabel : brand.signinSubmitLabel}
               </button>
             </div>
 
@@ -264,7 +340,16 @@ export default function BivoAuthCard({ brand, previewOnly = false }: { brand: Bi
 
         {step === "done" && (
           <div className="flex flex-col" style={{ gap: "var(--bivo-field-spacing)" }}>
-            <p className="bivo-muted-text">{brand.signinDoneMessage}</p>
+            <h1 className="bivo-font-display font-medium tracking-tight" style={{ fontSize: "var(--bivo-heading-size)" }}>
+              {mode === "signup" ? brand.signupDoneTitle : brand.signinDoneTitle}
+            </h1>
+            <p className="bivo-muted-text">
+              {mode === "signup"
+                ? signupPending
+                  ? brand.confirmEmailNoticeText
+                  : fillTemplate(brand.signupDoneMessageTemplate, { appName: brand.appName, name: name.trim() || email.trim() })
+                : brand.signinDoneMessage}
+            </p>
             {canRedirect && brand.successRedirectUrl ? (
               <div className="flex flex-wrap items-center gap-3">
                 <button type="button" className="bivo-btn bivo-btn-primary" onClick={() => !previewOnly && goTo(brand.successRedirectUrl, router)}>
@@ -281,6 +366,7 @@ export default function BivoAuthCard({ brand, previewOnly = false }: { brand: Bi
                   setPassword("");
                   setErrors({});
                   setCanRedirect(false);
+                  setSignupPending(false);
                 }}
               >
                 {brand.useAnotherAccountLabel}
@@ -296,6 +382,60 @@ export default function BivoAuthCard({ brand, previewOnly = false }: { brand: Bi
     <div style={cssVars} className="bivo">
       {brand.showCard ? <div className="bivo-card">{content}</div> : content}
     </div>
+  );
+}
+
+/**
+ * The page-level header bar — logo + "Sign in with {appName}" + a bottom
+ * divider, restoring the original look. Deliberately contains no link,
+ * button, or icon of any kind: there is no back control here, on any step.
+ * Rendered by the real page (src/app/signin/page.tsx) and by the admin's
+ * live preview (BivoBrandEditor.tsx), both as a sibling ABOVE BivoAuthCard
+ * rather than inside it, so it can span the full width of its container
+ * (the card below it stays centered and width-limited on its own).
+ */
+export function HeaderBar({ brand }: { brand: BivoBrand }) {
+  return (
+    <div className="bivo-header-bar">
+      {brand.showLogo && <BivoLogo name={brand.appName} logoUrl={brand.logoUrl} size={20} />}
+      <span>{fillTemplate(brand.headerText, { appName: brand.appName })}</span>
+    </div>
+  );
+}
+
+/**
+ * The page-level footer — a (cosmetic) language label on the left, and up to
+ * three admin-configured links on the right (default: Help / Privacy /
+ * Terms, pointing at real pages on this site — see src/app/signin/help,
+ * /privacy and /terms — never a dead link). Rendered below the card by the
+ * real page and by the admin's live preview.
+ */
+export function PageFooter({ brand }: { brand: BivoBrand }) {
+  const links = [
+    { label: brand.footerLink1Label, url: brand.footerLink1Url },
+    { label: brand.footerLink2Label, url: brand.footerLink2Url },
+    { label: brand.footerLink3Label, url: brand.footerLink3Url },
+  ].filter((l) => l.label.trim() && l.url.trim());
+
+  return (
+    <footer className="bivo-page-footer">
+      <span>{brand.footerLanguageLabel}</span>
+      {links.length > 0 && (
+        <nav>
+          {links.map((l, i) =>
+            l.url.startsWith("http") ? (
+              <a key={i} href={l.url} target="_blank" rel="noopener noreferrer">
+                {l.label}
+              </a>
+            ) : (
+              <Link key={i} href={l.url}>
+                {l.label}
+              </Link>
+            ),
+          )}
+        </nav>
+      )}
+    </footer>
   );
 }
 

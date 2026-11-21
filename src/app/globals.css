@@ -394,3 +394,55 @@ html {
   cursor: pointer;
   color: currentColor;
 }
+
+/* Page-level chrome restoring the original look: a full-width header bar
+   above the card (logo + "Sign in with {appName}" + a bottom divider, no
+   back control of any kind) and a footer below the card (language label +
+   up to three links). Neither is part of BivoAuthCard's own "card" — they
+   wrap it on the real page (and in the admin's live preview). */
+.bivo-header-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--bivo-border);
+  flex-shrink: 0;
+}
+.bivo-header-bar span {
+  font-size: 16px;
+  color: currentColor;
+  opacity: 0.7;
+}
+
+.bivo-page-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  width: 100%;
+  max-width: var(--bivo-page-max-width);
+  margin: 16px auto 0;
+  padding: 0 4px;
+  font-size: 12px;
+  color: currentColor;
+  opacity: 0.7;
+}
+.bivo-page-footer select {
+  background: transparent;
+  border: none;
+  font-size: 12px;
+  color: currentColor;
+  cursor: pointer;
+}
+.bivo-page-footer nav {
+  display: flex;
+  gap: 20px;
+}
+.bivo-page-footer a {
+  color: currentColor;
+}
+.bivo-page-footer a:hover {
+  text-decoration: underline;
+}

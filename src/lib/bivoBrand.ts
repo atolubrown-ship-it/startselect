@@ -192,6 +192,18 @@ export type BivoBrand = {
   /** Space above the message, px. */
   securityMessageSpacing: number;
   showSecurityMessage: boolean;
+
+  /**
+   * The page-level header bar (logo + "Sign in with {appName}" + a bottom
+   * divider) shown above the card, and the page-level footer (language +
+   * up to three links) shown below it. Neither ever contains a back
+   * control — restoring this chrome (requested after the original design)
+   * is scoped to look only, not navigation.
+   */
+  showHeaderBar: boolean;
+  headerText: string;
+  showPageFooter: boolean;
+  footerLanguageLabel: string;
 };
 
 export const DEFAULT_BIVO_BRAND: BivoBrand = {
@@ -213,8 +225,8 @@ export const DEFAULT_BIVO_BRAND: BivoBrand = {
 
   supportEmail: "help@bivo.app",
 
-  signinHeadline: "Sign in with {appName}",
-  signinSubline: "Use your Bivo account to continue",
+  signinHeadline: "Sign in",
+  signinSubline: "Use your {appName} account",
   signinPasswordTitle: "Welcome back",
   signinSubmitLabel: "Sign in",
   signinSwitchLabel: "Create account",
@@ -250,12 +262,12 @@ export const DEFAULT_BIVO_BRAND: BivoBrand = {
 
   successRedirectUrl: "",
 
-  footerLink1Label: "",
-  footerLink1Url: "",
-  footerLink2Label: "",
-  footerLink2Url: "",
-  footerLink3Label: "",
-  footerLink3Url: "",
+  footerLink1Label: "Help",
+  footerLink1Url: "/signin/help",
+  footerLink2Label: "Privacy",
+  footerLink2Url: "/signin/privacy",
+  footerLink3Label: "Terms",
+  footerLink3Url: "/signin/terms",
 
   pageMaxWidth: 896,
   pagePaddingX: 16,
@@ -315,6 +327,11 @@ export const DEFAULT_BIVO_BRAND: BivoBrand = {
   securityMessageAlign: "left",
   securityMessageSpacing: 24,
   showSecurityMessage: true,
+
+  showHeaderBar: true,
+  headerText: "Sign in with {appName}",
+  showPageFooter: true,
+  footerLanguageLabel: "English (United States)",
 };
 
 /** Safe font-family stacks for the small admin-picked allow-list (never a raw admin-typed string). */
@@ -627,6 +644,11 @@ export function sanitizeBivoBrand(input: unknown, fallback: BivoBrand = DEFAULT_
     securityMessageAlign: oneOf(input.securityMessageAlign, MESSAGE_ALIGNS, fallback.securityMessageAlign),
     securityMessageSpacing: num(input.securityMessageSpacing, fallback.securityMessageSpacing, 0, 80),
     showSecurityMessage: bool(input.showSecurityMessage, fallback.showSecurityMessage),
+
+    showHeaderBar: bool(input.showHeaderBar, fallback.showHeaderBar),
+    headerText: text(input.headerText, fallback.headerText, 60),
+    showPageFooter: bool(input.showPageFooter, fallback.showPageFooter),
+    footerLanguageLabel: text(input.footerLanguageLabel, fallback.footerLanguageLabel, 40),
   };
 }
 
