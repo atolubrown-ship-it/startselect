@@ -38,6 +38,7 @@ export default function BivoBrandEditor() {
   }, []);
 
   const set = (key: TextKey) => (e: ChangeEvent<HTMLInputElement>) => setDraft((d) => ({ ...d, [key]: e.target.value }));
+  const setLogoUrl = (e: ChangeEvent<HTMLInputElement>) => setDraft((d) => ({ ...d, logoUrl: e.target.value }));
   const setColor = (key: "buttonColor" | "linkColor") => (hex: string) => setDraft((d) => ({ ...d, [key]: hex }));
   const setNumber = (key: NumberKey) => (n: number) => setDraft((d) => ({ ...d, [key]: n }));
 
@@ -140,7 +141,7 @@ export default function BivoBrandEditor() {
             <input
               placeholder="…or paste an image link (https://…)"
               value={draft.logoUrl.startsWith("data:") ? "" : draft.logoUrl}
-              onChange={set("logoUrl")}
+              onChange={setLogoUrl}
               className="bivo-input h-11"
             />
           </div>

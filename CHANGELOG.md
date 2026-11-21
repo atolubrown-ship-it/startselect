@@ -1,5 +1,8 @@
 # Changelog
 
+## 4.2.4
+- Build fix: the "paste an image link" field in the logo uploader called `set("logoUrl")`, but `logoUrl` is intentionally excluded from the set of fields that helper handles (it's set separately by the file-upload and "Remove" actions). Added a small dedicated `setLogoUrl` handler for that one input instead. No visual or behavioral change.
+
 ## 4.2.3
 - Build fix: `BivoBrandEditor.tsx` had several admin field labels written with `\"escaped quotes\"` inside a plain JSX attribute string (e.g. `label="\"Next\" button"`). JSX attribute strings don't support backslash escapes the way JS strings do, so this broke the parser for the whole file and failed the Vercel build. Rewrote those labels as `label={'"Next" button'}` (a real JS string expression, which does support quotes). No visual or behavioral change — same label text as before, now valid syntax.
 
