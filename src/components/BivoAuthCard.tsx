@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import BivoLogo from "@/components/BivoLogo";
 import { ArrowLeftIcon, CheckIcon, EyeIcon, EyeOffIcon, SpinnerIcon } from "@/components/icons";
 import { getSupabase } from "@/lib/supabase";
@@ -9,6 +10,12 @@ import { validateEmail, validateName, validatePassword } from "@/lib/bivoValidat
 
 type Mode = "signin" | "signup";
 type Step = "email" | "password" | "done";
+
+/** A path on this site uses the SPA router; a full https:// link is a real navigation. */
+function goTo(href: string, router: ReturnType<typeof useRouter>) {
+  if (href.startsWith("/")) router.push(href);
+  else window.location.href = href;
+}
 
 /**
  * Bivo's two-step sign-in / sign-up screen — ported from the standalone Bivo
@@ -19,6 +26,7 @@ type Step = "email" | "password" | "done";
  * `bivo_brand_settings` row, editable at /bivo/admin.
  */
 export default function BivoAuthCard({ brand }: { brand: BivoBrand }) {
+  const router = useRouter();
   const [mode, setMode] = useState<Mode>("signin");
   const [step, setStep] = useState<Step>("email");
   const [name, setName] = useState("");
@@ -28,6 +36,7 @@ export default function BivoAuthCard({ brand }: { brand: BivoBrand }) {
   const [errors, setErrors] = useState<{ name?: string; email?: string; password?: string; form?: string }>({});
   const [loading, setLoading] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [canRedirect, setCanRedirect] = useState(false);
 
   const switchMode = (m: Mode) => {
     setMode(m);
@@ -35,6 +44,7 @@ export default function BivoAuthCard({ brand }: { brand: BivoBrand }) {
     setPassword("");
     setErrors({});
     setNotice(null);
+    setCanRedirect(false);
   };
 
   const onEmailNext = (e: FormEvent) => {
@@ -60,6 +70,7 @@ export default function BivoAuthCard({ brand }: { brand: BivoBrand }) {
     setLoading(true);
     try {
       const sb = getSupabase();
+      let authenticated = true;
       if (sb) {
         if (mode === "signin") {
           const { error } = await sb.auth.signInWithPassword({ email: email.trim(), password });
@@ -73,11 +84,13 @@ export default function BivoAuthCard({ brand }: { brand: BivoBrand }) {
           });
           if (error) throw error;
           setNotice(data.session ? null : brand.confirmEmailNoticeText);
+          authenticated = Boolean(data.session);
         }
       } else {
         await new Promise((r) => setTimeout(r, 700));
         setNotice(brand.demoNoticeText);
       }
+      setCanRedirect(authenticated);
       setStep("done");
     } catch (err) {
       setErrors({ form: err instanceof Error ? err.message : "Something went wrong. Try again." });
@@ -85,6 +98,14 @@ export default function BivoAuthCard({ brand }: { brand: BivoBrand }) {
       setLoading(false);
     }
   };
+
+  // Admin-configured post-sign-in destination (BivoBrandEditor -> "After sign-in").
+  // Empty = stay on this screen, same as before this was added.
+  useEffect(() => {
+    if (step !== "done" || !canRedirect || !brand.successRedirectUrl) return;
+    const t = setTimeout(() => goTo(brand.successRedirectUrl, router), 1500);
+    return () => clearTimeout(t);
+  }, [step, canRedirect, brand.successRedirectUrl, router]);
 
   const vars = { appName: brand.appName, name: name.trim() };
   const title =
@@ -211,9 +232,20 @@ export default function BivoAuthCard({ brand }: { brand: BivoBrand }) {
                   {notice}
                 </p>
               )}
-              <button type="button" className="bivo-btn bivo-btn-outline" onClick={() => switchMode("signin")}>
-                {brand.useAnotherAccountLabel}
-              </button>
+              {canRedirect && brand.successRedirectUrl ? (
+                <div className="flex flex-wrap items-center gap-3">
+                  <button type="button" className="bivo-btn bivo-btn-primary" onClick={() => goTo(brand.successRedirectUrl, router)}>
+                    Continue
+                  </button>
+                  <span className="text-sm" style={{ color: "var(--bivo-muted)" }}>
+                    Taking you there automatically…
+                  </span>
+                </div>
+              ) : (
+                <button type="button" className="bivo-btn bivo-btn-outline" onClick={() => switchMode("signin")}>
+                  {brand.useAnotherAccountLabel}
+                </button>
+              )}
             </div>
           )}
         </div>

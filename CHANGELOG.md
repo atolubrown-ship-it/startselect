@@ -1,5 +1,19 @@
 # Changelog
 
+## 4.1.1
+- Hardened the configurable redirect URL validation against protocol-relative URLs, backslashes, and control characters.
+- Prevented the post-sign-in redirect from firing when sign-up requires email confirmation and no authenticated session exists.
+- Kept the admin editor's redirect validation consistent with the runtime sanitizer.
+
+## 4.1.0
+- Fixed Bivo branding (`/bivo/admin`) not actually changing anything on `/bivo`: the `.bivo-*` CSS classes and `--bivo-*` variables it writes were never defined anywhere, so colours, spacing and the logo had nothing to render through. Added the full stylesheet in `src/app/globals.css`.
+- Fixed Bivo branding failing to load/save: the `bivo_brand_settings` table it reads/writes didn't exist in `quilo-backend.sql`. Added it (section 6), mirroring `site_settings`'s RLS (admins only can write, everyone can read), with a larger size limit since the Bivo logo is stored inline as a data URL rather than in Storage.
+- Admin → Layout & spacing: new "Field border width" slider (0–3px) for the sign-in/sign-up form fields.
+- Admin → new "After sign-in" card: a redirect link (a path like `/`, or a full `https://` link) a visitor is sent to once they sign in or create an account. Leave it blank to keep the existing "Use another account" success screen.
+- Added the four icon exports (`ArrowLeftIcon`, `SpinnerIcon`, `UploadIcon`, `TrashIcon`) that `/bivo`, `/bivo/admin` and their components needed but `src/components/icons.tsx` didn't have yet.
+
+**If you already ran `quilo-backend.sql` before this version:** re-run it — it's safe to run again — so you get the new `bivo_brand_settings` table (section 6, near the end).
+
 ## 4.0.0
 - Merged the "Bivo" sign-in app into this project, on Quilo's own Next.js/Tailwind stack instead of its original separate inline-style component (`src/components/BivoSignIn.tsx`, new route at `/signin`).
 - On the "This wasn't me" screen, "Sign in with Google" is now the one live provider button: it navigates to `/signin` (the Bivo sign-in app) instead of being a display-only demo. Facebook and Apple remain display-only.

@@ -98,3 +98,186 @@ html {
   outline: 2px solid var(--q-primary);
   outline-offset: 2px;
 }
+
+/* ============================================================================
+ * Bivo (/bivo, /bivo/admin) — scoped entirely under .bivo so none of this
+ * touches the rest of the site. Colours, spacing and sizing are CSS
+ * variables set at runtime from the admin-edited BivoBrand (see
+ * src/lib/bivoBrand.ts, src/app/bivo/page.tsx and BivoBrandEditor.tsx) —
+ * the values below are only the first-paint defaults, before that JS runs.
+ * ========================================================================= */
+:root {
+  --bivo-primary: #1f6b4f;
+  --bivo-primary-ink: #ffffff;
+  --bivo-link: #1f6b4f;
+  --bivo-ink: #1b1f24;
+  --bivo-muted: #6b7280;
+  --bivo-border: #dbe1e8;
+  --bivo-input-border: var(--bivo-border);
+  --bivo-input-border-width: 1px;
+  --bivo-success: #1f9d6b;
+  --bivo-danger: #b3261e;
+  --bivo-danger-bg: #fdecea;
+  --bivo-page-max-width: 896px;
+  --bivo-page-px: 16px;
+  --bivo-page-py: 40px;
+  --bivo-column-gap: 48px;
+  --bivo-heading-size: 40px;
+  --bivo-input-height: 48px;
+}
+
+.bivo {
+  color: var(--bivo-ink);
+  background-color: #ffffff;
+}
+
+.bivo-font-display {
+  letter-spacing: -0.01em;
+}
+
+.bivo-mark {
+  background-color: var(--bivo-primary);
+}
+
+.bivo-card {
+  border: 1px solid var(--bivo-border);
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+}
+
+.bivo-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 48px;
+  padding: 0 20px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, opacity 0.15s ease, color 0.15s ease;
+}
+.bivo-btn-primary {
+  background-color: var(--bivo-primary);
+  color: var(--bivo-primary-ink);
+}
+.bivo-btn-primary:hover {
+  opacity: 0.92;
+}
+.bivo-btn-primary:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.bivo-btn-outline {
+  border: 1px solid var(--bivo-border);
+  background: #ffffff;
+  color: var(--bivo-ink);
+}
+.bivo-btn-outline:hover {
+  background: #f3f4f6;
+}
+.bivo-btn-ghost {
+  height: auto;
+  padding: 0 4px;
+  background: transparent;
+  color: var(--bivo-muted);
+}
+.bivo-btn-ghost:hover {
+  color: var(--bivo-ink);
+}
+
+.bivo-input {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  height: var(--bivo-input-height, 48px);
+  padding: 0 16px;
+  border-radius: 12px;
+  border-width: var(--bivo-input-border-width, 1px);
+  border-style: solid;
+  border-color: var(--bivo-input-border);
+  background: #ffffff;
+  color: var(--bivo-ink);
+  font-size: 16px;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+.bivo-input:focus {
+  border-color: var(--bivo-primary);
+}
+.bivo-input[aria-invalid="true"] {
+  border-color: var(--bivo-danger);
+}
+.bivo-input-pr {
+  padding-right: 48px;
+}
+
+.bivo-field {
+  position: relative;
+}
+.bivo-floating-label {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 0 4px;
+  background: #ffffff;
+  color: var(--bivo-muted);
+  font-size: 16px;
+  pointer-events: none;
+  transition: all 0.15s ease-out;
+}
+.bivo-input:focus + .bivo-floating-label,
+.bivo-input:not(:placeholder-shown) + .bivo-floating-label {
+  top: 0;
+  font-size: 12px;
+  color: var(--bivo-primary);
+}
+
+.bivo-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--bivo-ink);
+}
+.bivo-error {
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--bivo-danger);
+}
+.bivo-link {
+  color: var(--bivo-link);
+}
+
+.bivo-success-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  border-radius: 14px;
+  padding: 14px 16px;
+  font-size: 15px;
+  color: var(--bivo-ink);
+  background: rgba(31, 157, 107, 0.1);
+}
+
+@keyframes bivo-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.bivo-animate-rise {
+  animation: bivo-rise 260ms ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .bivo-animate-rise {
+    animation: none;
+  }
+}

@@ -40,6 +40,7 @@ export default function BivoSignInPage() {
     root.style.setProperty("--bivo-column-gap", `${brand.columnGap}px`);
     root.style.setProperty("--bivo-heading-size", `${brand.headingSize}px`);
     root.style.setProperty("--bivo-input-height", `${brand.inputHeight}px`);
+    root.style.setProperty("--bivo-input-border-width", `${brand.inputBorderWidth}px`);
   }, [
     brand.buttonColor,
     brand.linkColor,
@@ -49,6 +50,7 @@ export default function BivoSignInPage() {
     brand.columnGap,
     brand.headingSize,
     brand.inputHeight,
+    brand.inputBorderWidth,
   ]);
 
   return (

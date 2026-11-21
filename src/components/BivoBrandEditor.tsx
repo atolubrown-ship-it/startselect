@@ -8,7 +8,7 @@ import { DEFAULT_BIVO_BRAND, loadBivoBrand, saveBivoBrand, type BivoBrand } from
 import { validateEmail } from "@/lib/bivoValidation";
 import { isHexColor, readableOn } from "@/lib/settings";
 
-type NumberKey = "pageMaxWidth" | "pagePaddingX" | "pagePaddingY" | "columnGap" | "headingSize" | "inputHeight";
+type NumberKey = "pageMaxWidth" | "pagePaddingX" | "pagePaddingY" | "columnGap" | "headingSize" | "inputHeight" | "inputBorderWidth";
 type TextKey = Exclude<keyof BivoBrand, "logoUrl" | "buttonColor" | "linkColor" | NumberKey>;
 
 /** The branding + copy editor shown at /bivo/admin once an admin is signed in. */
@@ -62,6 +62,14 @@ export default function BivoBrandEditor() {
     if (!draft.signinHeadline.trim()) next.signinHeadline = "Enter a heading";
     const supportErr = validateEmail(draft.supportEmail);
     if (supportErr) next.supportEmail = supportErr;
+    const redirect = draft.successRedirectUrl.trim();
+    if (
+      redirect &&
+      !(redirect.startsWith("/") && !redirect.startsWith("//") && !redirect.includes("\\") && !/[\u0000-\u001f\u007f]/.test(redirect)) &&
+      !(/^https:\/\/[^\s\\]+$/i.test(redirect) && !/[\u0000-\u001f\u007f]/.test(redirect))
+    ) {
+      next.successRedirectUrl = "Use a same-site path (e.g. /dashboard) or a full https:// link.";
+    }
     setErrors(next);
     if (Object.keys(next).length) return;
 
@@ -89,7 +97,8 @@ export default function BivoBrandEditor() {
     root.style.setProperty("--bivo-link", draft.linkColor);
     root.style.setProperty("--bivo-heading-size", `${draft.headingSize}px`);
     root.style.setProperty("--bivo-input-height", `${draft.inputHeight}px`);
-  }, [draft.buttonColor, draft.linkColor, draft.headingSize, draft.inputHeight]);
+    root.style.setProperty("--bivo-input-border-width", `${draft.inputBorderWidth}px`);
+  }, [draft.buttonColor, draft.linkColor, draft.headingSize, draft.inputHeight, draft.inputBorderWidth]);
 
   if (!ready) {
     return (
@@ -191,6 +200,20 @@ export default function BivoBrandEditor() {
           <TextField id="contactLabel" label="Word before the email" value={draft.contactLabel} onChange={set("contactLabel")} />
         </Card>
 
+        <Card
+          title="After sign-in"
+          hint="Where a visitor lands once they sign in or create an account. Leave blank to keep showing the success screen with its 'Use another account' button."
+        >
+          <TextField
+            id="successRedirectUrl"
+            label="Redirect link"
+            value={draft.successRedirectUrl}
+            onChange={set("successRedirectUrl")}
+            error={errors.successRedirectUrl}
+            placeholder="/ or https://example.com/welcome"
+          />
+        </Card>
+
         <Card title="Layout & spacing" hint="Controls the /bivo page itself — sizes are in pixels.">
           <NumberField id="pageMaxWidth" label="Content width" value={draft.pageMaxWidth} onChange={setNumber("pageMaxWidth")} min={420} max={1280} step={8} />
           <div className="grid grid-cols-2 gap-3">
@@ -200,6 +223,7 @@ export default function BivoBrandEditor() {
           <NumberField id="columnGap" label="Gap between the two columns" value={draft.columnGap} onChange={setNumber("columnGap")} min={0} max={120} step={4} />
           <NumberField id="headingSize" label="Heading text size" value={draft.headingSize} onChange={setNumber("headingSize")} min={20} max={72} step={2} />
           <NumberField id="inputHeight" label="Field height" value={draft.inputHeight} onChange={setNumber("inputHeight")} min={36} max={72} step={2} />
+          <NumberField id="inputBorderWidth" label="Field border width" value={draft.inputBorderWidth} onChange={setNumber("inputBorderWidth")} min={0} max={3} step={1} />
         </Card>
 
         <div className="bivo-card flex flex-wrap justify-end gap-3 p-6">
@@ -225,7 +249,10 @@ export default function BivoBrandEditor() {
             {draft.signinSubline}
           </p>
           <div className="relative mt-6" style={{ height: "var(--bivo-input-height)" }}>
-            <div className="h-full w-full rounded-xl border" style={{ borderColor: "var(--bivo-input-border)" }} />
+            <div
+              className="h-full w-full rounded-xl"
+              style={{ borderStyle: "solid", borderWidth: "var(--bivo-input-border-width)", borderColor: "var(--bivo-input-border)" }}
+            />
             <span className="absolute left-4 top-2 text-xs" style={{ color: "var(--bivo-primary)" }}>
               {draft.emailLabel}
             </span>

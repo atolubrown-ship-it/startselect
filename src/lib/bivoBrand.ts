@@ -55,6 +55,13 @@ export type BivoBrand = {
   /** Word before the support-email link, on its own line below needHelpHeading. */
   contactLabel: string;
 
+  /**
+   * Where a visitor lands after signing in or signing up. Empty = stay on the
+   * "done" screen with the "Use another account" button, same as before.
+   * A path starting with "/" (e.g. "/") or a full "https://" link.
+   */
+  successRedirectUrl: string;
+
   // Layout & sizing (all in px)
   pageMaxWidth: number;
   pagePaddingX: number;
@@ -62,6 +69,8 @@ export type BivoBrand = {
   columnGap: number;
   headingSize: number;
   inputHeight: number;
+  /** Form field border thickness, 0–3px. */
+  inputBorderWidth: number;
 };
 
 export const DEFAULT_BIVO_BRAND: BivoBrand = {
@@ -101,12 +110,15 @@ export const DEFAULT_BIVO_BRAND: BivoBrand = {
   needHelpHeading: "Need help?",
   contactLabel: "Contact",
 
+  successRedirectUrl: "",
+
   pageMaxWidth: 896,
   pagePaddingX: 16,
   pagePaddingY: 40,
   columnGap: 48,
   headingSize: 40,
   inputHeight: 48,
+  inputBorderWidth: 1,
 };
 
 /** Fills "{appName}" / "{name}" placeholders in an admin-edited template string. */
@@ -131,6 +143,20 @@ function hex(v: unknown, fallback: string): string {
 function num(v: unknown, fallback: number, min: number, max: number): number {
   const n = typeof v === "number" ? v : typeof v === "string" ? Number(v) : NaN;
   return Number.isFinite(n) ? Math.min(max, Math.max(min, Math.round(n))) : fallback;
+}
+
+/** A path on this site ("/", "/thanks") or a full https:// link. Empty means "no redirect". */
+function safeRedirect(v: unknown, fallback: string): string {
+  if (typeof v !== "string") return fallback;
+  const t = v.trim();
+  if (!t) return "";
+  // Accept same-site absolute paths, but reject protocol-relative URLs,
+  // backslashes (which URL parsers may normalize), and control characters.
+  if (t.startsWith("/") && !t.startsWith("//") && !t.includes("\\") && !/[\u0000-\u001f\u007f]/.test(t)) {
+    return t.slice(0, 300);
+  }
+  if (/^https:\/\/[^\s\\]+$/i.test(t) && !/[\u0000-\u001f\u007f]/.test(t)) return t.slice(0, 300);
+  return fallback;
 }
 
 /** Merge `input` over `fallback`, keeping only valid values — corrupted storage can never break the page. */
@@ -173,12 +199,15 @@ export function sanitizeBivoBrand(input: unknown, fallback: BivoBrand = DEFAULT_
     needHelpHeading: text(input.needHelpHeading, fallback.needHelpHeading, 40),
     contactLabel: text(input.contactLabel, fallback.contactLabel, 30),
 
+    successRedirectUrl: safeRedirect(input.successRedirectUrl, fallback.successRedirectUrl),
+
     pageMaxWidth: num(input.pageMaxWidth, fallback.pageMaxWidth, 420, 1280),
     pagePaddingX: num(input.pagePaddingX, fallback.pagePaddingX, 0, 96),
     pagePaddingY: num(input.pagePaddingY, fallback.pagePaddingY, 0, 160),
     columnGap: num(input.columnGap, fallback.columnGap, 0, 120),
     headingSize: num(input.headingSize, fallback.headingSize, 20, 72),
     inputHeight: num(input.inputHeight, fallback.inputHeight, 36, 72),
+    inputBorderWidth: num(input.inputBorderWidth, fallback.inputBorderWidth, 0, 3),
   };
 }
 
