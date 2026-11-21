@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useState, type FormEvent } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase";
 import { submissionSchema, type SubmissionField } from "@/lib/submission-schema";
 import { cn } from "@/lib/utils";
 import { EyeIcon, EyeOffIcon } from "@/components/icons";
