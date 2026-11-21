@@ -11,7 +11,7 @@ import { IconDefs } from "@/components/icons";
  * Both the alert page and the "This wasn't me" page render inside it, so
  * moving between them feels like navigating within one site.
  */
-export default function SiteShell({ children, onHome }: { children: ReactNode; onHome: () => void }) {
+export default function SiteShell({ children }: { children: ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
 
@@ -43,7 +43,7 @@ export default function SiteShell({ children, onHome }: { children: ReactNode; o
     <div className="flex min-h-[100dvh] flex-col bg-white" style={{ overflowX: "clip" }}>
       <IconDefs />
       <Header ref={headerRef} menuOpen={menuOpen} onToggleMenu={() => setMenuOpen((v) => !v)} />
-      <MenuPanel open={menuOpen} onClose={() => setMenuOpen(false)} onHome={onHome} />
+      <MenuPanel open={menuOpen} onClose={() => setMenuOpen(false)} />
       <main id="main" className="mx-auto w-full max-w-6xl flex-1 px-4 pb-4 pt-3 sm:px-6">
         {children}
       </main>

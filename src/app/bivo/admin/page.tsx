@@ -20,7 +20,7 @@ export default function BivoAdminPage() {
     <div className="bivo min-h-dvh px-4 py-10">
       <div className="mx-auto max-w-5xl">
         <div className="mb-6 flex items-center justify-between">
-          <Link href="/bivo" className="inline-flex items-center gap-2 text-sm hover:underline" style={{ color: "var(--bivo-muted)" }}>
+          <Link href="/bivo" className="bivo-muted-text inline-flex items-center gap-2 text-sm hover:underline">
             <ArrowLeftIcon className="h-4 w-4" /> Back to sign-in
           </Link>
           {state.phase === "admin" && (
@@ -67,7 +67,7 @@ function StatusCard({ title, actions, children }: { title: string; actions?: Rea
   return (
     <div className="bivo-card p-10 text-center">
       <h1 className="bivo-font-display text-3xl font-semibold">{title}</h1>
-      <p className="mt-3" style={{ color: "var(--bivo-muted)" }}>
+      <p className="mt-3 bivo-muted-text">
         {children}
       </p>
       {actions && <div className="mt-6 flex justify-center">{actions}</div>}

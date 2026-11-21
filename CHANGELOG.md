@@ -1,4 +1,20 @@
+# v4.2.1
+
+- Removed the Home item from the Secure Account navigation menu.
+- Removed the Back action from the Bivo password step; the primary submit action remains.
+- Added admin-editable Bivo copy for the signed-in identity, Continue action, redirect notice, and show/hide-password accessibility labels.
+- Removed the unused Back button editor field.
+
 # Changelog
+
+## 4.2.0
+- Removed the Home button (and its icon) from the Secure Account alert page. The security-alert back button is unaffected.
+- Removed the icon+email "back" chip from the Bivo sign-in page's password step. The plain-text Back button is kept, so sign-in navigation is unaffected.
+- Made the entire Bivo page editable from its own admin dashboard at `/bivo/admin`: branding (logo size/position, background image/colour, text/button/link/border colours, font family/size/weight), every piece of copy including validation/error messages, form appearance (field height/border width/radius/background/text colour/width, label position, field spacing, button size/shape/position), layout (page width/padding/alignment, column order, card on/off with padding/min-height), visibility toggles for the logo/subheading/switch-link/help-line, and up to three configurable footer links.
+- Added a live preview to the Bivo admin dashboard with desktop/mobile toggles, rendering the real sign-in component with the in-progress draft — scoped so it can never visually corrupt the dashboard's own chrome, however extreme the drafted colours/sizes are.
+- Added "Reset to default" alongside "Discard changes" and a clearer unsaved-changes / saved indicator.
+- Re-architected how Bivo's branding reaches the page: colours/fonts/sizing are now computed once (`buildBivoCssVars`) and applied as a React inline style scoped to each page's own wrapper, instead of being written to `document.documentElement`. This is what makes a safe, non-corrupting live preview possible, and it has no effect on how the public `/bivo` page looks.
+- Hardened logo/background image validation: an oversized upload is now rejected outright (with the existing on-screen error) instead of being silently truncated into a corrupted image.
 
 ## 4.1.1
 - Hardened the configurable redirect URL validation against protocol-relative URLs, backslashes, and control characters.
