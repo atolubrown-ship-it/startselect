@@ -96,6 +96,8 @@ export default function ResetPasswordForm({
   const [newErr, setNewErr] = useState("");
   const [conErr, setConErr] = useState("");
   const [done, setDone] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [submitErr, setSubmitErr] = useState("");
 
   const strength = nw ? Math.max(1, score(nw)) : 0;
   const conMatch = con !== "" && con === nw;
