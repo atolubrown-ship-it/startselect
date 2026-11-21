@@ -105,27 +105,34 @@ html {
    site; uses the same Tailwind + CSS-variable pattern as the Quilo site shell.
    ========================================================================== */
 .bivo {
-  --bivo-bg: #fdfbf5;
-  --bivo-card: #fffdf9;
+  /* --bivo-primary, --bivo-primary-ink, --bivo-link and the --bivo-page-*
+     layout variables are set inline, per render, from the admin's Colours
+     and Layout settings (src/lib/bivoBrand.ts, src/app/bivo/page.tsx);
+     the values below are only the pre-hydration fallback. */
+  --bivo-bg: #ffffff;
+  --bivo-card: #ffffff;
   --bivo-ink: #10231d;
   --bivo-muted: #5d6b64;
   --bivo-border: #dde3dc;
   --bivo-input-border: #c7cfc7;
   --bivo-primary: #1f6b4f;
-  --bivo-primary-dark: #17543e;
-  --bivo-primary-ink: #fdfbf5;
-  --bivo-accent: #e08a3c;
+  --bivo-primary-ink: #ffffff;
+  --bivo-link: #1f6b4f;
   --bivo-success: #2f8f5b;
   --bivo-danger: #c23b2d;
   --bivo-danger-bg: #fbeae7;
   --bivo-radius-lg: 1.5rem;
   --bivo-radius: 0.875rem;
 
+  --bivo-page-max-width: 896px;
+  --bivo-page-px: 16px;
+  --bivo-page-py: 40px;
+  --bivo-column-gap: 48px;
+  --bivo-heading-size: 40px;
+  --bivo-input-height: 48px;
+
   min-height: 100dvh;
   background-color: var(--bivo-bg);
-  background-image:
-    radial-gradient(60rem 40rem at 10% -10%, rgba(31, 107, 79, 0.08), transparent 60%),
-    radial-gradient(50rem 35rem at 110% 110%, rgba(224, 138, 60, 0.08), transparent 60%);
   color: var(--bivo-ink);
   font-family: "Outfit", ui-sans-serif, system-ui, sans-serif;
 }
@@ -136,21 +143,31 @@ html {
 
 .bivo .bivo-card {
   background-color: var(--bivo-card);
+  border: 1px solid var(--bivo-border);
   border-radius: var(--bivo-radius-lg);
-  box-shadow: 0 1px 2px rgba(16, 35, 29, 0.06), 0 24px 60px -24px rgba(16, 35, 29, 0.22);
+}
+
+.bivo .bivo-link {
+  color: var(--bivo-link);
 }
 
 .bivo .bivo-mark {
-  background-image: linear-gradient(135deg, var(--bivo-primary), var(--bivo-accent));
+  background-color: var(--bivo-primary);
 }
 
+/* Floating-label field: the input's own placeholder is a single space (so
+   :placeholder-shown behaves), and the visible label sits over it, resting at
+   input height until the field is focused or filled, when it rises and shrinks. */
+.bivo .bivo-field {
+  position: relative;
+}
 .bivo .bivo-input {
   width: 100%;
   border-radius: var(--bivo-radius);
   border: 1px solid var(--bivo-input-border);
   background-color: #fff;
-  padding: 0 1rem;
-  height: 3rem;
+  padding: 0.9rem 1rem 0;
+  height: var(--bivo-input-height);
   font-size: 16px; /* keep iOS Safari from zooming on focus */
   color: var(--bivo-ink);
   outline: none;
@@ -160,6 +177,31 @@ html {
 }
 .bivo .bivo-input[aria-invalid="true"] {
   border-color: var(--bivo-danger);
+}
+.bivo .bivo-floating-label {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  transform-origin: left top;
+  font-size: 16px;
+  color: var(--bivo-muted);
+  background: transparent;
+  pointer-events: none;
+  transition: top 150ms ease, transform 150ms ease, font-size 150ms ease, color 150ms ease;
+}
+.bivo .bivo-input:focus ~ .bivo-floating-label,
+.bivo .bivo-input:not(:placeholder-shown) ~ .bivo-floating-label {
+  top: 0.45rem;
+  transform: translateY(0) scale(0.78);
+  color: var(--bivo-primary);
+}
+.bivo .bivo-input[aria-invalid="true"] ~ .bivo-floating-label {
+  color: var(--bivo-danger);
+}
+/* Extra right padding for a field with a trailing control (the password show/hide button). */
+.bivo .bivo-input.bivo-input-pr {
+  padding-right: 3rem;
 }
 
 .bivo .bivo-btn {
@@ -184,7 +226,7 @@ html {
   color: var(--bivo-primary-ink);
 }
 .bivo .bivo-btn-primary:hover:not(:disabled) {
-  background-color: var(--bivo-primary-dark);
+  filter: brightness(0.92);
 }
 .bivo .bivo-btn-ghost {
   background-color: transparent;

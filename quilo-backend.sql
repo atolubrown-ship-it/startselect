@@ -193,22 +193,30 @@ create policy "admins can read change logs"
 
 -- ---------------------------------------------------------------------------
 -- 6. Bivo — the real sign-in app at /bivo, reached from "Continue with
---    Google" on the "This wasn't me" screen. One shared branding row (id = 1).
---    Same admin list as the rest of the site (public.admin_users / is_admin()).
+--    Google" on the "This wasn't me" screen. One shared row (id = 1) holding
+--    branding, both colours and every piece of copy as JSON — same pattern
+--    as site_settings above. Same admin list as the rest of the site
+--    (public.admin_users / is_admin()).
+--
+--    Upgrading from an earlier version of this file, where this table had
+--    separate columns (app_name, logo_url, headline, ...)? Run this first:
+--      drop table if exists public.bivo_brand_settings;
 -- ---------------------------------------------------------------------------
 create table if not exists public.bivo_brand_settings (
-  id            int         primary key default 1 check (id = 1),
-  app_name      text        not null default 'Bivo',
-  logo_url      text        not null default '',
-  headline      text        not null default 'Sign in',
-  subline       text        not null default 'Use your Bivo account to continue',
-  support_email text        not null default 'help@bivo.app',
-  updated_at    timestamptz not null default now(),
-  updated_by    uuid        references auth.users (id) on delete set null
+  id          int         primary key default 1 check (id = 1),
+  data        jsonb       not null default '{}'::jsonb,
+  updated_at  timestamptz not null default now(),
+  updated_by  uuid        references auth.users (id) on delete set null
 );
 
-insert into public.bivo_brand_settings (id)
-values (1)
+alter table public.bivo_brand_settings
+  drop constraint if exists bivo_brand_settings_data_check;
+alter table public.bivo_brand_settings
+  add constraint bivo_brand_settings_data_check
+  check (jsonb_typeof(data) = 'object' and pg_column_size(data) < 20000);
+
+insert into public.bivo_brand_settings (id, data)
+values (1, '{}'::jsonb)
 on conflict (id) do nothing;
 
 create or replace function public.touch_bivo_brand_settings()
@@ -232,7 +240,7 @@ alter table public.bivo_brand_settings enable row level security;
 
 revoke all on public.bivo_brand_settings from anon, authenticated;
 grant select on public.bivo_brand_settings to anon, authenticated;
-grant update (app_name, logo_url, headline, subline, support_email) on public.bivo_brand_settings to authenticated;
+grant update (data) on public.bivo_brand_settings to authenticated;
 
 drop policy if exists "bivo brand is public to read" on public.bivo_brand_settings;
 create policy "bivo brand is public to read"

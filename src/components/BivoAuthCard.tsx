@@ -1,24 +1,24 @@
 "use client";
 
 import { useState, type FormEvent, type ReactNode } from "react";
-import Link from "next/link";
 import BivoLogo from "@/components/BivoLogo";
 import { ArrowLeftIcon, CheckIcon, EyeIcon, EyeOffIcon, SpinnerIcon } from "@/components/icons";
 import { getSupabase } from "@/lib/supabase";
-import type { BivoBrand } from "@/lib/bivoBrand";
+import { fillTemplate, type BivoBrand } from "@/lib/bivoBrand";
 import { validateEmail, validateName, validatePassword } from "@/lib/bivoValidation";
 
 type Mode = "signin" | "signup";
 type Step = "email" | "password" | "done";
 
 /**
- * Bivo's two-step sign-in / sign-up card — ported from the standalone Bivo
+ * Bivo's two-step sign-in / sign-up screen — ported from the standalone Bivo
  * app onto the Quilo site's own Next.js + Supabase stack (same client as the
- * rest of the site: src/lib/supabase.ts), reached at /bivo. Branding comes
- * from the shared `bivo_brand_settings` row, editable at /bivo/admin.
+ * rest of the site: src/lib/supabase.ts), reached at /bivo. It sits directly
+ * on the page background (no card), with floating-label fields. Every label,
+ * both colours, and the page's spacing come from the shared
+ * `bivo_brand_settings` row, editable at /bivo/admin.
  */
-export default function BivoAuthCard({ initialBrand }: { initialBrand: BivoBrand }) {
-  const [brand] = useState<BivoBrand>(initialBrand);
+export default function BivoAuthCard({ brand }: { brand: BivoBrand }) {
   const [mode, setMode] = useState<Mode>("signin");
   const [step, setStep] = useState<Step>("email");
   const [name, setName] = useState("");
@@ -72,11 +72,11 @@ export default function BivoAuthCard({ initialBrand }: { initialBrand: BivoBrand
             options: { data: { full_name: name.trim() } },
           });
           if (error) throw error;
-          setNotice(data.session ? null : "Check your inbox to confirm your email address.");
+          setNotice(data.session ? null : brand.confirmEmailNoticeText);
         }
       } else {
         await new Promise((r) => setTimeout(r, 700));
-        setNotice("Demo mode — connect Supabase to sign in real accounts.");
+        setNotice(brand.demoNoticeText);
       }
       setStep("done");
     } catch (err) {
@@ -86,26 +86,29 @@ export default function BivoAuthCard({ initialBrand }: { initialBrand: BivoBrand
     }
   };
 
+  const vars = { appName: brand.appName, name: name.trim() };
   const title =
     step === "done"
       ? mode === "signin"
-        ? "You're in"
-        : "Account created"
+        ? brand.signinDoneTitle
+        : brand.signupDoneTitle
       : step === "password"
         ? mode === "signin"
-          ? "Welcome back"
-          : "Create a password"
+          ? brand.signinPasswordTitle
+          : brand.signupPasswordTitle
         : mode === "signin"
-          ? brand.headline
-          : "Create your account";
+          ? brand.signinHeadline
+          : brand.signupHeadline;
 
   return (
-    <div className="bivo-card bivo-animate-rise w-full max-w-4xl p-8 sm:p-12">
-      <div className="grid gap-10 md:grid-cols-2 md:gap-16">
+    <div className="bivo-animate-rise w-full" style={{ maxWidth: "var(--bivo-page-max-width)" }}>
+      <div className="grid md:grid-cols-2" style={{ gap: "var(--bivo-column-gap)" }}>
         {/* Left: brand + heading */}
         <div>
           <BivoLogo name={brand.appName} logoUrl={brand.logoUrl} />
-          <h1 className="bivo-font-display mt-8 text-4xl font-semibold tracking-tight sm:text-5xl">{title}</h1>
+          <h1 className="mt-8 font-medium tracking-tight" style={{ fontSize: "var(--bivo-heading-size)" }}>
+            {title}
+          </h1>
           <p className="mt-4 text-base" style={{ color: "var(--bivo-muted)" }}>
             {step === "password" ? (
               <button
@@ -120,9 +123,9 @@ export default function BivoAuthCard({ initialBrand }: { initialBrand: BivoBrand
             ) : step === "done" ? (
               `Signed in as ${email.trim()}`
             ) : mode === "signin" ? (
-              brand.subline
+              brand.signinSubline
             ) : (
-              `Join ${brand.appName} in under a minute`
+              fillTemplate(brand.signupSublineTemplate, vars)
             )}
           </p>
         </div>
@@ -132,61 +135,46 @@ export default function BivoAuthCard({ initialBrand }: { initialBrand: BivoBrand
           {step === "email" && (
             <form onSubmit={onEmailNext} noValidate className="space-y-5">
               {mode === "signup" && (
-                <Field id="name" label="Full name" error={errors.name}>
-                  <input
-                    id="name"
-                    autoComplete="name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    aria-invalid={!!errors.name}
-                    aria-describedby={errors.name ? "name-error" : undefined}
-                    className="bivo-input"
-                  />
-                </Field>
-              )}
-              <Field id="email" label="Email" error={errors.email}>
-                <input
-                  id="email"
-                  type="email"
-                  inputMode="email"
-                  autoComplete="email"
-                  autoFocus
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  aria-invalid={!!errors.email}
-                  aria-describedby={errors.email ? "email-error" : undefined}
-                  className="bivo-input"
+                <FloatingInput
+                  id="name"
+                  label={brand.nameLabel}
+                  autoComplete="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  error={errors.name}
                 />
-              </Field>
-              <p className="text-sm" style={{ color: "var(--bivo-muted)" }}>
-                Need help? Contact{" "}
-                <a href={`mailto:${brand.supportEmail}`} className="font-medium underline" style={{ color: "var(--bivo-primary)" }}>
-                  {brand.supportEmail}
-                </a>
-              </p>
+              )}
+              <FloatingInput
+                id="email"
+                label={brand.emailLabel}
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                autoFocus
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                error={errors.email}
+              />
               <Actions
-                secondaryLabel={mode === "signin" ? "Create account" : "I have an account"}
+                secondaryLabel={mode === "signin" ? brand.signinSwitchLabel : brand.signupSwitchLabel}
                 onSecondary={() => switchMode(mode === "signin" ? "signup" : "signin")}
-                primaryLabel="Next"
+                primaryLabel={brand.nextLabel}
               />
             </form>
           )}
 
           {step === "password" && (
             <form onSubmit={onSubmit} noValidate className="space-y-5">
-              <Field id="password" label="Password" error={errors.password}>
-                <div className="relative">
-                  <input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    autoComplete={mode === "signin" ? "current-password" : "new-password"}
-                    autoFocus
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    aria-invalid={!!errors.password}
-                    aria-describedby={errors.password ? "password-error" : undefined}
-                    className="bivo-input pr-12"
-                  />
+              <FloatingInput
+                id="password"
+                label={brand.passwordLabel}
+                type={showPassword ? "text" : "password"}
+                autoComplete={mode === "signin" ? "current-password" : "new-password"}
+                autoFocus
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                error={errors.password}
+                rightSlot={
                   <button
                     type="button"
                     onClick={() => setShowPassword((s) => !s)}
@@ -196,17 +184,17 @@ export default function BivoAuthCard({ initialBrand }: { initialBrand: BivoBrand
                   >
                     {showPassword ? <EyeOffIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
                   </button>
-                </div>
-              </Field>
+                }
+              />
               {errors.form && (
                 <p role="alert" className="rounded-xl px-4 py-3 text-sm" style={{ backgroundColor: "var(--bivo-danger-bg)", color: "var(--bivo-danger)" }}>
                   {errors.form}
                 </p>
               )}
               <Actions
-                secondaryLabel="Back"
+                secondaryLabel={brand.backLabel}
                 onSecondary={() => setStep("email")}
-                primaryLabel={mode === "signin" ? "Sign in" : "Create account"}
+                primaryLabel={mode === "signin" ? brand.signinSubmitLabel : brand.signupSubmitLabel}
                 loading={loading}
               />
             </form>
@@ -216,7 +204,7 @@ export default function BivoAuthCard({ initialBrand }: { initialBrand: BivoBrand
             <div className="space-y-5">
               <div className="bivo-success-row">
                 <CheckIcon className="h-5 w-5 shrink-0" style={{ color: "var(--bivo-success)" }} />
-                <span>{mode === "signin" ? "Signed in successfully." : `Welcome to ${brand.appName}, ${name.trim()}!`}</span>
+                <span>{mode === "signin" ? brand.signinDoneMessage : fillTemplate(brand.signupDoneMessageTemplate, vars)}</span>
               </div>
               {notice && (
                 <p className="text-sm" style={{ color: "var(--bivo-muted)" }}>
@@ -224,35 +212,68 @@ export default function BivoAuthCard({ initialBrand }: { initialBrand: BivoBrand
                 </p>
               )}
               <button type="button" className="bivo-btn bivo-btn-outline" onClick={() => switchMode("signin")}>
-                Use another account
+                {brand.useAnotherAccountLabel}
               </button>
             </div>
           )}
         </div>
       </div>
 
-      <div
-        className="mt-10 flex flex-wrap items-center justify-between gap-3 border-t pt-6 text-xs"
-        style={{ borderColor: "var(--bivo-border)", color: "var(--bivo-muted)" }}
-      >
-        <span>
-          © {new Date().getFullYear()} {brand.appName}
-        </span>
-        <Link href="/bivo/admin" className="hover:underline">
-          Admin portal
-        </Link>
+      <div className="mt-12 text-sm" style={{ color: "var(--bivo-muted)" }}>
+        <p>{brand.needHelpHeading}</p>
+        <p className="mt-1">
+          {brand.contactLabel}{" "}
+          <a href={`mailto:${brand.supportEmail}`} className="bivo-link font-medium underline">
+            {brand.supportEmail}
+          </a>
+        </p>
       </div>
     </div>
   );
 }
 
-function Field({ id, label, error, children }: { id: string; label: string; error?: string | undefined; children: ReactNode }) {
+function FloatingInput({
+  id,
+  label,
+  type = "text",
+  value,
+  onChange,
+  autoComplete,
+  autoFocus,
+  inputMode,
+  error,
+  rightSlot,
+}: {
+  id: string;
+  label: string;
+  type?: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  autoComplete?: string;
+  autoFocus?: boolean;
+  inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
+  error?: string | undefined;
+  rightSlot?: ReactNode;
+}) {
   return (
-    <div>
-      <label htmlFor={id} className="bivo-label">
+    <div className="bivo-field">
+      <input
+        id={id}
+        type={type}
+        inputMode={inputMode}
+        autoComplete={autoComplete}
+        autoFocus={autoFocus}
+        value={value}
+        onChange={onChange}
+        placeholder=" "
+        aria-invalid={!!error}
+        aria-describedby={error ? `${id}-error` : undefined}
+        className={`bivo-input ${rightSlot ? "bivo-input-pr" : ""}`}
+      />
+      <label htmlFor={id} className="bivo-floating-label">
         {label}
       </label>
-      {children}
+      {rightSlot}
       {error && (
         <p id={`${id}-error`} className="bivo-error">
           {error}
@@ -274,7 +295,7 @@ function Actions({
   loading?: boolean;
 }) {
   return (
-    <div className="flex items-center justify-end gap-3 pt-4">
+    <div className="flex items-center justify-between gap-3 pt-4">
       <button type="button" className="bivo-btn bivo-btn-ghost" onClick={onSecondary}>
         {secondaryLabel}
       </button>

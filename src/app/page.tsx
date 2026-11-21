@@ -27,7 +27,7 @@ export default function SecurityAlertPage() {
   return (
     <SiteShell onHome={() => setView("alert")}>
       <div className="mx-auto w-full max-w-xl">
-        <Breadcrumb view={view} onBack={() => setView("alert")} />
+        {view !== "alert" && <Breadcrumb onBack={() => setView("alert")} />}
         <div key={view} className="q-view-in">
           {view === "alert" && (
             <AlertScreen onRecognized={() => setView("recognized")} onNotMe={() => setView("notme")} />
@@ -40,16 +40,16 @@ export default function SecurityAlertPage() {
   );
 }
 
-function Breadcrumb({ view, onBack }: { view: View; onBack: () => void }) {
-  const atHome = view === "alert";
+/** Back-navigation shown on the response screens only; the first (alert) screen has no "Home" button. */
+function Breadcrumb({ onBack }: { onBack: () => void }) {
   return (
     <button
       type="button"
-      onClick={atHome ? () => window.scrollTo({ top: 0, behavior: "smooth" }) : onBack}
+      onClick={onBack}
       className="-ml-2 flex h-11 items-center gap-1 pr-3 text-[13px] font-medium uppercase leading-5 tracking-[0.05em] text-q-ink"
     >
       <ChevronLeftIcon className="h-5 w-5 text-q-sub" />
-      {atHome ? "Home" : "Security alert"}
+      Security alert
     </button>
   );
 }

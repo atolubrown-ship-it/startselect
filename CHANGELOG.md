@@ -1,5 +1,22 @@
 # Changelog
 
+## 4.2.2
+- No SQL change needed — the Bivo branding row already stores everything as JSON, so new fields below just work once you save from `/bivo/admin`.
+- Bivo fields are now floating-label inputs: empty and unfocused, the label sits centered like a placeholder; focused or filled, it rises and shrinks above the field, same behaviour as a typical native sign-in form.
+- The "Sign in" / "Create your account" heading is a lighter weight.
+- The help line is now two lines ("Need help?" then "Contact help@bivo.app" on its own line) and sits lower on the page, below the form — both lines are admin-editable under a new "Help line" card.
+- Removed the language-picker / Help / Privacy / Terms row added in the previous round, along with its admin fields.
+- The sign-in form no longer sits in its own white card with a border — it's directly on the page background now.
+- New "Layout & spacing" card in `/bivo/admin`: content width, page padding (left/right, top/bottom), the gap between the two columns, heading text size, and field height — all in pixels, with a live-updating preview.
+
+## 4.2.1
+- Security alert screen: the "Home" button on the first (alert) page is removed. The back button on the "Yes, this was me" / "This wasn't me" screens is unchanged.
+- Bivo (`/bivo`): background is now plain white, and **both the button colour and the hyperlink text colour are admin-controlled** (new "Colours" card in `/bivo/admin`) — button text contrast adjusts automatically.
+- Bivo: **every piece of text on the sign-in / sign-up screens is now admin-editable** — headings, subtitles, field labels, button labels, success messages, the demo-mode notice, and more (new "Sign-in text", "Sign-up text" and "Shared labels" cards in `/bivo/admin`).
+- Bivo sign-in page: removed the "Admin portal" link and the "© Bivo" line from the bottom of the card. Below the card there's now a footer with a language picker on the left and Help / Privacy / Terms (admin-editable label + link) on the right.
+- Bivo sign-in/sign-up form: the secondary action ("Create account" / "I have an account" / "Back") now sits at the left edge, away from the primary button ("Next" / "Sign in" / "Create account") on the right.
+- `bivo_brand_settings` is restructured to hold branding, colours and all copy as one JSON column (`data`), same pattern as the main site's `site_settings` — see the updated section 6 of `quilo-backend.sql`. **If you already ran an earlier version of this file**, run `drop table if exists public.bivo_brand_settings;` first, then re-run the whole file.
+
 ## 4.2.0
 - **Bivo is now part of this site**, at `/bivo` — ported from the separate Bivo project onto Quilo's own stack (Next.js + Tailwind + Supabase) instead of its original TanStack Start / Vite / Bun setup. No new build tool, framework or Vercel project needed.
 - On the "This wasn't me" screen, **"Continue with Google" is now a real button**: it takes people to the Bivo sign-in app at `/bivo`, inside this same site. The Facebook and Apple buttons are unchanged (demonstration only).
