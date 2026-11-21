@@ -8,10 +8,11 @@ import { useAdminAuth } from "@/lib/useAdminAuth";
 import { validateEmail, validatePassword } from "@/lib/bivoValidation";
 
 /**
- * Admin portal for the Bivo branding, at /signin/admin.
+ * Independent admin dashboard for the Bivo sign-in page, at /signin/admin —
+ * separate from both the public /signin page and the main site's /admin.
  * Uses the same admin check as the rest of the site (public.admin_users /
  * is_admin() in quilo-backend.sql) — one admin list for both the main site
- * settings and the Bivo branding.
+ * settings and the Bivo branding; there is no separate hardcoded password.
  */
 export default function BivoAdminPage() {
   const { state, signIn, signOut, recheck } = useAdminAuth();
@@ -65,7 +66,7 @@ export default function BivoAdminPage() {
 
 function StatusCard({ title, actions, children }: { title: string; actions?: ReactNode; children: ReactNode }) {
   return (
-    <div className="bivo-card p-10 text-center">
+    <div className="bivo-admin-card p-10 text-center">
       <h1 className="bivo-font-display text-3xl font-semibold">{title}</h1>
       <p className="mt-3 bivo-muted-text">
         {children}
@@ -96,7 +97,7 @@ function BivoAdminLogin({ onSignIn }: { onSignIn: (email: string, password: stri
   };
 
   return (
-    <form onSubmit={onSubmit} noValidate className="bivo-card mx-auto max-w-md space-y-5 p-10">
+    <form onSubmit={onSubmit} noValidate className="bivo-admin-card mx-auto max-w-md space-y-5">
       <h1 className="bivo-font-display text-3xl font-semibold">Admin sign in</h1>
       <div>
         <label htmlFor="bivo-admin-email" className="bivo-label">

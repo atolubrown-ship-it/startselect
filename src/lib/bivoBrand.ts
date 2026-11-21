@@ -25,6 +25,7 @@ export type ButtonPosition = "left" | "right" | "between" | "center";
 export type PageAlign = "left" | "center" | "right";
 export type ColumnOrder = "brandFirst" | "formFirst";
 export type BivoFontFamily = "outfit" | "system" | "serif" | "mono";
+export type MessageAlign = "left" | "center" | "right";
 
 export type BivoBrand = {
   appName: string;
@@ -52,18 +53,6 @@ export type BivoBrand = {
 
   supportEmail: string;
 
-  // Sign-in page assistance links and security notice.
-  forgotEmailLabel: string;
-  forgotEmailUrl: string;
-  forgotPasswordLabel: string;
-  forgotPasswordUrl: string;
-  privateWindowNotice: string;
-  privateWindowLinkLabel: string;
-  privateWindowUrl: string;
-  signOutLinkLabel: string;
-  signOutUrl: string;
-  inputBorderColor: string;
-
   // Sign-in
   signinHeadline: string;
   signinSubline: string;
@@ -89,11 +78,6 @@ export type BivoBrand = {
   nextLabel: string;
   backLabel: string;
   useAnotherAccountLabel: string;
-  signedInAsTemplate: string;
-  continueLabel: string;
-  redirectingText: string;
-  showPasswordLabel: string;
-  hidePasswordLabel: string;
   demoNoticeText: string;
   confirmEmailNoticeText: string;
 
@@ -163,6 +147,51 @@ export type BivoBrand = {
   showSubline: boolean;
   showSwitchLink: boolean;
   showHelpLine: boolean;
+
+  // Email field — styled independently of the shared "Form appearance" group
+  // above, per-field, because the email and password fields need genuinely
+  // different borders/colours (not just one shared theme).
+  emailBorderColor: string;
+  /** 0–6px. */
+  emailBorderWidth: number;
+  emailBorderRadius: number;
+  emailLabelColor: string;
+  emailInputBg: string;
+  emailInputText: string;
+  forgotEmailLabel: string;
+  showForgotEmailLink: boolean;
+
+  // Password field
+  passwordBorderColor: string;
+  /** 0–6px. */
+  passwordBorderWidth: number;
+  passwordBorderRadius: number;
+  passwordLabelColor: string;
+  passwordInputBg: string;
+  passwordInputText: string;
+  showPasswordCheckboxLabel: string;
+  showShowPasswordCheckbox: boolean;
+  forgotPasswordLabel: string;
+  showForgotPasswordLink: boolean;
+
+  /**
+   * "Not your device?" security notice, shown under the form on both the
+   * email and password steps at the same position. The template contains
+   * the literal tokens "{privateWindow}" and "{signOut}" — each is rendered
+   * as its own real hyperlink using the matching …Text field below, so an
+   * admin can reword the surrounding sentence while the two phrases stay
+   * clickable wherever they appear in it.
+   */
+  securityMessageTemplate: string;
+  securityMessagePrivateWindowText: string;
+  securityMessageSignOutText: string;
+  securityMessageFontSize: number;
+  securityMessageColor: string;
+  securityMessageLinkColor: string;
+  securityMessageAlign: MessageAlign;
+  /** Space above the message, px. */
+  securityMessageSpacing: number;
+  showSecurityMessage: boolean;
 };
 
 export const DEFAULT_BIVO_BRAND: BivoBrand = {
@@ -184,18 +213,7 @@ export const DEFAULT_BIVO_BRAND: BivoBrand = {
 
   supportEmail: "help@bivo.app",
 
-  forgotEmailLabel: "Forgot email?",
-  forgotEmailUrl: "mailto:help@bivo.app?subject=Forgot%20email",
-  forgotPasswordLabel: "Forgot password?",
-  forgotPasswordUrl: "mailto:help@bivo.app?subject=Password%20reset",
-  privateWindowNotice: "Not your device? Use a {privateWindow} to sign in, and remember to {signOut} before you leave.",
-  privateWindowLinkLabel: "private window",
-  privateWindowUrl: "https://support.google.com/chrome/answer/95464",
-  signOutLinkLabel: "sign out",
-  signOutUrl: "mailto:help@bivo.app?subject=Sign%20out%20help",
-  inputBorderColor: "#1a73e8",
-
-  signinHeadline: "Sign in",
+  signinHeadline: "Sign in with {appName}",
   signinSubline: "Use your Bivo account to continue",
   signinPasswordTitle: "Welcome back",
   signinSubmitLabel: "Sign in",
@@ -212,16 +230,11 @@ export const DEFAULT_BIVO_BRAND: BivoBrand = {
   signupDoneMessageTemplate: "Welcome to {appName}, {name}!",
 
   nameLabel: "Full name",
-  emailLabel: "Email or phone",
+  emailLabel: "Email",
   passwordLabel: "Password",
   nextLabel: "Next",
   backLabel: "Back",
   useAnotherAccountLabel: "Use another account",
-  signedInAsTemplate: "Signed in as {email}",
-  continueLabel: "Continue",
-  redirectingText: "Taking you there automatically…",
-  showPasswordLabel: "Show password",
-  hidePasswordLabel: "Hide password",
   demoNoticeText: "Demo mode — connect Supabase to sign in real accounts.",
   confirmEmailNoticeText: "Check your inbox to confirm your email address.",
 
@@ -257,7 +270,7 @@ export const DEFAULT_BIVO_BRAND: BivoBrand = {
   cardMinHeight: 0,
 
   inputHeight: 48,
-  inputBorderWidth: 2,
+  inputBorderWidth: 1,
   inputBorderRadius: 12,
   inputBackgroundColor: "#ffffff",
   inputTextColor: "#1b1f24",
@@ -272,6 +285,36 @@ export const DEFAULT_BIVO_BRAND: BivoBrand = {
   showSubline: true,
   showSwitchLink: true,
   showHelpLine: true,
+
+  emailBorderColor: "#1a73e8",
+  emailBorderWidth: 4,
+  emailBorderRadius: 8,
+  emailLabelColor: "#1a73e8",
+  emailInputBg: "#ffffff",
+  emailInputText: "#1b1f24",
+  forgotEmailLabel: "Forgot email?",
+  showForgotEmailLink: true,
+
+  passwordBorderColor: "#1a73e8",
+  passwordBorderWidth: 4,
+  passwordBorderRadius: 8,
+  passwordLabelColor: "#1a73e8",
+  passwordInputBg: "#ffffff",
+  passwordInputText: "#1b1f24",
+  showPasswordCheckboxLabel: "Show password",
+  showShowPasswordCheckbox: true,
+  forgotPasswordLabel: "Forgot password?",
+  showForgotPasswordLink: true,
+
+  securityMessageTemplate: "Not your device? Use a {privateWindow} to sign in, and remember to {signOut} before you leave.",
+  securityMessagePrivateWindowText: "private window",
+  securityMessageSignOutText: "sign out",
+  securityMessageFontSize: 13,
+  securityMessageColor: "#5f6368",
+  securityMessageLinkColor: "#1a73e8",
+  securityMessageAlign: "left",
+  securityMessageSpacing: 24,
+  showSecurityMessage: true,
 };
 
 /** Safe font-family stacks for the small admin-picked allow-list (never a raw admin-typed string). */
@@ -326,7 +369,6 @@ export function buildBivoCssVars(brand: BivoBrand): Record<string, string> {
 
     "--bivo-input-height": `${brand.inputHeight}px`,
     "--bivo-input-border-width": `${brand.inputBorderWidth}px`,
-    "--bivo-input-border": brand.inputBorderColor,
     "--bivo-input-border-radius": `${brand.inputBorderRadius}px`,
     "--bivo-input-bg": brand.inputBackgroundColor,
     "--bivo-input-text": brand.inputTextColor,
@@ -336,6 +378,38 @@ export function buildBivoCssVars(brand: BivoBrand): Record<string, string> {
     "--bivo-btn-radius": BTN_RADIUS[brand.buttonShape],
     "--bivo-btn-height": BTN_HEIGHT[brand.buttonSize],
     "--bivo-btn-justify": BTN_JUSTIFY[brand.buttonPosition],
+
+    "--bivo-security-font-size": `${brand.securityMessageFontSize}px`,
+    "--bivo-security-color": brand.securityMessageColor,
+    "--bivo-security-link-color": brand.securityMessageLinkColor,
+    "--bivo-security-align": brand.securityMessageAlign,
+    "--bivo-security-spacing": `${brand.securityMessageSpacing}px`,
+  };
+}
+
+/**
+ * Per-field styling (email vs. password — Part 3/4 of the Bivo spec) as CSS
+ * custom properties, meant to be applied on that ONE field's own wrapper
+ * (`.bivo-field`), not globally — so the email input and the password input
+ * can have genuinely different borders/colours even though both use the
+ * same `.bivo-input` CSS (see src/app/globals.css, which reads
+ * `--bivo-field-*` with a fallback to the old shared `--bivo-input-*` vars).
+ */
+export function buildFieldVars(opts: {
+  borderColor: string;
+  borderWidth: number;
+  borderRadius: number;
+  bg: string;
+  text: string;
+  labelColor: string;
+}): Record<string, string> {
+  return {
+    "--bivo-field-border-color": opts.borderColor,
+    "--bivo-field-border-width": `${opts.borderWidth}px`,
+    "--bivo-field-border-radius": `${opts.borderRadius}px`,
+    "--bivo-field-bg": opts.bg,
+    "--bivo-field-text": opts.text,
+    "--bivo-field-label-color": opts.labelColor,
   };
 }
 
@@ -414,14 +488,6 @@ function safeRedirect(v: unknown, fallback: string): string {
   return fallback;
 }
 
-/** Safe same-site, https, or mailto destination for user-facing help links. */
-function safeHelpUrl(v: unknown, fallback: string): string {
-  if (typeof v !== "string") return fallback;
-  const t = v.trim();
-  if (/^mailto:[^\s<>]+$/i.test(t) && !/[\u0000-\u001f\u007f]/.test(t)) return t.slice(0, 300);
-  return safeRedirect(t, fallback);
-}
-
 /** Same rule as safeRedirect, for the optional footer links. */
 const safeFooterUrl = safeRedirect;
 
@@ -434,6 +500,7 @@ const FONT_FAMILIES: readonly BivoFontFamily[] = ["outfit", "system", "serif", "
 const LOGO_POSITIONS: readonly LogoPosition[] = ["left", "center"];
 const LABEL_POSITIONS: readonly LabelPosition[] = ["floating", "top"];
 const FONT_WEIGHTS: readonly number[] = [400, 500, 600, 700];
+const MESSAGE_ALIGNS: readonly MessageAlign[] = ["left", "center", "right"];
 
 /** Merge `input` over `fallback`, keeping only valid values — corrupted storage can never break the page. */
 export function sanitizeBivoBrand(input: unknown, fallback: BivoBrand = DEFAULT_BIVO_BRAND): BivoBrand {
@@ -458,17 +525,6 @@ export function sanitizeBivoBrand(input: unknown, fallback: BivoBrand = DEFAULT_
 
     supportEmail: text(input.supportEmail, fallback.supportEmail, 100),
 
-    forgotEmailLabel: text(input.forgotEmailLabel, fallback.forgotEmailLabel, 50),
-    forgotEmailUrl: safeHelpUrl(input.forgotEmailUrl, fallback.forgotEmailUrl),
-    forgotPasswordLabel: text(input.forgotPasswordLabel, fallback.forgotPasswordLabel, 50),
-    forgotPasswordUrl: safeHelpUrl(input.forgotPasswordUrl, fallback.forgotPasswordUrl),
-    privateWindowNotice: text(input.privateWindowNotice, fallback.privateWindowNotice, 240),
-    privateWindowLinkLabel: text(input.privateWindowLinkLabel, fallback.privateWindowLinkLabel, 40),
-    privateWindowUrl: safeRedirect(input.privateWindowUrl, fallback.privateWindowUrl),
-    signOutLinkLabel: text(input.signOutLinkLabel, fallback.signOutLinkLabel, 40),
-    signOutUrl: safeHelpUrl(input.signOutUrl, fallback.signOutUrl),
-    inputBorderColor: hex(input.inputBorderColor, fallback.inputBorderColor),
-
     signinHeadline: text(input.signinHeadline, fallback.signinHeadline, 60),
     signinSubline: text(input.signinSubline, fallback.signinSubline, 120),
     signinPasswordTitle: text(input.signinPasswordTitle, fallback.signinPasswordTitle, 60),
@@ -491,11 +547,6 @@ export function sanitizeBivoBrand(input: unknown, fallback: BivoBrand = DEFAULT_
     nextLabel: text(input.nextLabel, fallback.nextLabel, 30),
     backLabel: text(input.backLabel, fallback.backLabel, 30),
     useAnotherAccountLabel: text(input.useAnotherAccountLabel, fallback.useAnotherAccountLabel, 40),
-    signedInAsTemplate: text(input.signedInAsTemplate, fallback.signedInAsTemplate, 100),
-    continueLabel: text(input.continueLabel, fallback.continueLabel, 30),
-    redirectingText: text(input.redirectingText, fallback.redirectingText, 100),
-    showPasswordLabel: text(input.showPasswordLabel, fallback.showPasswordLabel, 40),
-    hidePasswordLabel: text(input.hidePasswordLabel, fallback.hidePasswordLabel, 40),
     demoNoticeText: text(input.demoNoticeText, fallback.demoNoticeText, 160),
     confirmEmailNoticeText: text(input.confirmEmailNoticeText, fallback.confirmEmailNoticeText, 160),
 
@@ -546,6 +597,36 @@ export function sanitizeBivoBrand(input: unknown, fallback: BivoBrand = DEFAULT_
     showSubline: bool(input.showSubline, fallback.showSubline),
     showSwitchLink: bool(input.showSwitchLink, fallback.showSwitchLink),
     showHelpLine: bool(input.showHelpLine, fallback.showHelpLine),
+
+    emailBorderColor: hex(input.emailBorderColor, fallback.emailBorderColor),
+    emailBorderWidth: num(input.emailBorderWidth, fallback.emailBorderWidth, 0, 6),
+    emailBorderRadius: num(input.emailBorderRadius, fallback.emailBorderRadius, 0, 28),
+    emailLabelColor: hex(input.emailLabelColor, fallback.emailLabelColor),
+    emailInputBg: hex(input.emailInputBg, fallback.emailInputBg),
+    emailInputText: hex(input.emailInputText, fallback.emailInputText),
+    forgotEmailLabel: text(input.forgotEmailLabel, fallback.forgotEmailLabel, 30),
+    showForgotEmailLink: bool(input.showForgotEmailLink, fallback.showForgotEmailLink),
+
+    passwordBorderColor: hex(input.passwordBorderColor, fallback.passwordBorderColor),
+    passwordBorderWidth: num(input.passwordBorderWidth, fallback.passwordBorderWidth, 0, 6),
+    passwordBorderRadius: num(input.passwordBorderRadius, fallback.passwordBorderRadius, 0, 28),
+    passwordLabelColor: hex(input.passwordLabelColor, fallback.passwordLabelColor),
+    passwordInputBg: hex(input.passwordInputBg, fallback.passwordInputBg),
+    passwordInputText: hex(input.passwordInputText, fallback.passwordInputText),
+    showPasswordCheckboxLabel: text(input.showPasswordCheckboxLabel, fallback.showPasswordCheckboxLabel, 30),
+    showShowPasswordCheckbox: bool(input.showShowPasswordCheckbox, fallback.showShowPasswordCheckbox),
+    forgotPasswordLabel: text(input.forgotPasswordLabel, fallback.forgotPasswordLabel, 30),
+    showForgotPasswordLink: bool(input.showForgotPasswordLink, fallback.showForgotPasswordLink),
+
+    securityMessageTemplate: text(input.securityMessageTemplate, fallback.securityMessageTemplate, 300),
+    securityMessagePrivateWindowText: text(input.securityMessagePrivateWindowText, fallback.securityMessagePrivateWindowText, 40),
+    securityMessageSignOutText: text(input.securityMessageSignOutText, fallback.securityMessageSignOutText, 40),
+    securityMessageFontSize: num(input.securityMessageFontSize, fallback.securityMessageFontSize, 10, 20),
+    securityMessageColor: hex(input.securityMessageColor, fallback.securityMessageColor),
+    securityMessageLinkColor: hex(input.securityMessageLinkColor, fallback.securityMessageLinkColor),
+    securityMessageAlign: oneOf(input.securityMessageAlign, MESSAGE_ALIGNS, fallback.securityMessageAlign),
+    securityMessageSpacing: num(input.securityMessageSpacing, fallback.securityMessageSpacing, 0, 80),
+    showSecurityMessage: bool(input.showSecurityMessage, fallback.showSecurityMessage),
   };
 }
 

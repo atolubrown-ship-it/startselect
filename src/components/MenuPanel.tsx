@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import {
   ChevronRightIcon,
+  HomeFillIcon,
   HelpFillIcon,
   ChatFillIcon,
   LockFillIcon,
@@ -15,6 +16,7 @@ import { readableOn } from "@/lib/settings";
 type MenuPanelProps = {
   open: boolean;
   onClose: () => void;
+  onHome: () => void;
 };
 
 function Divider() {
@@ -58,7 +60,7 @@ function PlainRow({ label, onClick }: { label: string; onClick: () => void }) {
   );
 }
 
-export default function MenuPanel({ open, onClose }: MenuPanelProps) {
+export default function MenuPanel({ open, onClose, onHome }: MenuPanelProps) {
   const { settings } = useSettings();
   const name = settings.siteName;
   return (
@@ -77,6 +79,7 @@ export default function MenuPanel({ open, onClose }: MenuPanelProps) {
       >
         <h2 className="q-h2 mb-2">Security</h2>
         <ul>
+          <IconRow icon={<HomeFillIcon className="h-7 w-7" />} label="Home" onClick={() => { onHome(); onClose(); }} />
           <IconRow icon={<HelpFillIcon className="h-7 w-7" />} label="Help Center" onClick={onClose} />
           <IconRow icon={<ChatFillIcon className="h-7 w-7" />} label="Contact Support" onClick={onClose} />
           <IconRow icon={<LockFillIcon className="h-7 w-7" />} label="Privacy Policy" onClick={onClose} />

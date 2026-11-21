@@ -1,14 +1,13 @@
 "use client";
 
-import { useEffect, useState, type CSSProperties, type FormEvent, type ReactNode } from "react";
+import { useEffect, useState, type CSSProperties, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import BivoLogo from "@/components/BivoLogo";
-import { CheckIcon, EyeIcon, EyeOffIcon, SpinnerIcon } from "@/components/icons";
+import { SpinnerIcon } from "@/components/icons";
 import { getSupabase } from "@/lib/supabase";
-import { buildBivoCssVars, fillTemplate, type BivoBrand } from "@/lib/bivoBrand";
-import { validateEmail, validateName, validatePassword } from "@/lib/bivoValidation";
+import { buildBivoCssVars, buildFieldVars, fillTemplate, type BivoBrand } from "@/lib/bivoBrand";
+import { validateEmail, validatePassword } from "@/lib/bivoValidation";
 
-type Mode = "signin" | "signup";
 type Step = "email" | "password" | "done";
 
 /** A path on this site uses the SPA router; a full https:// link is a real navigation. */
@@ -18,48 +17,35 @@ function goTo(href: string, router: ReturnType<typeof useRouter>) {
 }
 
 /**
- * Bivo's two-step sign-in / sign-up screen — ported from the standalone Bivo
- * app onto the Quilo site's own Next.js + Supabase stack (same client as the
- * rest of the site: src/lib/supabase.ts), reached at /bivo.
+ * Bivo's sign-in screen, at /signin — a single-column, Google-style flow
+ * (email, then password), admin-configurable end to end at /signin/admin
+ * (BivoBrandEditor.tsx). There is no sign-up path here and no back arrow
+ * anywhere in the header or the steps: both were explicitly removed.
  *
- * Every visual and copy detail (colours, fonts, spacing, card vs. bare page,
- * field styling, button shape/size/position, footer links, visibility
- * toggles) comes from the shared `bivo_brand_settings` row, editable at
- * /signin/admin — see BivoBrandEditor.tsx. This component applies all of it as
- * a React inline `style` scoped to its own root element (never to
- * `document.documentElement`), so it renders identically whether it's the
- * real public page or the admin's own live preview, without ever touching
- * the admin dashboard's own chrome.
+ * All styling is applied as a React inline `style`, scoped to this
+ * component's own root element (buildBivoCssVars) and, per-field, to each
+ * field's own wrapper (buildFieldVars) — never to `document.documentElement`
+ * — so the same component is safe to render inside the admin's own live
+ * preview without corrupting the dashboard's chrome.
  */
 export default function BivoAuthCard({ brand, previewOnly = false }: { brand: BivoBrand; previewOnly?: boolean }) {
   const router = useRouter();
-  const [mode, setMode] = useState<Mode>("signin");
   const [step, setStep] = useState<Step>("email");
-  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [errors, setErrors] = useState<{ name?: string; email?: string; password?: string; form?: string }>({});
+  const [errors, setErrors] = useState<{ email?: string; password?: string; form?: string }>({});
   const [loading, setLoading] = useState(false);
-  const [notice, setNotice] = useState<string | null>(null);
   const [canRedirect, setCanRedirect] = useState(false);
-
-  const switchMode = (m: Mode) => {
-    setMode(m);
-    setStep("email");
-    setPassword("");
-    setErrors({});
-    setNotice(null);
-    setCanRedirect(false);
-  };
+  const [resetNotice, setResetNotice] = useState<string | null>(null);
+  const [resetSending, setResetSending] = useState(false);
 
   const onEmailNext = (e: FormEvent) => {
     e.preventDefault();
     if (previewOnly) return;
-    const nameErr = mode === "signup" ? validateName(name, { required: brand.nameRequiredMessage }) : null;
     const emailErr = validateEmail(email, { required: brand.emailRequiredMessage, invalid: brand.emailInvalidMessage });
-    if (nameErr || emailErr) {
-      setErrors({ ...(nameErr ? { name: nameErr } : {}), ...(emailErr ? { email: emailErr } : {}) });
+    if (emailErr) {
+      setErrors({ email: emailErr });
       return;
     }
     setErrors({});
@@ -81,25 +67,12 @@ export default function BivoAuthCard({ brand, previewOnly = false }: { brand: Bi
     setLoading(true);
     try {
       const sb = getSupabase();
-      let authenticated = true;
+      const authenticated = true;
       if (sb) {
-        if (mode === "signin") {
-          const { error } = await sb.auth.signInWithPassword({ email: email.trim(), password });
-          if (error) throw error;
-          setNotice(null);
-        } else {
-          const { data, error } = await sb.auth.signUp({
-            email: email.trim(),
-            password,
-            options: { data: { full_name: name.trim() } },
-          });
-          if (error) throw error;
-          setNotice(data.session ? null : brand.confirmEmailNoticeText);
-          authenticated = Boolean(data.session);
-        }
+        const { error } = await sb.auth.signInWithPassword({ email: email.trim(), password });
+        if (error) throw error;
       } else {
         await new Promise((r) => setTimeout(r, 700));
-        setNotice(brand.demoNoticeText);
       }
       setCanRedirect(authenticated);
       setStep("done");
@@ -110,188 +83,212 @@ export default function BivoAuthCard({ brand, previewOnly = false }: { brand: Bi
     }
   };
 
-  // Admin-configured post-sign-in destination (BivoBrandEditor -> "After sign-in").
-  // Empty = stay on this screen, same as before this was added. Never fires in the
-  // admin's own live preview.
+  // Admin-configured post-sign-in destination. Empty = stay on the "done" screen.
   useEffect(() => {
     if (previewOnly || step !== "done" || !canRedirect || !brand.successRedirectUrl) return;
     const t = setTimeout(() => goTo(brand.successRedirectUrl, router), 1500);
     return () => clearTimeout(t);
   }, [previewOnly, step, canRedirect, brand.successRedirectUrl, router]);
 
-  const vars = { appName: brand.appName, name: name.trim() };
-  const title =
-    step === "done"
-      ? mode === "signin"
-        ? brand.signinDoneTitle
-        : brand.signupDoneTitle
-      : step === "password"
-        ? mode === "signin"
-          ? brand.signinPasswordTitle
-          : brand.signupPasswordTitle
-        : mode === "signin"
-          ? brand.signinHeadline
-          : brand.signupHeadline;
+  const onForgotEmail = () => {
+    if (previewOnly) return;
+    goTo(`/signin/recover-email${email.trim() ? `?hint=${encodeURIComponent(email.trim())}` : ""}`, router);
+  };
+
+  // Real password-reset request via Supabase Auth — never reveals whether the
+  // address has an account (Supabase's own resetPasswordForEmail doesn't either).
+  const onForgotPassword = async () => {
+    if (previewOnly) return;
+    const emailErr = validateEmail(email, { required: brand.emailRequiredMessage, invalid: brand.emailInvalidMessage });
+    if (emailErr) {
+      setStep("email");
+      setErrors({ email: emailErr });
+      return;
+    }
+    setResetSending(true);
+    setResetNotice(null);
+    try {
+      const sb = getSupabase();
+      if (sb) {
+        await sb.auth.resetPasswordForEmail(email.trim(), {
+          redirectTo: typeof window !== "undefined" ? `${window.location.origin}/signin/reset-password` : undefined,
+        });
+      } else {
+        await new Promise((r) => setTimeout(r, 500));
+      }
+    } finally {
+      setResetSending(false);
+      // Deliberately the same message whether or not the account exists.
+      setResetNotice("If an account exists for that email, we've sent a link to reset the password.");
+    }
+  };
 
   const cssVars = buildBivoCssVars(brand) as CSSProperties;
-  const footerLinks = [
-    { label: brand.footerLink1Label, url: brand.footerLink1Url },
-    { label: brand.footerLink2Label, url: brand.footerLink2Url },
-    { label: brand.footerLink3Label, url: brand.footerLink3Url },
-  ].filter((l) => l.label && l.url);
-
-  const brandColumn = (
-    <div style={{ order: brand.columnOrder === "formFirst" ? 1 : 0 }}>
-      {brand.showLogo && <BivoLogo name={brand.appName} logoUrl={brand.logoUrl} size={brand.logoSize} />}
-      <h1
-        className={`mt-8 font-medium tracking-tight ${brand.logoPosition === "center" ? "text-center" : ""}`}
-        style={{ fontSize: "var(--bivo-heading-size)" }}
-      >
-        {title}
-      </h1>
-      <p className="mt-4 text-base">
-        {step === "password" ? (
-          <span className="bivo-muted-text">{email.trim()}</span>
-        ) : step === "done" ? (
-          <span className="bivo-muted-text">{fillTemplate(brand.signedInAsTemplate, { ...vars, email: email.trim() })}</span>
-        ) : (
-          brand.showSubline && (
-            <span className="bivo-muted-text">{mode === "signin" ? brand.signinSubline : fillTemplate(brand.signupSublineTemplate, vars)}</span>
-          )
-        )}
-      </p>
-    </div>
-  );
-
-  const formColumn = (
-    <div className="flex flex-col justify-between" style={{ order: brand.columnOrder === "formFirst" ? 0 : 1 }}>
-      {step === "email" && (
-        <form onSubmit={onEmailNext} noValidate className="flex flex-col" style={{ gap: "var(--bivo-field-spacing)" }}>
-          {mode === "signup" && (
-            <FloatingInput
-              id="name"
-              label={brand.nameLabel}
-              labelPosition={brand.labelPosition}
-              autoComplete="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              error={errors.name}
-            />
-          )}
-          <FloatingInput
-            id="email"
-            label={brand.emailLabel}
-            labelPosition={brand.labelPosition}
-            type="email"
-            inputMode="email"
-            autoComplete="email"
-            autoFocus={!previewOnly}
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            error={errors.email}
-          />
-          {brand.showSwitchLink ? (
-            <Actions
-              secondaryLabel={mode === "signin" ? brand.signinSwitchLabel : brand.signupSwitchLabel}
-              onSecondary={() => switchMode(mode === "signin" ? "signup" : "signin")}
-              primaryLabel={brand.nextLabel}
-              position={brand.buttonPosition}
-              size={brand.buttonSize}
-            />
-          ) : (
-            <PrimaryOnly label={brand.nextLabel} position={brand.buttonPosition} size={brand.buttonSize} />
-          )}
-        </form>
-      )}
-
-      {step === "password" && (
-        <form onSubmit={onSubmit} noValidate className="flex flex-col" style={{ gap: "var(--bivo-field-spacing)" }}>
-          <FloatingInput
-            id="password"
-            label={brand.passwordLabel}
-            labelPosition={brand.labelPosition}
-            type={showPassword ? "text" : "password"}
-            autoComplete={mode === "signin" ? "current-password" : "new-password"}
-            autoFocus={!previewOnly}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            error={errors.password}
-            rightSlot={
-              <button
-                type="button"
-                onClick={() => setShowPassword((s) => !s)}
-                aria-label={showPassword ? brand.hidePasswordLabel : brand.showPasswordLabel}
-                className="bivo-muted-text absolute inset-y-0 right-0 grid w-12 place-items-center"
-              >
-                {showPassword ? <EyeOffIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
-              </button>
-            }
-          />
-          {errors.form && (
-            <p role="alert" className="rounded-xl px-4 py-3 text-sm" style={{ backgroundColor: "var(--bivo-danger-bg)", color: "var(--bivo-danger)" }}>
-              {errors.form}
-            </p>
-          )}
-          <PrimaryOnly
-            label={mode === "signin" ? brand.signinSubmitLabel : brand.signupSubmitLabel}
-            position={brand.buttonPosition}
-            size={brand.buttonSize}
-          />
-        </form>
-      )}
-
-      {step === "done" && (
-        <div className="flex flex-col" style={{ gap: "var(--bivo-field-spacing)" }}>
-          <div className="bivo-success-row">
-            <CheckIcon className="h-5 w-5 shrink-0" style={{ color: "var(--bivo-success)" }} />
-            <span>{mode === "signin" ? brand.signinDoneMessage : fillTemplate(brand.signupDoneMessageTemplate, vars)}</span>
-          </div>
-          {notice && <p className="bivo-muted-text text-sm">{notice}</p>}
-          {canRedirect && brand.successRedirectUrl ? (
-            <div className="flex flex-wrap items-center gap-3">
-              <button type="button" className="bivo-btn bivo-btn-primary" onClick={() => !previewOnly && goTo(brand.successRedirectUrl, router)}>
-                {brand.continueLabel}
-              </button>
-              <span className="bivo-muted-text text-sm">{brand.redirectingText}</span>
-            </div>
-          ) : (
-            <button type="button" className="bivo-btn bivo-btn-outline" onClick={() => switchMode("signin")}>
-              {brand.useAnotherAccountLabel}
-            </button>
-          )}
-        </div>
-      )}
-    </div>
-  );
+  const emailFieldVars = buildFieldVars({
+    borderColor: brand.emailBorderColor,
+    borderWidth: brand.emailBorderWidth,
+    borderRadius: brand.emailBorderRadius,
+    bg: brand.emailInputBg,
+    text: brand.emailInputText,
+    labelColor: brand.emailLabelColor,
+  }) as CSSProperties;
+  const passwordFieldVars = buildFieldVars({
+    borderColor: brand.passwordBorderColor,
+    borderWidth: brand.passwordBorderWidth,
+    borderRadius: brand.passwordBorderRadius,
+    bg: brand.passwordInputBg,
+    text: brand.passwordInputText,
+    labelColor: brand.passwordLabelColor,
+  }) as CSSProperties;
 
   const content = (
-    <div className="bivo-animate-rise w-full" style={{ maxWidth: "var(--bivo-page-max-width)" }}>
-      <div className={`grid md:grid-cols-2 ${brand.pageAlign === "left" ? "justify-start" : brand.pageAlign === "right" ? "justify-end" : ""}`} style={{ gap: "var(--bivo-column-gap)" }}>
-        {brandColumn}
-        {formColumn}
+    <div className="bivo-animate-rise w-full" style={{ maxWidth: "var(--bivo-page-max-width)", margin: "0 auto" }}>
+      {/* Header — logo + heading only. No back control anywhere in it, on any step. */}
+      <div className={`flex items-center gap-3 ${brand.logoPosition === "center" ? "flex-col text-center" : ""}`}>
+        {brand.showLogo && <BivoLogo name={brand.appName} logoUrl={brand.logoUrl} size={brand.logoSize} />}
+        <h1 className="bivo-font-display font-medium tracking-tight" style={{ fontSize: "var(--bivo-heading-size)" }}>
+          {fillTemplate(brand.signinHeadline, { appName: brand.appName })}
+        </h1>
       </div>
 
-      {brand.showHelpLine && (
-        <div className="mt-12 text-sm">
-          <p className="bivo-muted-text">{brand.needHelpHeading}</p>
-          <p className="mt-1 bivo-muted-text">
-            {brand.contactLabel}{" "}
-            <a href={previewOnly ? undefined : `mailto:${brand.supportEmail}`} className="bivo-link font-medium underline" style={{ opacity: 1 }}>
-              {brand.supportEmail}
-            </a>
-          </p>
-        </div>
-      )}
+      <div className="mt-8">
+        {step === "email" && (
+          <form onSubmit={onEmailNext} noValidate className="flex flex-col" style={{ gap: "var(--bivo-field-spacing)" }}>
+            {brand.showSubline && <p className="bivo-muted-text -mt-2 mb-1">{brand.signinSubline}</p>}
 
-      {footerLinks.length > 0 && (
-        <div className="mt-6 flex flex-wrap gap-4 text-sm">
-          {footerLinks.map((l, i) => (
-            <a key={i} href={previewOnly ? undefined : l.url} className="bivo-link underline">
-              {l.label}
-            </a>
-          ))}
-        </div>
-      )}
+            <div className="bivo-field" style={emailFieldVars}>
+              <input
+                id="email"
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                autoFocus={!previewOnly}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder=" "
+                aria-invalid={!!errors.email}
+                aria-describedby={errors.email ? "email-error" : undefined}
+                className="bivo-input"
+              />
+              <label htmlFor="email" className="bivo-floating-label">
+                {brand.emailLabel}
+              </label>
+            </div>
+            {errors.email && (
+              <p id="email-error" className="bivo-error">
+                {errors.email}
+              </p>
+            )}
+
+            <div className="flex items-center justify-between pt-2">
+              {brand.showForgotEmailLink ? (
+                <button type="button" onClick={onForgotEmail} className="bivo-link text-sm font-medium">
+                  {brand.forgotEmailLabel}
+                </button>
+              ) : (
+                <span />
+              )}
+              <button type="submit" className="bivo-btn bivo-btn-primary px-7">
+                {brand.nextLabel}
+              </button>
+            </div>
+
+            {brand.showSecurityMessage && <SecurityMessage brand={brand} />}
+          </form>
+        )}
+
+        {step === "password" && (
+          <form onSubmit={onSubmit} noValidate className="flex flex-col" style={{ gap: "var(--bivo-field-spacing)" }}>
+            <p className="bivo-muted-text -mt-2 mb-1">{email.trim()}</p>
+
+            <div className="bivo-field" style={passwordFieldVars}>
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="current-password"
+                autoFocus={!previewOnly}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder=" "
+                aria-invalid={!!errors.password}
+                aria-describedby={errors.password ? "password-error" : undefined}
+                className="bivo-input"
+              />
+              <label htmlFor="password" className="bivo-floating-label">
+                {brand.passwordLabel}
+              </label>
+            </div>
+            {errors.password && (
+              <p id="password-error" className="bivo-error">
+                {errors.password}
+              </p>
+            )}
+
+            {brand.showShowPasswordCheckbox && (
+              <div className="bivo-checkbox-row">
+                <input
+                  id="show-password"
+                  type="checkbox"
+                  checked={showPassword}
+                  onChange={(e) => setShowPassword(e.target.checked)}
+                />
+                <label htmlFor="show-password">{brand.showPasswordCheckboxLabel}</label>
+              </div>
+            )}
+
+            {errors.form && (
+              <p role="alert" className="rounded-xl px-4 py-3 text-sm" style={{ backgroundColor: "var(--bivo-danger-bg)", color: "var(--bivo-danger)" }}>
+                {errors.form}
+              </p>
+            )}
+            {resetNotice && <p className="bivo-muted-text text-sm">{resetNotice}</p>}
+
+            <div className="flex items-center justify-between pt-2">
+              {brand.showForgotPasswordLink ? (
+                <button type="button" onClick={() => void onForgotPassword()} disabled={resetSending} className="bivo-link text-sm font-medium">
+                  {resetSending && <SpinnerIcon className="mr-1 inline h-3.5 w-3.5" />}
+                  {brand.forgotPasswordLabel}
+                </button>
+              ) : (
+                <span />
+              )}
+              <button type="submit" className="bivo-btn bivo-btn-primary px-7" disabled={loading}>
+                {loading && <SpinnerIcon className="h-4 w-4" />}
+                {brand.signinSubmitLabel}
+              </button>
+            </div>
+
+            {brand.showSecurityMessage && <SecurityMessage brand={brand} />}
+          </form>
+        )}
+
+        {step === "done" && (
+          <div className="flex flex-col" style={{ gap: "var(--bivo-field-spacing)" }}>
+            <p className="bivo-muted-text">{brand.signinDoneMessage}</p>
+            {canRedirect && brand.successRedirectUrl ? (
+              <div className="flex flex-wrap items-center gap-3">
+                <button type="button" className="bivo-btn bivo-btn-primary" onClick={() => !previewOnly && goTo(brand.successRedirectUrl, router)}>
+                  Continue
+                </button>
+                <span className="bivo-muted-text text-sm">Taking you there automatically…</span>
+              </div>
+            ) : (
+              <button
+                type="button"
+                className="bivo-btn bivo-btn-outline"
+                onClick={() => {
+                  setStep("email");
+                  setPassword("");
+                  setErrors({});
+                  setCanRedirect(false);
+                }}
+              >
+                {brand.useAnotherAccountLabel}
+              </button>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 
@@ -302,127 +299,34 @@ export default function BivoAuthCard({ brand, previewOnly = false }: { brand: Bi
   );
 }
 
-function FloatingInput({
-  id,
-  label,
-  labelPosition,
-  type = "text",
-  value,
-  onChange,
-  autoComplete,
-  autoFocus,
-  inputMode,
-  error,
-  rightSlot,
-}: {
-  id: string;
-  label: string;
-  labelPosition: BivoBrand["labelPosition"];
-  type?: string;
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  autoComplete?: string;
-  autoFocus?: boolean;
-  inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
-  error?: string | undefined;
-  rightSlot?: ReactNode;
-}) {
-  if (labelPosition === "top") {
-    return (
-      <div>
-        <label htmlFor={id} className="bivo-top-label">
-          {label}
-        </label>
-        <div className="bivo-field" style={{ position: "relative" }}>
-          <input
-            id={id}
-            type={type}
-            inputMode={inputMode}
-            autoComplete={autoComplete}
-            autoFocus={autoFocus}
-            value={value}
-            onChange={onChange}
-            aria-invalid={!!error}
-            aria-describedby={error ? `${id}-error` : undefined}
-            className={`bivo-input ${rightSlot ? "bivo-input-pr" : ""}`}
-          />
-          {rightSlot}
-        </div>
-        {error && (
-          <p id={`${id}-error`} className="bivo-error">
-            {error}
-          </p>
-        )}
-      </div>
-    );
-  }
+/**
+ * The "Not your device?" notice (Part 6) — one component used identically by
+ * both the email and password forms above, so its markup, position and
+ * styling never differ between steps; only the step's own content above it
+ * changes. Splits the admin-edited template on its two known tokens and
+ * renders each as a real link, wherever in the sentence it falls.
+ */
+function SecurityMessage({ brand }: { brand: BivoBrand }) {
+  const parts = brand.securityMessageTemplate.split(/(\{privateWindow\}|\{signOut\})/g);
   return (
-    <div className="bivo-field">
-      <input
-        id={id}
-        type={type}
-        inputMode={inputMode}
-        autoComplete={autoComplete}
-        autoFocus={autoFocus}
-        value={value}
-        onChange={onChange}
-        placeholder=" "
-        aria-invalid={!!error}
-        aria-describedby={error ? `${id}-error` : undefined}
-        className={`bivo-input ${rightSlot ? "bivo-input-pr" : ""}`}
-      />
-      <label htmlFor={id} className="bivo-floating-label">
-        {label}
-      </label>
-      {rightSlot}
-      {error && (
-        <p id={`${id}-error`} className="bivo-error">
-          {error}
-        </p>
-      )}
-    </div>
-  );
-}
-
-function Actions({
-  primaryLabel,
-  secondaryLabel,
-  onSecondary,
-  loading,
-  position,
-  size,
-}: {
-  primaryLabel: string;
-  secondaryLabel: string;
-  onSecondary: () => void;
-  loading?: boolean;
-  position: BivoBrand["buttonPosition"];
-  size: BivoBrand["buttonSize"];
-}) {
-  const sizeClass = size === "sm" ? "text-sm px-5" : size === "lg" ? "text-base px-8" : "px-7";
-  return (
-    <div className="flex items-center gap-3 pt-4" style={{ justifyContent: "var(--bivo-btn-justify, space-between)" }}>
-      {position === "right" && <span />}
-      <button type="button" className="bivo-btn bivo-btn-ghost" onClick={onSecondary}>
-        {secondaryLabel}
-      </button>
-      <button type="submit" className={`bivo-btn bivo-btn-primary ${sizeClass}`} disabled={loading}>
-        {loading && <SpinnerIcon className="h-4 w-4" />}
-        {primaryLabel}
-      </button>
-    </div>
-  );
-}
-
-/** Same layout as Actions, but with no secondary/switch control (brand.showSwitchLink === false). */
-function PrimaryOnly({ label, position, size }: { label: string; position: BivoBrand["buttonPosition"]; size: BivoBrand["buttonSize"] }) {
-  const sizeClass = size === "sm" ? "text-sm px-5" : size === "lg" ? "text-base px-8" : "px-7";
-  const justify = position === "left" ? "flex-start" : position === "right" || position === "between" ? "flex-end" : "center";
-  return (
-    <div className="flex items-center pt-4" style={{ justifyContent: justify }}>
-      <button type="submit" className={`bivo-btn bivo-btn-primary ${sizeClass}`}>
-        {label}
-      </button>
-    </div>
+    <p className="bivo-security-message">
+      {parts.map((part, i) => {
+        if (part === "{privateWindow}") {
+          return (
+            <a key={i} href="/signin/help/private-browsing" target="_blank" rel="noopener noreferrer">
+              {brand.securityMessagePrivateWindowText}
+            </a>
+          );
+        }
+        if (part === "{signOut}") {
+          return (
+            <a key={i} href="/signin/help/sign-out" target="_blank" rel="noopener noreferrer">
+              {brand.securityMessageSignOutText}
+            </a>
+          );
+        }
+        return <span key={i}>{part}</span>;
+      })}
+    </p>
   );
 }

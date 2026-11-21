@@ -193,7 +193,7 @@ create policy "admins can read change logs"
 
 -- ---------------------------------------------------------------------------
 -- 6. Bivo branding (shared row, id = 1) — same pattern as site_settings above,
---    read by src/lib/bivoBrand.ts and edited at /signin/admin.
+--    read by src/lib/bivoBrand.ts and edited at /bivo/admin.
 --    Visitors: read only.   Admins (the same admin_users list): change the data.
 --    Unlike site_settings, the Bivo logo is kept as a data: URL inside `data`
 --    itself (not Supabase Storage — see src/lib/image.ts), so the size limit

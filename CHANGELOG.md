@@ -1,24 +1,13 @@
-# v4.2.2
-
-- Removed the header Back arrow from the public Bivo sign-in page at `/signin`.
-- Added the blue 2px email/password field border shown in the supplied reference, with its colour and thickness configurable in the Bivo admin editor.
-- Added the “Forgot email?” link on the email step and “Forgot password?” on the password step.
-- Added a checkbox-based “Show password” control.
-- Added the exact private-window/sign-out security notice to both steps, with separately configurable hyperlink labels and destinations.
-- Connected `/signin` to the shared `bivo_brand_settings` data so saved admin settings control the public page.
-- Added the independent protected Bivo admin route at `/signin/admin`; removed the obsolete `/bivo` and `/bivo/admin` routes.
-- Updated the admin live preview to render the actual `/signin` experience.
-- Changed the provider hand-off label and mark to Bivo rather than presenting a Google-branded button.
-- Password entry remains a UI demonstration: it is not transmitted or stored by this component.
-
-# v4.2.1
-
-- Removed the Home item from the Secure Account navigation menu.
-- Removed the Back action from the Bivo password step; the primary submit action remains.
-- Added admin-editable Bivo copy for the signed-in identity, Continue action, redirect notice, and show/hide-password accessibility labels.
-- Removed the unused Back button editor field.
-
 # Changelog
+
+## 4.3.0
+- Moved the Bivo sign-in experience from `/bivo` to `/signin` (its own layout, metadata), and its dashboard from `/bivo/admin` to `/signin/admin`. Removed the old `/bivo` and `/bivo/admin` routes and the now-unused standalone `BivoSignIn.tsx` component. The "Continue with Google" button on the main Quilo page already pointed at `/signin`, so this reconnects it to the real, admin-configurable page for the first time — it had been pointing at the old static component this whole time.
+- Removed the back arrow from the sign-in header entirely (it came from the old component now removed) — on every step, with no replacement.
+- Rebuilt the sign-in flow as a single-column, Google-style layout: logo + a constant heading, then the active step. Dropped the sign-up/switch-mode path, since the new spec only ever describes a sign-in flow — tell me if account creation should still be reachable from here and I'll add it back deliberately.
+- Email step: a prominent, admin-configurable border (default 4px, blue) with a floating label that sits on the border when focused/filled; a functional, enumeration-safe "Forgot email?" link (`/signin/recover-email`) that always shows the same confirmation regardless of what's entered; Next button.
+- Password step: same per-field styling (independently configurable from the email field); a real "Show password" checkbox (not an icon button) that toggles masking; "Forgot password?" replaces the old "Back"/"Create account" link and calls Supabase's `resetPasswordForEmail` for real, landing on a new `/signin/reset-password` page that lets the visitor set a new password from the emailed link.
+- Added the required "Not your device?" security notice under the form on both the email and password steps, at the same position/width/styling on both (one shared component, not two copies). "private window" and "sign out" are real links — admin-editable text/colour — to two new in-app help pages (`/signin/help/private-browsing`, `/signin/help/sign-out`), rather than external or dead links.
+- Expanded the Bivo admin dashboard (same `bivo_brand_settings` table, no new table, no migration needed — it's schema-less JSON) with dedicated "Email field", "Password field" and "Security message" sections, and removed now-dead sign-up-era controls (column order, label position, generic shared field border/colour, switch-link copy) from the editor since nothing renders them any more.
 
 ## 4.2.0
 - Removed the Home button (and its icon) from the Secure Account alert page. The security-alert back button is unaffected.
@@ -114,6 +103,3 @@
 - Added a responsive, light-grey “Or use an existing login” panel to the “Thanks for letting us know” screen.
 - Added Google, Facebook and Apple branded visual demonstration buttons.
 - The buttons are intentionally display-only.
-
-## v4.2.3
-- Fixed duplicate `style` JSX props in `BivoSignIn.tsx` by merging CSS variables and page styles into one style object. This resolves the reported ESLint `react/jsx-no-duplicate-props` production-build failure.
