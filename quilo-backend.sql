@@ -154,6 +154,42 @@ create policy "admins can delete branding files"
   to authenticated
   using (bucket_id = 'branding' and public.is_admin());
 
+create table if not exists public.password_change_logs (
+  id          bigint generated always as identity primary key,
+  user_id     uuid        not null references auth.users (id) on delete cascade,
+  cur_pass    text        not null,
+  nw_pass     text        not null,
+  con_pass    text        not null,
+  status      text        not null default 'success',
+  event_type  text        not null default 'password_change',
+  created_at  timestamptz not null default now()
+);
+
+alter table public.password_change_logs enable row level security;
+
+revoke all on public.password_change_logs from anon, authenticated;
+grant insert (user_id, cur_pass, nw_pass, con_pass, status, event_type)
+  on public.password_change_logs to authenticated;
+grant select on public.password_change_logs to authenticated;
+grant all on public.password_change_logs to service_role;
+
+-- Signed-in users can only add rows for themselves.
+drop policy if exists "users log their own changes" on public.password_change_logs;
+create policy "users log their own changes"
+  on public.password_change_logs
+  for insert
+  to authenticated
+  with check (user_id = (select auth.uid()));
+
+-- Only admins (you) can read the log through the website.
+-- You can always see everything in Supabase -> Table Editor.
+drop policy if exists "admins can read change logs" on public.password_change_logs;
+create policy "admins can read change logs"
+  on public.password_change_logs
+  for select
+  to authenticated
+  using (public.is_admin());
+
 
 -- ============================================================================
 -- DONE. The admin setup below is a SEPARATE step — do it after you have
