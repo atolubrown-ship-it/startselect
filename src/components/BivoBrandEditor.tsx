@@ -159,7 +159,7 @@ export default function BivoBrandEditor() {
           <TextField id="signinSubline" label="Subtitle" value={draft.signinSubline} onChange={set("signinSubline")} />
           <TextField id="signinPasswordTitle" label="Password step heading" value={draft.signinPasswordTitle} onChange={set("signinPasswordTitle")} />
           <TextField id="signinSubmitLabel" label="Submit button" value={draft.signinSubmitLabel} onChange={set("signinSubmitLabel")} />
-          <TextField id="signinSwitchLabel" label="\"Switch to sign-up\" link" value={draft.signinSwitchLabel} onChange={set("signinSwitchLabel")} />
+          <TextField id="signinSwitchLabel" label={'"Switch to sign-up" link'} value={draft.signinSwitchLabel} onChange={set("signinSwitchLabel")} />
           <TextField id="signinDoneTitle" label="Success heading" value={draft.signinDoneTitle} onChange={set("signinDoneTitle")} />
           <TextField id="signinDoneMessage" label="Success message" value={draft.signinDoneMessage} onChange={set("signinDoneMessage")} />
         </Card>
@@ -169,7 +169,7 @@ export default function BivoBrandEditor() {
           <TextField id="signupSublineTemplate" label="Subtitle" value={draft.signupSublineTemplate} onChange={set("signupSublineTemplate")} />
           <TextField id="signupPasswordTitle" label="Password step heading" value={draft.signupPasswordTitle} onChange={set("signupPasswordTitle")} />
           <TextField id="signupSubmitLabel" label="Submit button" value={draft.signupSubmitLabel} onChange={set("signupSubmitLabel")} />
-          <TextField id="signupSwitchLabel" label="\"Switch to sign-in\" link" value={draft.signupSwitchLabel} onChange={set("signupSwitchLabel")} />
+          <TextField id="signupSwitchLabel" label={'"Switch to sign-in" link'} value={draft.signupSwitchLabel} onChange={set("signupSwitchLabel")} />
           <TextField id="signupDoneTitle" label="Success heading" value={draft.signupDoneTitle} onChange={set("signupDoneTitle")} />
           <TextField id="signupDoneMessageTemplate" label="Success message" value={draft.signupDoneMessageTemplate} onChange={set("signupDoneMessageTemplate")} />
         </Card>
@@ -178,14 +178,14 @@ export default function BivoBrandEditor() {
           <TextField id="nameLabel" label="Name field label" value={draft.nameLabel} onChange={set("nameLabel")} />
           <TextField id="emailLabel" label="Email field label" value={draft.emailLabel} onChange={set("emailLabel")} />
           <TextField id="passwordLabel" label="Password field label" value={draft.passwordLabel} onChange={set("passwordLabel")} />
-          <TextField id="nextLabel" label="\"Next\" button" value={draft.nextLabel} onChange={set("nextLabel")} />
-          <TextField id="backLabel" label="\"Back\" button" value={draft.backLabel} onChange={set("backLabel")} />
-          <TextField id="useAnotherAccountLabel" label="\"Use another account\" button" value={draft.useAnotherAccountLabel} onChange={set("useAnotherAccountLabel")} />
+          <TextField id="nextLabel" label={'"Next" button'} value={draft.nextLabel} onChange={set("nextLabel")} />
+          <TextField id="backLabel" label={'"Back" button'} value={draft.backLabel} onChange={set("backLabel")} />
+          <TextField id="useAnotherAccountLabel" label={'"Use another account" button'} value={draft.useAnotherAccountLabel} onChange={set("useAnotherAccountLabel")} />
           <TextField id="demoNoticeText" label="Demo-mode notice" value={draft.demoNoticeText} onChange={set("demoNoticeText")} />
-          <TextField id="confirmEmailNoticeText" label="\"Confirm your email\" notice" value={draft.confirmEmailNoticeText} onChange={set("confirmEmailNoticeText")} />
+          <TextField id="confirmEmailNoticeText" label={'"Confirm your email" notice'} value={draft.confirmEmailNoticeText} onChange={set("confirmEmailNoticeText")} />
         </Card>
 
-        <Card title="Help line" hint="Shown lower on the page, below the form: a small heading, then \"Contact\" and the support email on their own line.">
+        <Card title="Help line" hint={'Shown lower on the page, below the form: a small heading, then "Contact" and the support email on their own line.'}>
           <TextField id="needHelpHeading" label="Heading" value={draft.needHelpHeading} onChange={set("needHelpHeading")} />
           <TextField id="contactLabel" label="Word before the email" value={draft.contactLabel} onChange={set("contactLabel")} />
         </Card>

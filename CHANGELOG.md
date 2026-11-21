@@ -1,5 +1,8 @@
 # Changelog
 
+## 4.2.3
+- Build fix: `BivoBrandEditor.tsx` had several admin field labels written with `\"escaped quotes\"` inside a plain JSX attribute string (e.g. `label="\"Next\" button"`). JSX attribute strings don't support backslash escapes the way JS strings do, so this broke the parser for the whole file and failed the Vercel build. Rewrote those labels as `label={'"Next" button'}` (a real JS string expression, which does support quotes). No visual or behavioral change — same label text as before, now valid syntax.
+
 ## 4.2.2
 - No SQL change needed — the Bivo branding row already stores everything as JSON, so new fields below just work once you save from `/bivo/admin`.
 - Bivo fields are now floating-label inputs: empty and unfocused, the label sits centered like a placeholder; focused or filled, it rises and shrinks above the field, same behaviour as a typical native sign-in form.
