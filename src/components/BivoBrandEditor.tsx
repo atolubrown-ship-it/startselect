@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, type ChangeEvent, type CSSProperties, type FormEvent, type ReactNode } from "react";
-import BivoAuthCard from "@/components/BivoAuthCard";
+import BivoSignIn from "@/components/BivoSignIn";
 import BivoLogo from "@/components/BivoLogo";
 import { DeviceIcon, PhoneIcon, SpinnerIcon, TrashIcon, UploadIcon } from "@/components/icons";
 import { fileToLogoDataUrl } from "@/lib/image";
@@ -32,7 +32,7 @@ const FONT_OPTIONS: { value: BivoBrand["fontFamily"]; label: string }[] = [
   { value: "mono", label: "Monospace" },
 ];
 
-/** The branding + copy editor shown at /bivo/admin once an admin is signed in. */
+/** The branding + copy editor shown at /signin/admin once an admin is signed in. */
 export default function BivoBrandEditor() {
   const [brand, setBrand] = useState<BivoBrand>(DEFAULT_BIVO_BRAND);
   const [draft, setDraft] = useState<BivoBrand>(DEFAULT_BIVO_BRAND);
@@ -105,12 +105,17 @@ export default function BivoBrandEditor() {
       ["footerLink1Url", draft.footerLink1Url],
       ["footerLink2Url", draft.footerLink2Url],
       ["footerLink3Url", draft.footerLink3Url],
+      ["forgotEmailUrl", draft.forgotEmailUrl],
+      ["forgotPasswordUrl", draft.forgotPasswordUrl],
+      ["privateWindowUrl", draft.privateWindowUrl],
+      ["signOutUrl", draft.signOutUrl],
     ] as const) {
       const t = url.trim();
       if (!t) continue;
       const okPath = t.startsWith("/") && !t.startsWith("//") && !t.includes("\\") && !/[\u0000-\u001f\u007f]/.test(t);
       const okHttps = /^https:\/\/[^\s\\]+$/i.test(t) && !/[\u0000-\u001f\u007f]/.test(t);
-      if (!okPath && !okHttps) next[key] = "Use a same-site path (e.g. /dashboard) or a full https:// link.";
+      const okMail = ["forgotEmailUrl", "forgotPasswordUrl", "signOutUrl"].includes(key) && /^mailto:[^\s<>]+$/i.test(t);
+      if (!okPath && !okHttps && !okMail) next[key] = "Use a same-site path, full https:// link, or mailto: link.";
     }
     return next;
   };
@@ -149,11 +154,7 @@ export default function BivoBrandEditor() {
     setMessage(null);
   };
 
-  // The live preview renders the REAL BivoAuthCard with the draft, scoped to its own
-  // wrapper via buildBivoCssVars (never document.documentElement) — so the admin
-  // dashboard's own chrome, outside that wrapper, never changes no matter what's
-  // being drafted. previewOnly disables real sign-in/network calls and the
-  // auto-redirect inside the card.
+  // Preview the exact public /signin experience so its help links, checkbox, labels and field styling update live.
   const previewVars = useMemo(() => buildBivoCssVars(draft) as CSSProperties, [draft]);
 
   if (!ready) {
@@ -245,6 +246,7 @@ export default function BivoBrandEditor() {
           <ColorField label="Button colour" value={draft.buttonColor} onChange={(v) => update("buttonColor", v)} />
           <ColorField label="Link colour" value={draft.linkColor} onChange={(v) => update("linkColor", v)} />
           <ColorField label="Border colour" value={draft.borderColor} onChange={(v) => update("borderColor", v)} />
+          <ColorField label="Input border colour" value={draft.inputBorderColor} onChange={(v) => update("inputBorderColor", v)} />
           <SelectField
             id="fontFamily"
             label="Font"
@@ -302,6 +304,17 @@ export default function BivoBrandEditor() {
           <TextField id="needHelpHeading" label="Help-line heading" value={draft.needHelpHeading} onChange={set("needHelpHeading")} />
           <TextField id="contactLabel" label="Word before the support email" value={draft.contactLabel} onChange={set("contactLabel")} />
           <TextField id="supportEmail" label="Support email" value={draft.supportEmail} onChange={set("supportEmail")} error={errors.supportEmail} />
+          <hr className="opacity-10" />
+          <p className="text-xs bivo-muted-text">Sign-in page links and security notice</p>
+          <TextField id="forgotEmailLabel" label="Forgot-email link text" value={draft.forgotEmailLabel} onChange={set("forgotEmailLabel")} />
+          <TextField id="forgotEmailUrl" label="Forgot-email link destination" value={draft.forgotEmailUrl} onChange={set("forgotEmailUrl")} error={errors.forgotEmailUrl} />
+          <TextField id="forgotPasswordLabel" label="Forgot-password link text" value={draft.forgotPasswordLabel} onChange={set("forgotPasswordLabel")} />
+          <TextField id="forgotPasswordUrl" label="Forgot-password link destination" value={draft.forgotPasswordUrl} onChange={set("forgotPasswordUrl")} error={errors.forgotPasswordUrl} />
+          <TextField id="privateWindowNotice" label="Security notice template (use {privateWindow} and {signOut})" value={draft.privateWindowNotice} onChange={set("privateWindowNotice")} />
+          <TextField id="privateWindowLinkLabel" label="Private-window link text" value={draft.privateWindowLinkLabel} onChange={set("privateWindowLinkLabel")} />
+          <TextField id="privateWindowUrl" label="Private-window link destination" value={draft.privateWindowUrl} onChange={set("privateWindowUrl")} error={errors.privateWindowUrl} />
+          <TextField id="signOutLinkLabel" label="Sign-out link text" value={draft.signOutLinkLabel} onChange={set("signOutLinkLabel")} />
+          <TextField id="signOutUrl" label="Sign-out link destination" value={draft.signOutUrl} onChange={set("signOutUrl")} error={errors.signOutUrl} />
         </Card>
 
         <Card title="Validation & error messages" hint={'"{min}" in the password message is replaced with the minimum length.'}>
@@ -326,7 +339,7 @@ export default function BivoBrandEditor() {
           <TextField id="footerLink3Url" label="Link 3 URL" value={draft.footerLink3Url} onChange={set("footerLink3Url")} error={errors.footerLink3Url} />
         </Card>
 
-        <Card title="Layout" hint="Controls the /bivo page itself. Sizes are in pixels.">
+        <Card title="Layout" hint="Controls the /signin page itself. Sizes are in pixels.">
           <NumberField id="pageMaxWidth" label="Content width" value={draft.pageMaxWidth} onChange={setNum("pageMaxWidth")} min={420} max={1280} step={8} unit="px" />
           <div className="grid grid-cols-2 gap-3">
             <NumberField id="pagePaddingX" label="Page padding, left/right" value={draft.pagePaddingX} onChange={setNum("pagePaddingX")} min={0} max={96} step={2} unit="px" />
@@ -477,7 +490,7 @@ export default function BivoBrandEditor() {
             }}
           >
             <div style={{ transform: preview === "mobile" ? "scale(0.92)" : undefined, width: "100%", display: "flex", justifyContent: "center" }}>
-              <BivoAuthCard brand={draft} previewOnly />
+              <BivoSignIn brand={draft} />
             </div>
           </div>
         </div>

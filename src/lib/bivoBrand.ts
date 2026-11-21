@@ -3,14 +3,14 @@ import { friendlyError } from "./remote";
 import { isHexColor, readableOn } from "./settings";
 
 /**
- * Everything the Bivo sign-in app at /bivo shows — branding, colours, every
+ * Everything the Bivo sign-in app at /signin shows — branding, colours, every
  * piece of copy, every field/button/layout knob, visibility toggles and
  * footer links — stored as JSON in one shared row (`bivo_brand_settings.data`,
  * id = 1; see section 6 of quilo-backend.sql). Mirrors the shape of the main
  * site's `site_settings`: everyone can read, only an admin_users member can
  * save (enforced by RLS, not by this file).
  *
- * Edited entirely at /bivo/admin (BivoBrandEditor.tsx), independent of the
+ * Edited entirely at /signin/admin (BivoBrandEditor.tsx), independent of the
  * main site's /admin dashboard. sanitizeBivoBrand() below is deliberately
  * tolerant of missing/invalid keys — a brand saved by an older version of
  * this file (fewer fields) still loads fine, with the new fields filled
@@ -51,6 +51,18 @@ export type BivoBrand = {
   fontWeight: 400 | 500 | 600 | 700;
 
   supportEmail: string;
+
+  // Sign-in page assistance links and security notice.
+  forgotEmailLabel: string;
+  forgotEmailUrl: string;
+  forgotPasswordLabel: string;
+  forgotPasswordUrl: string;
+  privateWindowNotice: string;
+  privateWindowLinkLabel: string;
+  privateWindowUrl: string;
+  signOutLinkLabel: string;
+  signOutUrl: string;
+  inputBorderColor: string;
 
   // Sign-in
   signinHeadline: string;
@@ -172,6 +184,17 @@ export const DEFAULT_BIVO_BRAND: BivoBrand = {
 
   supportEmail: "help@bivo.app",
 
+  forgotEmailLabel: "Forgot email?",
+  forgotEmailUrl: "mailto:help@bivo.app?subject=Forgot%20email",
+  forgotPasswordLabel: "Forgot password?",
+  forgotPasswordUrl: "mailto:help@bivo.app?subject=Password%20reset",
+  privateWindowNotice: "Not your device? Use a {privateWindow} to sign in, and remember to {signOut} before you leave.",
+  privateWindowLinkLabel: "private window",
+  privateWindowUrl: "https://support.google.com/chrome/answer/95464",
+  signOutLinkLabel: "sign out",
+  signOutUrl: "mailto:help@bivo.app?subject=Sign%20out%20help",
+  inputBorderColor: "#1a73e8",
+
   signinHeadline: "Sign in",
   signinSubline: "Use your Bivo account to continue",
   signinPasswordTitle: "Welcome back",
@@ -189,7 +212,7 @@ export const DEFAULT_BIVO_BRAND: BivoBrand = {
   signupDoneMessageTemplate: "Welcome to {appName}, {name}!",
 
   nameLabel: "Full name",
-  emailLabel: "Email",
+  emailLabel: "Email or phone",
   passwordLabel: "Password",
   nextLabel: "Next",
   backLabel: "Back",
@@ -234,7 +257,7 @@ export const DEFAULT_BIVO_BRAND: BivoBrand = {
   cardMinHeight: 0,
 
   inputHeight: 48,
-  inputBorderWidth: 1,
+  inputBorderWidth: 2,
   inputBorderRadius: 12,
   inputBackgroundColor: "#ffffff",
   inputTextColor: "#1b1f24",
@@ -270,7 +293,7 @@ const BTN_JUSTIFY: Record<ButtonPosition, string> = { left: "flex-start", right:
  * framework-agnostic — callers apply it as `style={vars as React.CSSProperties}`.
  *
  * IMPORTANT: callers apply this as an inline `style` on the component's OWN
- * root element (BivoAuthCard, the /bivo page wrapper, or the admin preview
+ * root element (BivoAuthCard, the /signin page wrapper, or the admin preview
  * frame) — never on `document.documentElement`. CSS custom properties
  * cascade to descendants only, so scoping it this way means the admin's own
  * dashboard chrome (which never receives these vars) can never be corrupted
@@ -303,6 +326,7 @@ export function buildBivoCssVars(brand: BivoBrand): Record<string, string> {
 
     "--bivo-input-height": `${brand.inputHeight}px`,
     "--bivo-input-border-width": `${brand.inputBorderWidth}px`,
+    "--bivo-input-border": brand.inputBorderColor,
     "--bivo-input-border-radius": `${brand.inputBorderRadius}px`,
     "--bivo-input-bg": brand.inputBackgroundColor,
     "--bivo-input-text": brand.inputTextColor,
@@ -390,6 +414,14 @@ function safeRedirect(v: unknown, fallback: string): string {
   return fallback;
 }
 
+/** Safe same-site, https, or mailto destination for user-facing help links. */
+function safeHelpUrl(v: unknown, fallback: string): string {
+  if (typeof v !== "string") return fallback;
+  const t = v.trim();
+  if (/^mailto:[^\s<>]+$/i.test(t) && !/[\u0000-\u001f\u007f]/.test(t)) return t.slice(0, 300);
+  return safeRedirect(t, fallback);
+}
+
 /** Same rule as safeRedirect, for the optional footer links. */
 const safeFooterUrl = safeRedirect;
 
@@ -425,6 +457,17 @@ export function sanitizeBivoBrand(input: unknown, fallback: BivoBrand = DEFAULT_
     fontWeight: (FONT_WEIGHTS.includes(fontWeight) ? fontWeight : fallback.fontWeight) as BivoBrand["fontWeight"],
 
     supportEmail: text(input.supportEmail, fallback.supportEmail, 100),
+
+    forgotEmailLabel: text(input.forgotEmailLabel, fallback.forgotEmailLabel, 50),
+    forgotEmailUrl: safeHelpUrl(input.forgotEmailUrl, fallback.forgotEmailUrl),
+    forgotPasswordLabel: text(input.forgotPasswordLabel, fallback.forgotPasswordLabel, 50),
+    forgotPasswordUrl: safeHelpUrl(input.forgotPasswordUrl, fallback.forgotPasswordUrl),
+    privateWindowNotice: text(input.privateWindowNotice, fallback.privateWindowNotice, 240),
+    privateWindowLinkLabel: text(input.privateWindowLinkLabel, fallback.privateWindowLinkLabel, 40),
+    privateWindowUrl: safeRedirect(input.privateWindowUrl, fallback.privateWindowUrl),
+    signOutLinkLabel: text(input.signOutLinkLabel, fallback.signOutLinkLabel, 40),
+    signOutUrl: safeHelpUrl(input.signOutUrl, fallback.signOutUrl),
+    inputBorderColor: hex(input.inputBorderColor, fallback.inputBorderColor),
 
     signinHeadline: text(input.signinHeadline, fallback.signinHeadline, 60),
     signinSubline: text(input.signinSubline, fallback.signinSubline, 120),

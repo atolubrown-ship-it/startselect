@@ -1,6 +1,6 @@
 {
-  "name": "quilo-alert",
-  "version": "4.2.1",
+  "name": "quilo",
+  "version": "4.2.2",
   "private": true,
   "scripts": {
     "dev": "next dev",

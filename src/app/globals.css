@@ -100,7 +100,7 @@ html {
 }
 
 /* ============================================================================
- * Bivo (/bivo, /bivo/admin) — scoped entirely under .bivo so none of this
+ * Bivo (/signin, /signin/admin) — scoped entirely under .bivo so none of this
  * touches the rest of the site. Colours, spacing and sizing are CSS
  * variables set at runtime from the admin-edited BivoBrand (see
  * src/lib/bivoBrand.ts, src/app/bivo/page.tsx and BivoBrandEditor.tsx) —
@@ -178,7 +178,7 @@ html {
 }
 
 /*
- * The admin dashboard's OWN chrome (cards, panels) at /bivo/admin always uses
+ * The admin dashboard's OWN chrome (cards, panels) at /signin/admin always uses
  * this fixed, non-variable style instead of .bivo-card. The admin's live
  * preview of the draft brand renders inside its own small wrapper with
  * buildBivoCssVars() (src/lib/bivoBrand.ts) applied as a React inline style —

@@ -1,14 +1,16 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import BivoSignIn from "@/components/BivoSignIn";
+import { DEFAULT_BIVO_BRAND, loadBivoBrand, type BivoBrand } from "@/lib/bivoBrand";
 
-/**
- * Bivo sign-in, reached from Quilo's "Sign in with Google" button
- * (src/app/page.tsx, the "Or use an existing login" section on the
- * "This wasn't me" screen). A visitor leaves Quilo's own site chrome
- * for Bivo's own sign-in UI here, then "Continue to Quilo" returns
- * them to "/" — the same back-and-forth a real OAuth hand-off has.
- */
 export default function BivoSignInPage() {
-  return <BivoSignIn appName="Bivo" primaryColor="#1d4ed8" backHref="/" backLabel="Quilo" />;
+  const [brand, setBrand] = useState<BivoBrand>(DEFAULT_BIVO_BRAND);
+  useEffect(() => {
+    let active = true;
+    void loadBivoBrand().then((result) => { if (active && result.ok) setBrand(result.brand); });
+    return () => { active = false; };
+  }, []);
+  useEffect(() => { document.title = `${brand.appName} – Sign in`; }, [brand.appName]);
+  return <BivoSignIn brand={brand} />;
 }

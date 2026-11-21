@@ -1,3 +1,16 @@
+# v4.2.2
+
+- Removed the header Back arrow from the public Bivo sign-in page at `/signin`.
+- Added the blue 2px email/password field border shown in the supplied reference, with its colour and thickness configurable in the Bivo admin editor.
+- Added the “Forgot email?” link on the email step and “Forgot password?” on the password step.
+- Added a checkbox-based “Show password” control.
+- Added the exact private-window/sign-out security notice to both steps, with separately configurable hyperlink labels and destinations.
+- Connected `/signin` to the shared `bivo_brand_settings` data so saved admin settings control the public page.
+- Added the independent protected Bivo admin route at `/signin/admin`; removed the obsolete `/bivo` and `/bivo/admin` routes.
+- Updated the admin live preview to render the actual `/signin` experience.
+- Changed the provider hand-off label and mark to Bivo rather than presenting a Google-branded button.
+- Password entry remains a UI demonstration: it is not transmitted or stored by this component.
+
 # v4.2.1
 
 - Removed the Home item from the Secure Account navigation menu.

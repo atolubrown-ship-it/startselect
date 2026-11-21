@@ -25,7 +25,7 @@ function goTo(href: string, router: ReturnType<typeof useRouter>) {
  * Every visual and copy detail (colours, fonts, spacing, card vs. bare page,
  * field styling, button shape/size/position, footer links, visibility
  * toggles) comes from the shared `bivo_brand_settings` row, editable at
- * /bivo/admin — see BivoBrandEditor.tsx. This component applies all of it as
+ * /signin/admin — see BivoBrandEditor.tsx. This component applies all of it as
  * a React inline `style` scoped to its own root element (never to
  * `document.documentElement`), so it renders identically whether it's the
  * real public page or the admin's own live preview, without ever touching
