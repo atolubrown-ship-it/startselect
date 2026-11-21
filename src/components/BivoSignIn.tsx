@@ -113,7 +113,17 @@ export default function BivoSignIn({ brand }: BivoSignInProps) {
   } as React.CSSProperties;
 
   return (
-    <div style={vars} className="flex min-h-[100dvh] flex-col font-sans" style={{ backgroundColor: brand.backgroundColor, color: brand.textColor, fontFamily: brand.fontFamily === "serif" ? "Georgia, serif" : brand.fontFamily === "mono" ? "monospace" : brand.fontFamily === "system" ? "system-ui, sans-serif" : "Outfit, sans-serif", fontSize: brand.fontSize, fontWeight: brand.fontWeight }}>
+    <div
+      className="flex min-h-[100dvh] flex-col font-sans"
+      style={{
+        ...vars,
+        backgroundColor: brand.backgroundColor,
+        color: brand.textColor,
+        fontFamily: brand.fontFamily === "serif" ? "Georgia, serif" : brand.fontFamily === "mono" ? "monospace" : brand.fontFamily === "system" ? "system-ui, sans-serif" : "Outfit, sans-serif",
+        fontSize: brand.fontSize,
+        fontWeight: brand.fontWeight,
+      }}
+    >
       <header className="flex w-full items-center gap-5 px-6 py-5 sm:px-10 sm:py-8">
         <BrandMark brand={brand} size={44} />
         <span className="text-[24px] text-[#5f6368]">Sign in with {brand.appName}</span>

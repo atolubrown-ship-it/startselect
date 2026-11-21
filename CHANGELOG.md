@@ -114,3 +114,6 @@
 - Added a responsive, light-grey “Or use an existing login” panel to the “Thanks for letting us know” screen.
 - Added Google, Facebook and Apple branded visual demonstration buttons.
 - The buttons are intentionally display-only.
+
+## v4.2.3
+- Fixed duplicate `style` JSX props in `BivoSignIn.tsx` by merging CSS variables and page styles into one style object. This resolves the reported ESLint `react/jsx-no-duplicate-props` production-build failure.
