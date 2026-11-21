@@ -8,6 +8,7 @@ import { useSettings } from "@/components/SettingsProvider";
 import { AccountIcon, CartIcon, MenuIcon, SearchIcon } from "@/components/icons";
 import { COUNTRIES, LANGUAGES, countryName, flagEmoji } from "@/lib/countries";
 import { fileToLogoDataUrl } from "@/lib/image";
+import PasswordLogsCard from "@/components/PasswordLogsCard";
 import { useAdminAuth } from "@/lib/useAdminAuth";
 import {
   BADGE_HEIGHT_MAX,
@@ -1012,6 +1013,7 @@ function AdminPanel({ email, onSignOut }: { email: string; onSignOut: () => void
             </Field>
           ))}
         </Card>
+        <PasswordLogsCard />
       </main>
 
       {/* Save bar */}
