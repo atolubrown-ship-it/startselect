@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import SiteShell from "@/components/SiteShell";
 import ResetPasswordForm from "@/components/ResetPasswordForm";
 import { useSettings } from "@/components/SettingsProvider";
@@ -27,7 +27,7 @@ export default function SecurityAlertPage() {
   return (
     <SiteShell onHome={() => setView("alert")}>
       <div className="mx-auto w-full max-w-xl">
-        {view !== "alert" && <Breadcrumb onBack={() => setView("alert")} />}
+        <Breadcrumb view={view} onBack={() => setView("alert")} />
         <div key={view} className="q-view-in">
           {view === "alert" && (
             <AlertScreen onRecognized={() => setView("recognized")} onNotMe={() => setView("notme")} />
@@ -40,16 +40,16 @@ export default function SecurityAlertPage() {
   );
 }
 
-/** Back-navigation shown on the response screens only; the first (alert) screen has no "Home" button. */
-function Breadcrumb({ onBack }: { onBack: () => void }) {
+function Breadcrumb({ view, onBack }: { view: View; onBack: () => void }) {
+  const atHome = view === "alert";
   return (
     <button
       type="button"
-      onClick={onBack}
+      onClick={atHome ? () => window.scrollTo({ top: 0, behavior: "smooth" }) : onBack}
       className="-ml-2 flex h-11 items-center gap-1 pr-3 text-[13px] font-medium uppercase leading-5 tracking-[0.05em] text-q-ink"
     >
       <ChevronLeftIcon className="h-5 w-5 text-q-sub" />
-      Security alert
+      {atHome ? "Home" : "Security alert"}
     </button>
   );
 }
@@ -132,7 +132,6 @@ function RecognizedScreen({ onBack }: { onBack: () => void }) {
 
 function NotMeScreen({ onBack }: { onBack: () => void }) {
   const { settings } = useSettings();
-  const router = useRouter();
   return (
     <div className="pt-6">
       <h1 className="q-h1 mt-4">Thanks for letting us know</h1>
@@ -156,12 +155,7 @@ function NotMeScreen({ onBack }: { onBack: () => void }) {
           Or use an existing login
         </h2>
         <div className="mx-auto flex w-full max-w-[440px] flex-col items-center gap-3">
-          <GoogleContinueButton
-            width={settings.loginButtonWidth}
-            height={settings.loginButtonHeight}
-            iconSize={settings.loginIconSize}
-            onContinue={() => router.push("/bivo")}
-          />
+          <GoogleLoginButton width={settings.loginButtonWidth} height={settings.loginButtonHeight} iconSize={settings.loginIconSize} />
           <DemoLoginButton provider="Facebook" width={settings.loginButtonWidth} height={settings.loginButtonHeight} iconSize={settings.loginIconSize} />
           <DemoLoginButton provider="Apple" width={settings.loginButtonWidth} height={settings.loginButtonHeight} iconSize={settings.loginIconSize} />
         </div>
@@ -174,29 +168,14 @@ function NotMeScreen({ onBack }: { onBack: () => void }) {
   );
 }
 
-/**
- * Real "Continue with Google" control: the other two providers stay demo-only,
- * but this one hands off into the Bivo sign-in app at /bivo, mounted inside
- * this same site (see src/app/bivo).
- */
-function GoogleContinueButton({
-  width,
-  height,
-  iconSize,
-  onContinue,
-}: {
-  width: number;
-  height: number;
-  iconSize: number;
-  onContinue: () => void;
-}) {
+/** The only live provider button here — it hands off to the Bivo sign-in app. */
+function GoogleLoginButton({ width, height, iconSize }: { width: number; height: number; iconSize: number }) {
   return (
-    <button
-      type="button"
-      onClick={onContinue}
-      aria-label="Continue with Google"
+    <Link
+      href="/signin"
+      aria-label="Sign in with Google"
       style={{ width: `min(100%, ${width}px)`, height }}
-      className="flex select-none items-center justify-center gap-3 rounded-[14px] border border-[#cbd1d5] bg-white px-4 text-center text-[14px] font-semibold text-[#626a72] shadow-sm transition-colors hover:bg-[#f7f8f9] active:bg-[#f0f1f2]"
+      className="flex items-center justify-center gap-3 rounded-[14px] border border-[#cbd1d5] bg-white px-4 text-center text-[14px] font-semibold text-[#626a72] shadow-sm transition-colors hover:bg-q-field active:bg-q-field"
     >
       <span className="flex shrink-0 items-center justify-center" style={{ width: iconSize, height: iconSize }} aria-hidden="true">
         <svg viewBox="0 0 48 48" style={{ width: iconSize, height: iconSize }} role="img">
@@ -206,8 +185,8 @@ function GoogleContinueButton({
           <path fill="#EA4335" d="M24 12.0c3 0 5.7 1 7.8 3.1l5.8-5.8C34.1 6 29.5 4 24 4A20 20 0 0 0 5.8 15.1l6.8 5.3C14.2 15.6 18.7 12 24 12Z" />
         </svg>
       </span>
-      <span>Continue with Google</span>
-    </button>
+      <span>Sign in with Google</span>
+    </Link>
   );
 }
 

@@ -32,26 +32,6 @@ sign-in button (text, link, show/hide), menu icon gradient colour, footer legal 
 
 ---
 
-## Bivo — the real sign-in app, at `/bivo`
-
-Quilo now includes Bivo: a real two-step sign-in / sign-up page, mounted
-inside this same site at `/bivo` and built on the same stack (Next.js +
-Tailwind + Supabase) — not a separate project, build tool or deployment.
-
-- On the **"This wasn't me"** screen, **"Continue with Google"** takes people
-  straight to `/bivo` to sign in or create an account. (The Facebook and Apple
-  buttons stay as demonstration-only, same as before.)
-- Branding (app name, logo, sign-in heading/subtitle, support email) lives in
-  the shared Supabase row `bivo_brand_settings` and is edited at **`/bivo/admin`**
-  — gated by the same admin list as the rest of the site (`admin_users`), so
-  there's one sign-in for everything.
-- No new environment variables: Bivo reads and writes through the same
-  `NEXT_SUPABASE_URL` / `NEXT_SUPABASE_ANON_KEY` already set up for the rest
-  of the site, and its table is created by the same `quilo-backend.sql` (see
-  step 1 below) — just re-run it after updating; it's safe to run again.
-
----
-
 ## Setup from your iPhone (Safari only)
 
 Do these in order. Nothing needs a computer or terminal.
@@ -114,17 +94,6 @@ Download the ZIP and unzip it in the Files app. Then either:
   | `src/lib/remote.ts` | **new** |
   | `src/lib/useAdminAuth.ts` | **new** |
   | `quilo-backend.sql` | **new** (reference copy) |
-  | `src/app/bivo/page.tsx` | **new** |
-  | `src/app/bivo/layout.tsx` | **new** |
-  | `src/app/bivo/admin/page.tsx` | **new** |
-  | `src/components/BivoAuthCard.tsx` | **new** |
-  | `src/components/BivoBrandEditor.tsx` | **new** |
-  | `src/components/BivoLogo.tsx` | **new** |
-  | `src/lib/bivoBrand.ts` | **new** |
-  | `src/lib/bivoValidation.ts` | **new** |
-  | `src/components/icons.tsx` | changed (a few small icons added) |
-  | `src/app/globals.css` | changed (Bivo's styling, scoped under `.bivo`) |
-  | `src/app/page.tsx` | changed ("Continue with Google" now links to `/bivo`) |
   | `public/site-settings.json` | no longer used — you can delete it |
 
 Vercel then deploys automatically. If you added the Vercel variables **after**
