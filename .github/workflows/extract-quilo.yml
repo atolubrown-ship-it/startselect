@@ -17,6 +17,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: testing
 
       - name: Extract project ZIP
         run: |
@@ -41,8 +43,6 @@ jobs:
           mkdir -p /tmp/zip-extract
           unzip -q "$ZIP_FILE" -d /tmp/zip-extract
 
-          # If the zip contains a single top-level folder, extract its contents
-          # into the repo root; otherwise copy whatever was extracted as-is.
           TOP_LEVEL_ENTRIES=$(find /tmp/zip-extract -mindepth 1 -maxdepth 1 | wc -l)
           if [ "$TOP_LEVEL_ENTRIES" -eq 1 ]; then
             SOURCE_DIR=$(find /tmp/zip-extract -mindepth 1 -maxdepth 1 -type d -print -quit)
@@ -65,5 +65,5 @@ jobs:
             echo "No changes to commit."
           else
             git commit -m "Extract project files from ZIP"
-            git push
+            git push origin HEAD:testing
           fi
