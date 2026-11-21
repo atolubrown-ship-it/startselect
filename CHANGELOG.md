@@ -1,3 +1,10 @@
+# Quilo v4.3.1
+
+- Fixed the stale legacy `BivoSignIn.tsx` type-check failure by replacing it with an unused compatibility stub; the active route remains `/signin` and uses `BivoAuthCard`.
+- Made sign-in fail closed when Supabase is not configured; the UI can no longer show a successful sign-in without a real Supabase authentication response.
+- Password-reset requests now display success only after Supabase accepts the request and show a useful error if the request fails or Supabase is unavailable.
+- Password updates now fail safely when Supabase is unavailable instead of displaying a false success.
+
 # Changelog
 
 ## 4.3.0

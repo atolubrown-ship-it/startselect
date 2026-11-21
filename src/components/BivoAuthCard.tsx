@@ -67,14 +67,12 @@ export default function BivoAuthCard({ brand, previewOnly = false }: { brand: Bi
     setLoading(true);
     try {
       const sb = getSupabase();
-      const authenticated = true;
-      if (sb) {
-        const { error } = await sb.auth.signInWithPassword({ email: email.trim(), password });
-        if (error) throw error;
-      } else {
-        await new Promise((r) => setTimeout(r, 700));
+      if (!sb) {
+        throw new Error("Sign-in is temporarily unavailable. Please try again later.");
       }
-      setCanRedirect(authenticated);
+      const { error } = await sb.auth.signInWithPassword({ email: email.trim(), password });
+      if (error) throw error;
+      setCanRedirect(true);
       setStep("done");
     } catch (err) {
       setErrors({ form: err instanceof Error ? err.message : brand.genericErrorMessage });
@@ -109,17 +107,19 @@ export default function BivoAuthCard({ brand, previewOnly = false }: { brand: Bi
     setResetNotice(null);
     try {
       const sb = getSupabase();
-      if (sb) {
-        await sb.auth.resetPasswordForEmail(email.trim(), {
-          redirectTo: typeof window !== "undefined" ? `${window.location.origin}/signin/reset-password` : undefined,
-        });
-      } else {
-        await new Promise((r) => setTimeout(r, 500));
+      if (!sb) {
+        throw new Error("Password recovery is temporarily unavailable. Please try again later.");
       }
+      const { error } = await sb.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: typeof window !== "undefined" ? `${window.location.origin}/signin/reset-password` : undefined,
+      });
+      if (error) throw error;
+      // Deliberately the same confirmation whether or not the account exists.
+      setResetNotice("If an account exists for that email, we've sent a link to reset the password.");
+    } catch (err) {
+      setErrors({ form: err instanceof Error ? err.message : brand.genericErrorMessage });
     } finally {
       setResetSending(false);
-      // Deliberately the same message whether or not the account exists.
-      setResetNotice("If an account exists for that email, we've sent a link to reset the password.");
     }
   };
 

@@ -53,10 +53,11 @@ export default function ResetPasswordPage() {
     setSaving(true);
     try {
       const sb = getSupabase();
-      if (sb) {
-        const { error: updateErr } = await sb.auth.updateUser({ password });
-        if (updateErr) throw updateErr;
+      if (!sb) {
+        throw new Error("Password reset is temporarily unavailable. Please try again later.");
       }
+      const { error: updateErr } = await sb.auth.updateUser({ password });
+      if (updateErr) throw updateErr;
       setDone(true);
       setTimeout(() => router.push("/signin"), 1800);
     } catch (err) {

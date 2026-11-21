@@ -19,7 +19,7 @@ export default function PrivateBrowsingHelpPage() {
 
         <h1 className="bivo-font-display mt-6 text-3xl font-semibold">Using a private window</h1>
         <p className="mt-3 bivo-muted-text">
-          A private (or &quot;incognito&quot;) window doesn&apos;t save your sign-in, browsing history, or cookies once you close
+          A private (or "incognito") window doesn&apos;t save your sign-in, browsing history, or cookies once you close
           it — useful on a shared or public computer.
         </p>
 
