@@ -1,33 +1,11 @@
-# Quilo v4.3.3
+# v4.2.1
 
-Restores the original page's look (per the attached screenshot of the pre-4.3.0 page) on top of the current `/signin`, without reintroducing any back control.
-
-- Added a full-width header bar above the card — logo + "Sign in with {appName}" + a bottom divider — and a page footer below it (a cosmetic language label on the left; up to three links on the right, defaulting to real Help/Privacy/Terms pages, not placeholders). Both are new, independent components (`HeaderBar`, `PageFooter` in `BivoAuthCard.tsx`) rendered by the real page and shown in the admin's live preview; **neither ever contains a link, icon, or button of any kind** — there is still no back control anywhere on `/signin`.
-- Restored a working "Create account" link on the email step only (never on the password step, so it still can't act as a way to step backwards once there). Clicking it switches to a real sign-up flow — a name field, Supabase's actual `auth.signUp()`, and an "I have an account" link back to sign-in — instead of a dead link. This reactivates sign-up copy/schema fields that already existed from before 4.3.0 but were unused.
-- Restored separate per-step headings ("Sign in" / "Welcome back" for signing in; "Create your account" / "Create a password" for creating an account) instead of one shared heading reused on every step, matching the original design.
-- New admin-dashboard sections at `/signin/admin`: **Header bar** (on/off, header text), **Create account** (on/off, both switch-link labels, every sign-up heading/label/message, the name field's label and required-message), and the existing **Footer links** card is now **Page footer** (on/off, language label, the same three link fields — now actually rendered on the page for the first time). No new table or migration — same `bivo_brand_settings` row.
-- Added `/signin/help` (an index linking the two existing help articles), `/signin/privacy` and `/signin/terms` — plain, honest placeholder pages (this is a fictional-brand concept, not a live product, and they say so) so the new footer's links are real, working pages rather than dead ones.
-- Kept every 4.3.1 hardening fix exactly as it arrived in this version (the `BivoSignIn.tsx` compatibility stub, fail-closed sign-in/password-reset/password-update when Supabase isn't configured, and the `private-browsing` lint fix) — nothing in this change touches that code.
-
-**Not tested against a real build** — no network access in this environment to run `npm install`/`next build`. Verified by: full manual review against the original screenshot and the project's very first `BivoSignIn.tsx` source (for exact structure/wording), a brace/bracket/paren balance check across every `.ts`/`.tsx`/`.css` file, and a `tsc --noEmit` pass — which parses every file with zero syntax errors; the only errors reported are pre-existing "cannot find module react/next/tailwindcss" from `node_modules` not being installed here, present identically on files untouched by this change. No SQL migration is needed.
-
-# Quilo v4.3.1
-
-- Fixed the stale legacy `BivoSignIn.tsx` type-check failure by replacing it with an unused compatibility stub; the active route remains `/signin` and uses `BivoAuthCard`.
-- Made sign-in fail closed when Supabase is not configured; the UI can no longer show a successful sign-in without a real Supabase authentication response.
-- Password-reset requests now display success only after Supabase accepts the request and show a useful error if the request fails or Supabase is unavailable.
-- Password updates now fail safely when Supabase is unavailable instead of displaying a false success.
+- Removed the Home item from the Secure Account navigation menu.
+- Removed the Back action from the Bivo password step; the primary submit action remains.
+- Added admin-editable Bivo copy for the signed-in identity, Continue action, redirect notice, and show/hide-password accessibility labels.
+- Removed the unused Back button editor field.
 
 # Changelog
-
-## 4.3.0
-- Moved the Bivo sign-in experience from `/bivo` to `/signin` (its own layout, metadata), and its dashboard from `/bivo/admin` to `/signin/admin`. Removed the old `/bivo` and `/bivo/admin` routes and the now-unused standalone `BivoSignIn.tsx` component. The "Continue with Google" button on the main Quilo page already pointed at `/signin`, so this reconnects it to the real, admin-configurable page for the first time — it had been pointing at the old static component this whole time.
-- Removed the back arrow from the sign-in header entirely (it came from the old component now removed) — on every step, with no replacement.
-- Rebuilt the sign-in flow as a single-column, Google-style layout: logo + a constant heading, then the active step. Dropped the sign-up/switch-mode path, since the new spec only ever describes a sign-in flow — tell me if account creation should still be reachable from here and I'll add it back deliberately.
-- Email step: a prominent, admin-configurable border (default 4px, blue) with a floating label that sits on the border when focused/filled; a functional, enumeration-safe "Forgot email?" link (`/signin/recover-email`) that always shows the same confirmation regardless of what's entered; Next button.
-- Password step: same per-field styling (independently configurable from the email field); a real "Show password" checkbox (not an icon button) that toggles masking; "Forgot password?" replaces the old "Back"/"Create account" link and calls Supabase's `resetPasswordForEmail` for real, landing on a new `/signin/reset-password` page that lets the visitor set a new password from the emailed link.
-- Added the required "Not your device?" security notice under the form on both the email and password steps, at the same position/width/styling on both (one shared component, not two copies). "private window" and "sign out" are real links — admin-editable text/colour — to two new in-app help pages (`/signin/help/private-browsing`, `/signin/help/sign-out`), rather than external or dead links.
-- Expanded the Bivo admin dashboard (same `bivo_brand_settings` table, no new table, no migration needed — it's schema-less JSON) with dedicated "Email field", "Password field" and "Security message" sections, and removed now-dead sign-up-era controls (column order, label position, generic shared field border/colour, switch-link copy) from the editor since nothing renders them any more.
 
 ## 4.2.0
 - Removed the Home button (and its icon) from the Secure Account alert page. The security-alert back button is unaffected.

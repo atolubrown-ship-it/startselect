@@ -243,33 +243,24 @@ html {
   opacity: 1;
 }
 
-/*
- * --bivo-field-* vars are set per-field, as an inline style on that one
- * field's own `.bivo-field` wrapper (buildFieldVars(), src/lib/bivoBrand.ts),
- * so the email input and the password input can have different borders and
- * colours from each other even though they share this same CSS — each
- * property falls back to the old shared `--bivo-input-*` var when a field
- * doesn't set its own (e.g. the admin-login form's plain .bivo-input).
- */
 .bivo-input {
   display: block;
   box-sizing: border-box;
   width: 100%;
   height: var(--bivo-input-height, 48px);
   padding: 0 16px;
-  border-radius: var(--bivo-field-border-radius, var(--bivo-input-border-radius, 12px));
-  border-width: var(--bivo-field-border-width, var(--bivo-input-border-width, 1px));
+  border-radius: var(--bivo-input-border-radius, 12px);
+  border-width: var(--bivo-input-border-width, 1px);
   border-style: solid;
-  border-color: var(--bivo-field-border-color, var(--bivo-input-border));
-  background: var(--bivo-field-bg, var(--bivo-input-bg, #ffffff));
-  color: var(--bivo-field-text, var(--bivo-input-text, var(--bivo-ink)));
+  border-color: var(--bivo-input-border);
+  background: var(--bivo-input-bg, #ffffff);
+  color: var(--bivo-input-text, var(--bivo-ink));
   font-size: 16px;
   outline: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color 0.15s ease;
 }
 .bivo-input:focus {
-  border-color: var(--bivo-field-border-color, var(--bivo-primary));
-  box-shadow: 0 0 0 1px var(--bivo-field-border-color, var(--bivo-primary));
+  border-color: var(--bivo-primary);
 }
 .bivo-input[aria-invalid="true"] {
   border-color: var(--bivo-danger);
@@ -288,8 +279,8 @@ html {
   top: 50%;
   transform: translateY(-50%);
   padding: 0 4px;
-  background: var(--bivo-field-bg, var(--bivo-input-bg, #ffffff));
-  color: currentColor;
+  background: var(--bivo-input-bg, #ffffff);
+  color: var(--bivo-input-text, var(--bivo-ink));
   opacity: 0.62;
   font-size: 16px;
   pointer-events: none;
@@ -299,7 +290,7 @@ html {
 .bivo-input:not(:placeholder-shown) + .bivo-floating-label {
   top: 0;
   font-size: 12px;
-  color: var(--bivo-field-label-color, var(--bivo-primary));
+  color: var(--bivo-primary);
   opacity: 1;
 }
 .bivo-top-label {
@@ -355,94 +346,4 @@ html {
   .bivo-animate-rise {
     animation: none;
   }
-}
-
-/* "Not your device?" notice (Part 6) — one shared block used identically by
-   both the email and password steps, so its position/width/styling never
-   changes between them; only the step's own content above it differs. */
-.bivo-security-message {
-  margin-top: var(--bivo-security-spacing, 24px);
-  font-size: var(--bivo-security-font-size, 13px);
-  color: var(--bivo-security-color, currentColor);
-  text-align: var(--bivo-security-align, left);
-  line-height: 1.5;
-}
-.bivo-security-message a {
-  color: var(--bivo-security-link-color, var(--bivo-link));
-  text-decoration: underline;
-  font-weight: 500;
-}
-
-/* Show-password checkbox (Part 4) — a real checkbox, not an icon button. */
-.bivo-checkbox-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 2px 0;
-}
-.bivo-checkbox-row input[type="checkbox"] {
-  width: 20px;
-  height: 20px;
-  min-width: 20px;
-  border-radius: 5px;
-  border: 1.5px solid var(--bivo-border);
-  accent-color: var(--bivo-primary);
-  cursor: pointer;
-}
-.bivo-checkbox-row label {
-  font-size: 14px;
-  cursor: pointer;
-  color: currentColor;
-}
-
-/* Page-level chrome restoring the original look: a full-width header bar
-   above the card (logo + "Sign in with {appName}" + a bottom divider, no
-   back control of any kind) and a footer below the card (language label +
-   up to three links). Neither is part of BivoAuthCard's own "card" — they
-   wrap it on the real page (and in the admin's live preview). */
-.bivo-header-bar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 14px 20px;
-  border-bottom: 1px solid var(--bivo-border);
-  flex-shrink: 0;
-}
-.bivo-header-bar span {
-  font-size: 16px;
-  color: currentColor;
-  opacity: 0.7;
-}
-
-.bivo-page-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
-  width: 100%;
-  max-width: var(--bivo-page-max-width);
-  margin: 16px auto 0;
-  padding: 0 4px;
-  font-size: 12px;
-  color: currentColor;
-  opacity: 0.7;
-}
-.bivo-page-footer select {
-  background: transparent;
-  border: none;
-  font-size: 12px;
-  color: currentColor;
-  cursor: pointer;
-}
-.bivo-page-footer nav {
-  display: flex;
-  gap: 20px;
-}
-.bivo-page-footer a {
-  color: currentColor;
-}
-.bivo-page-footer a:hover {
-  text-decoration: underline;
 }

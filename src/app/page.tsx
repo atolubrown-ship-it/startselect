@@ -25,7 +25,7 @@ export default function SecurityAlertPage() {
   }, [view]);
 
   return (
-    <SiteShell onHome={() => setView("alert")}>
+    <SiteShell>
       <div className="mx-auto w-full max-w-xl">
         <Breadcrumb view={view} onBack={() => setView("alert")} />
         <div key={view} className="q-view-in">

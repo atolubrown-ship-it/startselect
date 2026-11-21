@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, type ChangeEvent, type CSSProperties, type FormEvent, type ReactNode } from "react";
-import BivoAuthCard, { HeaderBar, PageFooter } from "@/components/BivoAuthCard";
+import BivoAuthCard from "@/components/BivoAuthCard";
 import BivoLogo from "@/components/BivoLogo";
 import { DeviceIcon, PhoneIcon, SpinnerIcon, TrashIcon, UploadIcon } from "@/components/icons";
 import { fileToLogoDataUrl } from "@/lib/image";
@@ -14,8 +14,9 @@ import {
   type ButtonPosition,
   type ButtonShape,
   type ButtonSize,
+  type ColumnOrder,
+  type LabelPosition,
   type LogoPosition,
-  type MessageAlign,
   type PageAlign,
 } from "@/lib/bivoBrand";
 import { validateEmail } from "@/lib/bivoValidation";
@@ -31,7 +32,7 @@ const FONT_OPTIONS: { value: BivoBrand["fontFamily"]; label: string }[] = [
   { value: "mono", label: "Monospace" },
 ];
 
-/** The branding + copy editor shown at /signin/admin once an admin is signed in. */
+/** The branding + copy editor shown at /bivo/admin once an admin is signed in. */
 export default function BivoBrandEditor() {
   const [brand, setBrand] = useState<BivoBrand>(DEFAULT_BIVO_BRAND);
   const [draft, setDraft] = useState<BivoBrand>(DEFAULT_BIVO_BRAND);
@@ -97,9 +98,6 @@ export default function BivoBrandEditor() {
     if (!draft.appName.trim()) next.appName = "Enter a name";
     else if (draft.appName.trim().length > 40) next.appName = "Keep the name under 40 characters";
     if (!draft.signinHeadline.trim()) next.signinHeadline = "Enter a heading";
-    if (!draft.securityMessageTemplate.includes("{privateWindow}") || !draft.securityMessageTemplate.includes("{signOut}")) {
-      next.securityMessageTemplate = 'Keep both "{privateWindow}" and "{signOut}" somewhere in the text — they become the two links.';
-    }
     const supportErr = validateEmail(draft.supportEmail);
     if (supportErr) next.supportEmail = supportErr;
     for (const [key, url] of [
@@ -169,13 +167,10 @@ export default function BivoBrandEditor() {
   return (
     <div className="grid gap-6 lg:grid-cols-[1.1fr_1fr]">
       <form onSubmit={onSave} noValidate className="space-y-6">
-        <div className="bivo-admin-card space-y-6">
+        <div className="bivo-card space-y-6">
           <div>
-            <h1 className="bivo-font-display text-3xl font-semibold">Bivo sign-in branding</h1>
-            <p className="mt-1 text-sm" style={{ color: "#6b7280" }}>
-              Everything on the public /signin page — branding, copy, the email and password fields, and the security
-              notice — is controlled from here.
-            </p>
+            <h1 className="bivo-font-display text-3xl font-semibold">Bivo branding</h1>
+            <p className="mt-1 text-sm bivo-muted-text">Everything on the Bivo sign-in page — branding, copy, layout and form styling — is controlled from here.</p>
           </div>
 
           {message && (
@@ -191,7 +186,7 @@ export default function BivoBrandEditor() {
               {message.text}
             </p>
           )}
-          {dirty && !message && <p className="text-sm" style={{ color: "#6b7280" }}>You have unsaved changes.</p>}
+          {dirty && !message && <p className="text-sm bivo-muted-text">You have unsaved changes.</p>}
         </div>
 
         <Card title="Logo & name">
@@ -220,12 +215,12 @@ export default function BivoBrandEditor() {
           <NumberField id="logoSize" label="Logo size" value={draft.logoSize} onChange={setNum("logoSize")} min={24} max={160} step={4} unit="px" />
           <SelectField<LogoPosition>
             id="logoPosition"
-            label="Header layout"
+            label="Logo position"
             value={draft.logoPosition}
             onChange={(v) => update("logoPosition", v)}
             options={[
-              { value: "left", label: "Logo beside the heading" },
-              { value: "center", label: "Logo above the heading, centered" },
+              { value: "left", label: "Left-aligned" },
+              { value: "center", label: "Centered" },
             ]}
           />
         </Card>
@@ -250,7 +245,13 @@ export default function BivoBrandEditor() {
           <ColorField label="Button colour" value={draft.buttonColor} onChange={(v) => update("buttonColor", v)} />
           <ColorField label="Link colour" value={draft.linkColor} onChange={(v) => update("linkColor", v)} />
           <ColorField label="Border colour" value={draft.borderColor} onChange={(v) => update("borderColor", v)} />
-          <SelectField id="fontFamily" label="Font" value={draft.fontFamily} onChange={(v) => update("fontFamily", v)} options={FONT_OPTIONS} />
+          <SelectField
+            id="fontFamily"
+            label="Font"
+            value={draft.fontFamily}
+            onChange={(v) => update("fontFamily", v)}
+            options={FONT_OPTIONS}
+          />
           <div className="grid grid-cols-2 gap-3">
             <NumberField id="fontSize" label="Base text size" value={draft.fontSize} onChange={setNum("fontSize")} min={13} max={20} step={1} unit="px" />
             <SelectField
@@ -268,75 +269,39 @@ export default function BivoBrandEditor() {
           </div>
         </Card>
 
-        <Card title="Header bar" hint="The full-width bar above the card. Never contains a back control.">
-          <Toggle id="showHeaderBar" label="Show the header bar" checked={draft.showHeaderBar} onChange={setBool("showHeaderBar")} />
-          {draft.showHeaderBar && <TextField id="headerText" label="Header text (use {appName} for the app name)" value={draft.headerText} onChange={set("headerText")} />}
-        </Card>
-
         <Card title="Page content">
-          <TextField
-            id="signinHeadline"
-            label="Email-step heading (sign in)"
-            value={draft.signinHeadline}
-            onChange={set("signinHeadline")}
-            error={errors.signinHeadline}
-          />
-          <TextField id="signinPasswordTitle" label="Password-step heading (sign in)" value={draft.signinPasswordTitle} onChange={set("signinPasswordTitle")} />
-          <Toggle id="showSubline" label="Show a subheading under the heading on the email step" checked={draft.showSubline} onChange={setBool("showSubline")} />
-          {draft.showSubline && (
-            <TextField id="signinSubline" label="Subheading (use {appName} for the app name)" value={draft.signinSubline} onChange={set("signinSubline")} />
-          )}
-          <TextField id="emailLabel" label="Email field label" value={draft.emailLabel} onChange={set("emailLabel")} />
-          <TextField id="nextLabel" label={'"Next" button'} value={draft.nextLabel} onChange={set("nextLabel")} />
-          <TextField id="passwordLabel" label="Password field label" value={draft.passwordLabel} onChange={set("passwordLabel")} />
+          <TextField id="signinHeadline" label="Sign-in heading" value={draft.signinHeadline} onChange={set("signinHeadline")} error={errors.signinHeadline} />
+          <TextField id="signinSubline" label="Sign-in subheading" value={draft.signinSubline} onChange={set("signinSubline")} />
+          <TextField id="signinPasswordTitle" label="Password step heading" value={draft.signinPasswordTitle} onChange={set("signinPasswordTitle")} />
           <TextField id="signinSubmitLabel" label="Sign-in submit button" value={draft.signinSubmitLabel} onChange={set("signinSubmitLabel")} />
+          <TextField id="signinSwitchLabel" label={'"Switch to sign-up" link'} value={draft.signinSwitchLabel} onChange={set("signinSwitchLabel")} />
           <TextField id="signinDoneTitle" label="Success heading" value={draft.signinDoneTitle} onChange={set("signinDoneTitle")} />
           <TextField id="signinDoneMessage" label="Success message" value={draft.signinDoneMessage} onChange={set("signinDoneMessage")} />
-          <TextField id="useAnotherAccountLabel" label={'"Use another account" button'} value={draft.useAnotherAccountLabel} onChange={set("useAnotherAccountLabel")} />
           <hr className="opacity-10" />
-          <Toggle id="showHelpLine" label="Show the help line" checked={draft.showHelpLine} onChange={setBool("showHelpLine")} />
-          {draft.showHelpLine && (
-            <>
-              <TextField id="needHelpHeading" label="Help-line heading" value={draft.needHelpHeading} onChange={set("needHelpHeading")} />
-              <TextField id="contactLabel" label="Word before the support email" value={draft.contactLabel} onChange={set("contactLabel")} />
-              <TextField id="supportEmail" label="Support email" value={draft.supportEmail} onChange={set("supportEmail")} error={errors.supportEmail} />
-            </>
-          )}
-        </Card>
-
-        <Card title="Create account" hint={'Lets a visitor switch from signing in to creating a new account, on the email step only — there is no switch link on the password step, so this never acts as a back control.'}>
-          <Toggle id="showSwitchLink" label={'Show the "Create account" / "I have an account" switch link'} checked={draft.showSwitchLink} onChange={setBool("showSwitchLink")} />
-          {draft.showSwitchLink && (
-            <>
-              <TextField id="signinSwitchLabel" label='Link text on the sign-in screen (e.g. "Create account")' value={draft.signinSwitchLabel} onChange={set("signinSwitchLabel")} />
-              <TextField id="signupSwitchLabel" label='Link text on the create-account screen (e.g. "I have an account")' value={draft.signupSwitchLabel} onChange={set("signupSwitchLabel")} />
-              <hr className="opacity-10" />
-              <TextField id="nameLabel" label="Name field label" value={draft.nameLabel} onChange={set("nameLabel")} />
-              <TextField id="nameRequiredMessage" label="Name required message" value={draft.nameRequiredMessage} onChange={set("nameRequiredMessage")} />
-              <TextField id="signupHeadline" label="Email-step heading (create account)" value={draft.signupHeadline} onChange={set("signupHeadline")} />
-              <TextField
-                id="signupSublineTemplate"
-                label="Subheading (create account; use {appName} for the app name)"
-                value={draft.signupSublineTemplate}
-                onChange={set("signupSublineTemplate")}
-              />
-              <TextField id="signupPasswordTitle" label="Password-step heading (create account)" value={draft.signupPasswordTitle} onChange={set("signupPasswordTitle")} />
-              <TextField id="signupSubmitLabel" label="Create-account submit button" value={draft.signupSubmitLabel} onChange={set("signupSubmitLabel")} />
-              <TextField id="signupDoneTitle" label="Success heading (create account)" value={draft.signupDoneTitle} onChange={set("signupDoneTitle")} />
-              <TextField
-                id="signupDoneMessageTemplate"
-                label="Success message (use {appName} and {name})"
-                value={draft.signupDoneMessageTemplate}
-                onChange={set("signupDoneMessageTemplate")}
-              />
-              <TextField
-                id="confirmEmailNoticeText"
-                label="Message shown when email confirmation is required before signing in"
-                value={draft.confirmEmailNoticeText}
-                onChange={set("confirmEmailNoticeText")}
-              />
-            </>
-          )}
+          <p className="text-xs bivo-muted-text">Sign-up text — use {"{appName}"} and {"{name}"}, filled in automatically.</p>
+          <TextField id="signupHeadline" label="Sign-up heading" value={draft.signupHeadline} onChange={set("signupHeadline")} />
+          <TextField id="signupSublineTemplate" label="Sign-up subheading" value={draft.signupSublineTemplate} onChange={set("signupSublineTemplate")} />
+          <TextField id="signupPasswordTitle" label="Sign-up password step heading" value={draft.signupPasswordTitle} onChange={set("signupPasswordTitle")} />
+          <TextField id="signupSubmitLabel" label="Sign-up submit button" value={draft.signupSubmitLabel} onChange={set("signupSubmitLabel")} />
+          <TextField id="signupSwitchLabel" label={'"Switch to sign-in" link'} value={draft.signupSwitchLabel} onChange={set("signupSwitchLabel")} />
+          <TextField id="signupDoneTitle" label="Sign-up success heading" value={draft.signupDoneTitle} onChange={set("signupDoneTitle")} />
+          <TextField id="signupDoneMessageTemplate" label="Sign-up success message" value={draft.signupDoneMessageTemplate} onChange={set("signupDoneMessageTemplate")} />
+          <hr className="opacity-10" />
+          <TextField id="nameLabel" label="Name field label" value={draft.nameLabel} onChange={set("nameLabel")} />
+          <TextField id="emailLabel" label="Email field label" value={draft.emailLabel} onChange={set("emailLabel")} />
+          <TextField id="passwordLabel" label="Password field label" value={draft.passwordLabel} onChange={set("passwordLabel")} />
+          <TextField id="nextLabel" label={'"Next" button'} value={draft.nextLabel} onChange={set("nextLabel")} />
+          <TextField id="useAnotherAccountLabel" label={'"Use another account" button'} value={draft.useAnotherAccountLabel} onChange={set("useAnotherAccountLabel")} />
+          <TextField id="signedInAsTemplate" label="Signed-in identity text (use {email})" value={draft.signedInAsTemplate} onChange={set("signedInAsTemplate")} />
+          <TextField id="continueLabel" label="Continue button" value={draft.continueLabel} onChange={set("continueLabel")} />
+          <TextField id="redirectingText" label="Automatic redirect message" value={draft.redirectingText} onChange={set("redirectingText")} />
+          <TextField id="showPasswordLabel" label="Show-password accessibility label" value={draft.showPasswordLabel} onChange={set("showPasswordLabel")} />
+          <TextField id="hidePasswordLabel" label="Hide-password accessibility label" value={draft.hidePasswordLabel} onChange={set("hidePasswordLabel")} />
+          <TextField id="demoNoticeText" label="Demo-mode notice" value={draft.demoNoticeText} onChange={set("demoNoticeText")} />
+          <TextField id="confirmEmailNoticeText" label={'"Confirm your email" notice'} value={draft.confirmEmailNoticeText} onChange={set("confirmEmailNoticeText")} />
+          <TextField id="needHelpHeading" label="Help-line heading" value={draft.needHelpHeading} onChange={set("needHelpHeading")} />
+          <TextField id="contactLabel" label="Word before the support email" value={draft.contactLabel} onChange={set("contactLabel")} />
+          <TextField id="supportEmail" label="Support email" value={draft.supportEmail} onChange={set("supportEmail")} error={errors.supportEmail} />
         </Card>
 
         <Card title="Validation & error messages" hint={'"{min}" in the password message is replaced with the minimum length.'}>
@@ -345,98 +310,24 @@ export default function BivoBrandEditor() {
           <TextField id="emailInvalidMessage" label="Email invalid" value={draft.emailInvalidMessage} onChange={set("emailInvalidMessage")} />
           <TextField id="passwordRequiredMessage" label="Password required" value={draft.passwordRequiredMessage} onChange={set("passwordRequiredMessage")} />
           <TextField id="passwordTooShortMessage" label="Password too short" value={draft.passwordTooShortMessage} onChange={set("passwordTooShortMessage")} />
+          <TextField id="nameRequiredMessage" label="Name required" value={draft.nameRequiredMessage} onChange={set("nameRequiredMessage")} />
         </Card>
 
-        <Card title="Email field" hint="Styling for the email input only — the password field below has its own, separate settings.">
-          <ColorField label="Border colour" value={draft.emailBorderColor} onChange={(v) => update("emailBorderColor", v)} />
-          <NumberField id="emailBorderWidth" label="Border thickness" value={draft.emailBorderWidth} onChange={setNum("emailBorderWidth")} min={0} max={6} step={1} unit="px" />
-          <NumberField id="emailBorderRadius" label="Border radius" value={draft.emailBorderRadius} onChange={setNum("emailBorderRadius")} min={0} max={28} step={2} unit="px" />
-          <ColorField label="Floating label colour" value={draft.emailLabelColor} onChange={(v) => update("emailLabelColor", v)} />
-          <ColorField label="Field background" value={draft.emailInputBg} onChange={(v) => update("emailInputBg", v)} />
-          <ColorField label="Entered text colour" value={draft.emailInputText} onChange={(v) => update("emailInputText", v)} />
-          <Toggle id="showForgotEmailLink" label={'Show "Forgot email?" link'} checked={draft.showForgotEmailLink} onChange={setBool("showForgotEmailLink")} />
-          {draft.showForgotEmailLink && <TextField id="forgotEmailLabel" label="Link text" value={draft.forgotEmailLabel} onChange={set("forgotEmailLabel")} />}
-        </Card>
-
-        <Card title="Password field">
-          <ColorField label="Border colour" value={draft.passwordBorderColor} onChange={(v) => update("passwordBorderColor", v)} />
-          <NumberField id="passwordBorderWidth" label="Border thickness" value={draft.passwordBorderWidth} onChange={setNum("passwordBorderWidth")} min={0} max={6} step={1} unit="px" />
-          <NumberField id="passwordBorderRadius" label="Border radius" value={draft.passwordBorderRadius} onChange={setNum("passwordBorderRadius")} min={0} max={28} step={2} unit="px" />
-          <ColorField label="Floating label colour" value={draft.passwordLabelColor} onChange={(v) => update("passwordLabelColor", v)} />
-          <ColorField label="Field background" value={draft.passwordInputBg} onChange={(v) => update("passwordInputBg", v)} />
-          <ColorField label="Entered text colour" value={draft.passwordInputText} onChange={(v) => update("passwordInputText", v)} />
-          <Toggle id="showShowPasswordCheckbox" label='Show the "Show password" checkbox' checked={draft.showShowPasswordCheckbox} onChange={setBool("showShowPasswordCheckbox")} />
-          {draft.showShowPasswordCheckbox && (
-            <TextField id="showPasswordCheckboxLabel" label="Checkbox label" value={draft.showPasswordCheckboxLabel} onChange={set("showPasswordCheckboxLabel")} />
-          )}
-          <Toggle id="showForgotPasswordLink" label={'Show "Forgot password?" link'} checked={draft.showForgotPasswordLink} onChange={setBool("showForgotPasswordLink")} />
-          {draft.showForgotPasswordLink && (
-            <TextField id="forgotPasswordLabel" label="Link text" value={draft.forgotPasswordLabel} onChange={set("forgotPasswordLabel")} />
-          )}
-        </Card>
-
-        <Card title="Security message" hint='Keep both "{privateWindow}" and "{signOut}" in the text — each becomes a real, working link, wherever it falls in the sentence.'>
-          <Toggle id="showSecurityMessage" label="Show this message" checked={draft.showSecurityMessage} onChange={setBool("showSecurityMessage")} />
-          {draft.showSecurityMessage && (
-            <>
-              <div>
-                <label htmlFor="securityMessageTemplate" className="bivo-label">
-                  Message text
-                </label>
-                <textarea
-                  id="securityMessageTemplate"
-                  value={draft.securityMessageTemplate}
-                  onChange={set("securityMessageTemplate")}
-                  rows={3}
-                  className="w-full rounded-xl border px-4 py-3 text-sm"
-                  style={errors.securityMessageTemplate ? { borderColor: "var(--bivo-danger)" } : { borderColor: "#dbe1e8" }}
-                />
-                {errors.securityMessageTemplate && <p className="bivo-error">{errors.securityMessageTemplate}</p>}
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <TextField id="securityMessagePrivateWindowText" label='"private window" link text' value={draft.securityMessagePrivateWindowText} onChange={set("securityMessagePrivateWindowText")} />
-                <TextField id="securityMessageSignOutText" label='"sign out" link text' value={draft.securityMessageSignOutText} onChange={set("securityMessageSignOutText")} />
-              </div>
-              <ColorField label="Text colour" value={draft.securityMessageColor} onChange={(v) => update("securityMessageColor", v)} />
-              <ColorField label="Hyperlink colour" value={draft.securityMessageLinkColor} onChange={(v) => update("securityMessageLinkColor", v)} />
-              <NumberField id="securityMessageFontSize" label="Font size" value={draft.securityMessageFontSize} onChange={setNum("securityMessageFontSize")} min={10} max={20} step={1} unit="px" />
-              <NumberField id="securityMessageSpacing" label="Space above the message" value={draft.securityMessageSpacing} onChange={setNum("securityMessageSpacing")} min={0} max={80} step={4} unit="px" />
-              <SelectField<MessageAlign>
-                id="securityMessageAlign"
-                label="Alignment"
-                value={draft.securityMessageAlign}
-                onChange={(v) => update("securityMessageAlign", v)}
-                options={[
-                  { value: "left", label: "Left" },
-                  { value: "center", label: "Center" },
-                  { value: "right", label: "Right" },
-                ]}
-              />
-            </>
-          )}
-        </Card>
-
-        <Card title="After sign-in" hint="Where a visitor lands once they sign in. Leave blank to keep showing the success screen.">
+        <Card title="After sign-in" hint="Where a visitor lands once they sign in or create an account. Leave blank to keep showing the success screen.">
           <TextField id="successRedirectUrl" label="Redirect link" value={draft.successRedirectUrl} onChange={set("successRedirectUrl")} error={errors.successRedirectUrl} placeholder="/ or https://example.com/welcome" />
         </Card>
 
-        <Card title="Page footer" hint="The row below the card: a language label on the left, up to three links on the right. Each link is hidden until both its label and URL are filled in.">
-          <Toggle id="showPageFooter" label="Show the page footer" checked={draft.showPageFooter} onChange={setBool("showPageFooter")} />
-          {draft.showPageFooter && (
-            <>
-              <TextField id="footerLanguageLabel" label="Language label (cosmetic — not a real language switcher)" value={draft.footerLanguageLabel} onChange={set("footerLanguageLabel")} />
-              <TextField id="footerLink1Label" label="Link 1 label" value={draft.footerLink1Label} onChange={set("footerLink1Label")} />
-              <TextField id="footerLink1Url" label="Link 1 URL" value={draft.footerLink1Url} onChange={set("footerLink1Url")} error={errors.footerLink1Url} />
-              <TextField id="footerLink2Label" label="Link 2 label" value={draft.footerLink2Label} onChange={set("footerLink2Label")} />
-              <TextField id="footerLink2Url" label="Link 2 URL" value={draft.footerLink2Url} onChange={set("footerLink2Url")} error={errors.footerLink2Url} />
-              <TextField id="footerLink3Label" label="Link 3 label" value={draft.footerLink3Label} onChange={set("footerLink3Label")} />
-              <TextField id="footerLink3Url" label="Link 3 URL" value={draft.footerLink3Url} onChange={set("footerLink3Url")} error={errors.footerLink3Url} />
-            </>
-          )}
+        <Card title="Footer links" hint="Each link is hidden until both its label and URL are filled in.">
+          <TextField id="footerLink1Label" label="Link 1 label" value={draft.footerLink1Label} onChange={set("footerLink1Label")} />
+          <TextField id="footerLink1Url" label="Link 1 URL" value={draft.footerLink1Url} onChange={set("footerLink1Url")} error={errors.footerLink1Url} />
+          <TextField id="footerLink2Label" label="Link 2 label" value={draft.footerLink2Label} onChange={set("footerLink2Label")} />
+          <TextField id="footerLink2Url" label="Link 2 URL" value={draft.footerLink2Url} onChange={set("footerLink2Url")} error={errors.footerLink2Url} />
+          <TextField id="footerLink3Label" label="Link 3 label" value={draft.footerLink3Label} onChange={set("footerLink3Label")} />
+          <TextField id="footerLink3Url" label="Link 3 URL" value={draft.footerLink3Url} onChange={set("footerLink3Url")} error={errors.footerLink3Url} />
         </Card>
 
-        <Card title="Layout" hint="Controls the /signin page itself. Sizes are in pixels.">
-          <NumberField id="pageMaxWidth" label="Content width" value={draft.pageMaxWidth} onChange={setNum("pageMaxWidth")} min={340} max={720} step={8} unit="px" />
+        <Card title="Layout" hint="Controls the /bivo page itself. Sizes are in pixels.">
+          <NumberField id="pageMaxWidth" label="Content width" value={draft.pageMaxWidth} onChange={setNum("pageMaxWidth")} min={420} max={1280} step={8} unit="px" />
           <div className="grid grid-cols-2 gap-3">
             <NumberField id="pagePaddingX" label="Page padding, left/right" value={draft.pagePaddingX} onChange={setNum("pagePaddingX")} min={0} max={96} step={2} unit="px" />
             <NumberField id="pagePaddingY" label="Page padding, top/bottom" value={draft.pagePaddingY} onChange={setNum("pagePaddingY")} min={0} max={160} step={2} unit="px" />
@@ -452,7 +343,18 @@ export default function BivoBrandEditor() {
               { value: "right", label: "Right" },
             ]}
           />
-          <NumberField id="headingSize" label="Heading text size" value={draft.headingSize} onChange={setNum("headingSize")} min={18} max={56} step={2} unit="px" />
+          <SelectField<ColumnOrder>
+            id="columnOrder"
+            label="Column order"
+            value={draft.columnOrder}
+            onChange={(v) => update("columnOrder", v)}
+            options={[
+              { value: "brandFirst", label: "Branding first, form second" },
+              { value: "formFirst", label: "Form first, branding second" },
+            ]}
+          />
+          <NumberField id="columnGap" label="Gap between columns" value={draft.columnGap} onChange={setNum("columnGap")} min={0} max={120} step={4} unit="px" />
+          <NumberField id="headingSize" label="Heading text size" value={draft.headingSize} onChange={setNum("headingSize")} min={20} max={72} step={2} unit="px" />
           <Toggle id="showCard" label="Show a card around the sign-in content" checked={draft.showCard} onChange={setBool("showCard")} />
           {draft.showCard && (
             <>
@@ -462,10 +364,24 @@ export default function BivoBrandEditor() {
           )}
         </Card>
 
-        <Card title="Form sizing & buttons">
+        <Card title="Form appearance">
           <NumberField id="inputHeight" label="Field height" value={draft.inputHeight} onChange={setNum("inputHeight")} min={36} max={72} step={2} unit="px" />
+          <NumberField id="inputBorderWidth" label="Field border width (0–3)" value={draft.inputBorderWidth} onChange={setNum("inputBorderWidth")} min={0} max={3} step={1} unit="px" />
+          <NumberField id="inputBorderRadius" label="Field border radius" value={draft.inputBorderRadius} onChange={setNum("inputBorderRadius")} min={0} max={28} step={2} unit="px" />
+          <ColorField label="Field background colour" value={draft.inputBackgroundColor} onChange={(v) => update("inputBackgroundColor", v)} />
+          <ColorField label="Field text colour" value={draft.inputTextColor} onChange={(v) => update("inputTextColor", v)} />
           <NumberField id="inputWidthPercent" label="Field width" value={draft.inputWidthPercent} onChange={setNum("inputWidthPercent")} min={40} max={100} step={5} unit="%" />
-          <NumberField id="fieldSpacing" label="Gap between stacked elements" value={draft.fieldSpacing} onChange={setNum("fieldSpacing")} min={4} max={40} step={2} unit="px" />
+          <SelectField<LabelPosition>
+            id="labelPosition"
+            label="Label position"
+            value={draft.labelPosition}
+            onChange={(v) => update("labelPosition", v)}
+            options={[
+              { value: "floating", label: "Floating (inside the field)" },
+              { value: "top", label: "Above the field" },
+            ]}
+          />
+          <NumberField id="fieldSpacing" label="Gap between stacked fields" value={draft.fieldSpacing} onChange={setNum("fieldSpacing")} min={4} max={40} step={2} unit="px" />
           <SelectField<ButtonSize>
             id="buttonSize"
             label="Button size"
@@ -494,16 +410,19 @@ export default function BivoBrandEditor() {
             value={draft.buttonPosition}
             onChange={(v) => update("buttonPosition", v)}
             options={[
-              { value: "between", label: "Spread apart (link left, button right)" },
               { value: "left", label: "Left" },
               { value: "right", label: "Right" },
+              { value: "between", label: "Spread apart" },
               { value: "center", label: "Centered" },
             ]}
           />
         </Card>
 
-        <Card title="Visibility">
+        <Card title="Visibility" hint="Hide individual visual elements without removing their text.">
           <Toggle id="showLogo" label="Show the logo" checked={draft.showLogo} onChange={setBool("showLogo")} />
+          <Toggle id="showSubline" label="Show the subheading" checked={draft.showSubline} onChange={setBool("showSubline")} />
+          <Toggle id="showSwitchLink" label={'Show the "switch mode" link'} checked={draft.showSwitchLink} onChange={setBool("showSwitchLink")} />
+          <Toggle id="showHelpLine" label="Show the help line" checked={draft.showHelpLine} onChange={setBool("showHelpLine")} />
         </Card>
 
         <div className="bivo-admin-card flex flex-wrap justify-end gap-3">
@@ -550,19 +469,15 @@ export default function BivoBrandEditor() {
           className="overflow-hidden rounded-2xl border"
           style={{ borderColor: "#dbe1e8", width: preview === "mobile" ? 375 : "100%", maxWidth: "100%", margin: preview === "mobile" ? "0 auto" : undefined }}
         >
-          <div className="flex min-h-[560px] flex-col overflow-auto" style={previewVars}>
-            {draft.showHeaderBar && <HeaderBar brand={draft} />}
-            <div
-              className="flex flex-1 flex-col px-4 py-6"
-              style={{
-                alignItems: draft.pageAlign === "left" ? "flex-start" : draft.pageAlign === "right" ? "flex-end" : "center",
-                justifyContent: "center",
-              }}
-            >
-              <div style={{ transform: preview === "mobile" ? "scale(0.92)" : undefined, width: "100%", display: "flex", justifyContent: "center" }}>
-                <BivoAuthCard brand={draft} previewOnly />
-              </div>
-              {draft.showPageFooter && <PageFooter brand={draft} />}
+          <div
+            className="flex min-h-[560px] flex-col justify-center overflow-auto px-4 py-6"
+            style={{
+              ...previewVars,
+              alignItems: draft.pageAlign === "left" ? "flex-start" : draft.pageAlign === "right" ? "flex-end" : "center",
+            }}
+          >
+            <div style={{ transform: preview === "mobile" ? "scale(0.92)" : undefined, width: "100%", display: "flex", justifyContent: "center" }}>
+              <BivoAuthCard brand={draft} previewOnly />
             </div>
           </div>
         </div>
@@ -611,7 +526,7 @@ function ColorField({ label, value, onChange }: { label: string; value: string; 
           }}
           className="h-11 w-full rounded-xl border px-4 text-sm"
           style={{ borderColor: "#dbe1e8" }}
-          placeholder="#1a73e8"
+          placeholder="#1f6b4f"
           maxLength={7}
         />
       </div>
@@ -716,7 +631,13 @@ function SelectField<T extends string>({
       <label htmlFor={id} className="bivo-label">
         {label}
       </label>
-      <select id={id} value={value} onChange={(e) => onChange(e.target.value as T)} className="h-11 w-full rounded-xl border px-3 text-sm" style={{ borderColor: "#dbe1e8" }}>
+      <select
+        id={id}
+        value={value}
+        onChange={(e) => onChange(e.target.value as T)}
+        className="h-11 w-full rounded-xl border px-3 text-sm"
+        style={{ borderColor: "#dbe1e8" }}
+      >
         {options.map((o) => (
           <option key={o.value} value={o.value}>
             {o.label}
