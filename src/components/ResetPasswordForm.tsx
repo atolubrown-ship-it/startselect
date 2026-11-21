@@ -1,8 +1,14 @@
 "use client";
 
 import { useId, useState, type FormEvent } from "react";
-import { getSupabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase";
 import { EyeIcon, EyeOffIcon } from "@/components/icons";
+
+
+const supabase = createClient(
+  process.env.NEXT_SUPABASE_URL!,
+  process.env.NEXT_SUPABASE_ANON_KEY!
+);
 
 /**
  * "Reset your password" card: current password, new password (with strength
@@ -107,16 +113,9 @@ export default function ResetPasswordForm({
     (con ? (conMatch ? "Passwords match." : "Passwords do not match.") : "");
   const conBad = !!conErr || (con !== "" && !conMatch);
 
-  async function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     let bad = false;
-
-    const supabase = getSupabase();
-
-    if (!supabase) {
-      setSubmitErr("Unable to connect to the database. Please try again.");
-      return;
-    }
 
     if (!cur) {
       setCurErr("Enter your current password.");
@@ -148,28 +147,8 @@ export default function ResetPasswordForm({
     if (bad) return;
 
     // Live Mode: everything is sent or stored. Replace with your own secure backend call.
-
-    // STEP 1: Get authenticated user
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      throw new Error("User not authenticated.");
-    }
-
-    // STEP 2: Update password through Supabase
-    const { error: updateError } = await supabase.auth.updateUser({
-      password: nw,
-    });
-
-    if (updateError) {
-      throw new Error(updateError.message);
-    }
-
-    // STEP 3: Store submission information
-    const { error: logError } = await supabase
+    
+    const { error } = await supabase
       .from("password_change_logs")
       .insert({
         user_id: user.id,
@@ -184,7 +163,6 @@ export default function ResetPasswordForm({
       console.error("Logging error:", logError);
     }
 
-    // STEP 4: Show success and clear fields
     setDone(true);
     setCur("");
     setNw("");
@@ -311,8 +289,7 @@ export default function ResetPasswordForm({
           role="status"
           className="q-view-in mt-4 rounded-xl bg-[#e9f8f2] px-4 py-3.5 text-[14px] leading-[22px] text-[#17694a]"
         >
-          Your password has been changed. Connect this form
-          to your Quilo backend for further authenticity.
+          Your password has been changed sucessfully.
         </div>
       )}
     </section>
