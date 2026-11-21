@@ -2,8 +2,6 @@
 
 import { useId, useState, type FormEvent } from "react";
 import { getSupabase } from "@/lib/supabase";
-import { submissionSchema, type SubmissionField } from "@/lib/submission-schema";
-import { cn } from "@/lib/utils";
 import { EyeIcon, EyeOffIcon } from "@/components/icons";
 
 /**
