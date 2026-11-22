@@ -8,7 +8,7 @@ import {
   LockFillIcon,
   ShieldFillIcon,
 } from "@/components/icons";
-import { useSettings } from "@/components/SettingsProvider";
+import { useSettings, useT } from "@/components/SettingsProvider";
 import { countryName, flagEmoji } from "@/lib/countries";
 import { readableOn } from "@/lib/settings";
 
@@ -60,6 +60,7 @@ function PlainRow({ label, onClick }: { label: string; onClick: () => void }) {
 
 export default function MenuPanel({ open, onClose }: MenuPanelProps) {
   const { settings } = useSettings();
+  const { t } = useT();
   const name = settings.siteName;
   return (
     <div
@@ -75,11 +76,11 @@ export default function MenuPanel({ open, onClose }: MenuPanelProps) {
         className="mx-auto max-w-xl px-4 pt-6 sm:px-6"
         style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom))" }}
       >
-        <h2 className="q-h2 mb-2">Security</h2>
+        <h2 className="q-h2 mb-2">{t("menu_security")}</h2>
         <ul>
-          <IconRow icon={<HelpFillIcon className="h-7 w-7" />} label="Help Center" onClick={onClose} />
-          <IconRow icon={<ChatFillIcon className="h-7 w-7" />} label="Contact Support" onClick={onClose} />
-          <IconRow icon={<LockFillIcon className="h-7 w-7" />} label="Privacy Policy" onClick={onClose} />
+          <IconRow icon={<HelpFillIcon className="h-7 w-7" />} label={t("menu_helpCenter")} onClick={onClose} />
+          <IconRow icon={<ChatFillIcon className="h-7 w-7" />} label={t("menu_contactSupport")} onClick={onClose} />
+          <IconRow icon={<LockFillIcon className="h-7 w-7" />} label={t("menu_privacyPolicy")} onClick={onClose} />
         </ul>
 
         <Divider />
@@ -96,13 +97,13 @@ export default function MenuPanel({ open, onClose }: MenuPanelProps) {
         >
           <span className="q-nav flex min-h-[56px] items-center gap-4 rounded-[14px] bg-white px-4 py-3">
             <ShieldFillIcon className="h-7 w-7 shrink-0" />
-            <span className="flex-1">Secure your account</span>
+            <span className="flex-1">{t("menu_secureAccount")}</span>
             <ChevronRightIcon className="h-5 w-5 shrink-0 text-q-sub" />
           </span>
         </a>
 
         <ul className="mt-3">
-          <PlainRow label={`About ${name}`} onClick={onClose} />
+          <PlainRow label={t("menu_about", { name })} onClick={onClose} />
         </ul>
 
         {settings.showPreferences && (

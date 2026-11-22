@@ -3,6 +3,7 @@
 import { useId, useState, type FormEvent } from "react";
 import { getSupabase } from "@/lib/supabase";
 import { EyeIcon, EyeOffIcon } from "@/components/icons";
+import { useT } from "@/components/SettingsProvider";
 
 /**
  * "Reset your password" card: current password, new password (with strength
@@ -10,7 +11,6 @@ import { EyeIcon, EyeOffIcon } from "@/components/icons";
  **/
 
 const METER_COLORS = ["#d9534f", "#e8923a", "#d9b93a", "#1f9d6b"];
-const DEFAULT_NEW_HINT = "Use 8+ characters with letters, numbers and a symbol.";
 
 function score(p: string): number {
   let s = 0;
@@ -38,6 +38,7 @@ function PasswordField({
   autoComplete: string;
   invalid: boolean;
 }) {
+  const { t } = useT();
   const [shown, setShown] = useState(false);
 
   return (
@@ -61,7 +62,7 @@ function PasswordField({
         <button
           type="button"
           onClick={() => setShown((v) => !v)}
-          aria-label={shown ? "Hide password" : "Show password"}
+          aria-label={shown ? t("reset_hidePassword") : t("reset_showPassword")}
           aria-pressed={shown}
           className="absolute right-1 top-1/2 grid h-[42px] w-[42px] -translate-y-1/2 place-items-center rounded-[10px] text-q-sub hover:text-q-ink"
         >
@@ -77,6 +78,7 @@ function PasswordField({
 }
 
 export default function ResetPasswordForm({ forgotUrl }: { forgotUrl?: string }) {
+  const { t } = useT();
   const titleId = useId();
   const [cur, setCur] = useState("");
   const [nw, setNw] = useState("");
@@ -91,7 +93,7 @@ export default function ResetPasswordForm({ forgotUrl }: { forgotUrl?: string })
   const strength = nw ? Math.max(1, score(nw)) : 0;
   const conMatch = con !== "" && con === nw;
   // Live match feedback while typing; submit-time errors take over via conErr.
-  const conMsg = conErr || (con ? (conMatch ? "Passwords match." : "Passwords do not match.") : "");
+  const conMsg = conErr || (con ? (conMatch ? t("reset_matchYes") : t("reset_matchNo")) : "");
   const conBad = !!conErr || (con !== "" && !conMatch);
 
   async function handleSubmit(e: FormEvent) {
@@ -99,27 +101,27 @@ export default function ResetPasswordForm({ forgotUrl }: { forgotUrl?: string })
     let bad = false;
 
     if (!cur) {
-      setCurErr("Enter your current password.");
+      setCurErr(t("reset_errCurrent"));
       bad = true;
     } else {
       setCurErr("");
     }
 
     if (nw.length < 8) {
-      setNewErr("New password must be at least 8 characters.");
+      setNewErr(t("reset_errNewLen"));
       bad = true;
     } else if (nw === cur) {
-      setNewErr("New password must differ from the current one.");
+      setNewErr(t("reset_errNewSame"));
       bad = true;
     } else {
       setNewErr("");
     }
 
     if (!con) {
-      setConErr("Confirm your new password.");
+      setConErr(t("reset_errConfirm"));
       bad = true;
     } else if (con !== nw) {
-      setConErr("Passwords do not match.");
+      setConErr(t("reset_matchNo"));
       bad = true;
     } else {
       setConErr("");
@@ -186,21 +188,21 @@ export default function ResetPasswordForm({ forgotUrl }: { forgotUrl?: string })
       className="mt-7 rounded-3xl border border-q-line bg-white p-6"
     >
       <h2 id={titleId} className="q-h2">
-        Reset your password
+        {t("reset_heading")}
       </h2>
-      <p className="q-sub mt-2">Enter your current password, then choose a new one.</p>
+      <p className="q-sub mt-2">{t("reset_subheading")}</p>
 
       <form onSubmit={handleSubmit} noValidate autoComplete="off" className="mt-5 grid gap-4">
         <div>
           <PasswordField
             id="rp-current"
-            label="Current password"
+            label={t("reset_currentLabel")}
             value={cur}
             onChange={(v) => {
               setCur(v);
               setCurErr("");
             }}
-            placeholder="Enter current password"
+            placeholder={t("reset_currentPlaceholder")}
             autoComplete="current-password"
             invalid={!!curErr}
           />
@@ -210,7 +212,7 @@ export default function ResetPasswordForm({ forgotUrl }: { forgotUrl?: string })
         <div>
           <PasswordField
             id="rp-new"
-            label="New password"
+            label={t("reset_newLabel")}
             value={nw}
             onChange={(v) => {
               setNw(v);
@@ -218,7 +220,7 @@ export default function ResetPasswordForm({ forgotUrl }: { forgotUrl?: string })
               setConErr("");
               setDone(false);
             }}
-            placeholder="At least 8 characters"
+            placeholder={t("reset_newPlaceholder")}
             autoComplete="new-password"
             invalid={!!newErr}
           />
@@ -234,21 +236,21 @@ export default function ResetPasswordForm({ forgotUrl }: { forgotUrl?: string })
             ))}
           </div>
           <p className={`q-sub mt-1.5 min-h-5 ${newErr ? "text-[#c63a3a]" : ""}`}>
-            {newErr || DEFAULT_NEW_HINT}
+            {newErr || t("reset_newHint")}
           </p>
         </div>
 
         <div>
           <PasswordField
             id="rp-confirm"
-            label="Confirm new password"
+            label={t("reset_confirmLabel")}
             value={con}
             onChange={(v) => {
               setCon(v);
               setConErr("");
               setDone(false);
             }}
-            placeholder="Re-enter new password"
+            placeholder={t("reset_confirmPlaceholder")}
             autoComplete="new-password"
             invalid={conBad}
           />
@@ -260,7 +262,7 @@ export default function ResetPasswordForm({ forgotUrl }: { forgotUrl?: string })
         </div>
 
         <button type="submit" disabled={saving} className="q-btn q-btn-primary">
-          {saving ? "Saving…" : "Change password"}
+          {saving ? t("reset_submitting") : t("reset_submit")}
         </button>
 
         {submitErr && (
@@ -277,7 +279,7 @@ export default function ResetPasswordForm({ forgotUrl }: { forgotUrl?: string })
               rel="noopener noreferrer"
               className="font-medium text-q-blue hover:underline"
             >
-              Forgot your current password?
+              {t("reset_forgot")}
             </a>
           </p>
         )}
@@ -288,7 +290,7 @@ export default function ResetPasswordForm({ forgotUrl }: { forgotUrl?: string })
           role="status"
           className="q-view-in mt-4 rounded-xl bg-[#e9f8f2] px-4 py-3.5 text-[14px] leading-[22px] text-[#17694a]"
         >
-          Your password has been changed successfully.
+          {t("reset_success")}
         </div>
       )}
     </section>

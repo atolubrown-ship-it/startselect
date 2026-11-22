@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import MenuPanel from "@/components/MenuPanel";
 import Footer from "@/components/Footer";
 import { IconDefs } from "@/components/icons";
+import { useT } from "@/components/SettingsProvider";
 
 /**
  * Shared website frame: header, hamburger menu, footer.
@@ -12,6 +13,7 @@ import { IconDefs } from "@/components/icons";
  * moving between them feels like navigating within one site.
  */
 export default function SiteShell({ children }: { children: ReactNode }) {
+  const { dir } = useT();
   const [menuOpen, setMenuOpen] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
 
@@ -40,7 +42,7 @@ export default function SiteShell({ children }: { children: ReactNode }) {
   }, [menuOpen]);
 
   return (
-    <div className="flex min-h-[100dvh] flex-col bg-white" style={{ overflowX: "clip" }}>
+    <div dir={dir} className="flex min-h-[100dvh] flex-col bg-white" style={{ overflowX: "clip" }}>
       <IconDefs />
       <Header ref={headerRef} menuOpen={menuOpen} onToggleMenu={() => setMenuOpen((v) => !v)} />
       <MenuPanel open={menuOpen} onClose={() => setMenuOpen(false)} />

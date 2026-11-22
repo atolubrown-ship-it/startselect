@@ -54,6 +54,8 @@ export type SiteSettings = {
   signInUrl: string;
   /** Sign-in button colour (hex). Empty = use the primary colour. */
   signInColor: string;
+  /** Optional link opened when the logo in the header is clicked. Empty = it just scrolls to the top of the page. */
+  logoLinkUrl: string;
   // Sample alert details (demonstration data)
   alertLocation: string;
   alertDevice: string;
@@ -117,6 +119,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   signInLabel: "Hello",
   signInUrl: "",
   signInColor: "",
+  logoLinkUrl: "",
   alertLocation: "Oregon, USA (approximate)",
   alertDevice: "iPhone 16 Plus",
   alertDateTime: "2026-11-19T15:42",
@@ -256,6 +259,7 @@ export function sanitizeSettings(input: unknown, fallback: SiteSettings): SiteSe
     signInLabel: text(input.signInLabel, fallback.signInLabel, 30),
     signInUrl: has("signInUrl") ? safeUrl(input.signInUrl) : fallback.signInUrl,
     signInColor: hexOrEmpty(input.signInColor, fallback.signInColor),
+    logoLinkUrl: has("logoLinkUrl") ? safeUrl(input.logoLinkUrl) : fallback.logoLinkUrl,
     headerStyle:
       input.headerStyle === "light" || input.headerStyle === "grey" || input.headerStyle === "brand"
         ? input.headerStyle

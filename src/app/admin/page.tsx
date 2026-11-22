@@ -489,6 +489,25 @@ function AdminPanel({ email, onSignOut }: { email: string; onSignOut: () => void
               className="h-11 w-full accent-[var(--q-primary)]"
             />
           </Field>
+
+          <Field
+            label="Logo link"
+            htmlFor="logo-link"
+            help="Optional. Opens this link (in a new tab) whenever a visitor taps the logo. Leave empty to just scroll to the top of the page."
+          >
+            <input
+              id="logo-link"
+              type="url"
+              inputMode="url"
+              autoCapitalize="off"
+              autoCorrect="off"
+              value={draft.logoLinkUrl}
+              onChange={(e) => set("logoLinkUrl", e.target.value)}
+              onBlur={(e) => set("logoLinkUrl", fixUrl(e.target.value))}
+              className={INPUT}
+              placeholder="https://example.com"
+            />
+          </Field>
         </Card>
 
         {/* Appearance */}
@@ -623,7 +642,11 @@ function AdminPanel({ email, onSignOut }: { email: string; onSignOut: () => void
               ))}
             </select>
           </Field>
-          <Field label="Language" htmlFor="prefs-language" help="This is the label shown on the chip; the site text itself stays as written.">
+          <Field
+            label="Language"
+            htmlFor="prefs-language"
+            help="Changes the language of every visitor-facing page (header, menu, footer, the alert and sign-in screens) immediately. The Admin Portal itself always stays in English."
+          >
             <select
               id="prefs-language"
               value={draft.languageName}

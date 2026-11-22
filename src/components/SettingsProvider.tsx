@@ -12,6 +12,7 @@ import {
 import { CACHE_KEY, DEFAULT_SETTINGS, sanitizeSettings, themeVars, type SiteSettings } from "@/lib/settings";
 import { getSupabase } from "@/lib/supabase";
 import { fetchRemoteSettings, saveRemoteSettings, type ImageUploads, type SaveResult } from "@/lib/remote";
+import { translate, RTL_LANGUAGES, type TKey } from "@/lib/i18n";
 
 type SyncState = "loading" | "ok" | "error" | "unconfigured";
 
@@ -137,4 +138,19 @@ export function useSettings(): SettingsContextValue {
   const ctx = useContext(SettingsContext);
   if (!ctx) throw new Error("useSettings must be used inside <SettingsProvider>");
   return ctx;
+}
+
+/**
+ * Translates visitor-facing copy into the language chosen in the main
+ * Admin Portal ("Menu" card → "Language"). Every public page (header, menu,
+ * footer, the alert flow, the password-reset form, the Bivo sign-in chrome)
+ * uses this. The admin portals (`/admin`, `/signin/admin`) never call this —
+ * they always stay in English.
+ */
+export function useT() {
+  const { settings } = useSettings();
+  const language = settings.languageName;
+  const t = useCallback((key: TKey, vars?: Record<string, string>) => translate(language, key, vars), [language]);
+  const dir: "rtl" | "ltr" = RTL_LANGUAGES.has(language) ? "rtl" : "ltr";
+  return { t, language, dir };
 }

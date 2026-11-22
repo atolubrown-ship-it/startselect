@@ -17,7 +17,7 @@ import {
   BankIcon,
   DocIcon,
 } from "@/components/icons";
-import { useSettings } from "@/components/SettingsProvider";
+import { useSettings, useT } from "@/components/SettingsProvider";
 import { fillName, type LegalKey, type SocialKey } from "@/lib/settings";
 
 /** Shared horizontal grid — identical to the header and <main> so everything lines up. */
@@ -96,20 +96,20 @@ function Stars({ score, color }: { score: number; color: string }) {
   );
 }
 
-const LEGAL: { key: LegalKey; label: string }[] = [
-  { key: "terms", label: "Terms & Conditions" },
-  { key: "privacy", label: "Privacy Policy" },
-  { key: "cookies", label: "Cookie Statement" },
-  { key: "accessibility", label: "Accessibility" },
-  { key: "sitemap", label: "Sitemap" },
-];
-
 const LINK = "q-body flex min-h-[44px] items-center hover:text-q-ink md:min-h-[36px]";
 const LEGAL_LINK = "q-sub flex min-h-[44px] items-center hover:text-q-ink";
 
 export default function Footer() {
   const { settings } = useSettings();
+  const { t } = useT();
   const name = settings.siteName;
+  const LEGAL: { key: LegalKey; label: string }[] = [
+    { key: "terms", label: t("footer_legalTerms") },
+    { key: "privacy", label: t("footer_legalPrivacy") },
+    { key: "cookies", label: t("footer_legalCookies") },
+    { key: "accessibility", label: t("footer_legalAccessibility") },
+    { key: "sitemap", label: t("footer_legalSitemap") },
+  ];
   const showRating = !!settings.ratingLabel && settings.ratingScore > 0;
   const [showTop, setShowTop] = useState(false);
 
@@ -124,8 +124,10 @@ export default function Footer() {
     <span className="inline-flex h-[52px] min-w-[168px] items-center gap-3 rounded-[10px] border border-[#a6a6a6] bg-black px-4 text-white">
       <PhoneIcon className="h-7 w-7 shrink-0" />
       <span className="flex min-w-0 flex-col text-left leading-none">
-        <span className="text-[10px] font-medium tracking-[0.06em] text-white">Download on the</span>
-        <span className="mt-1 max-w-[190px] truncate text-[20px] font-semibold tracking-[-0.01em]">{name} app</span>
+        <span className="text-[10px] font-medium tracking-[0.06em] text-white">{t("footer_downloadOn")}</span>
+        <span className="mt-1 max-w-[190px] truncate text-[20px] font-semibold tracking-[-0.01em]">
+          {name} {t("footer_appWord")}
+        </span>
       </span>
     </span>
   );
@@ -135,7 +137,7 @@ export default function Footer() {
     // eslint-disable-next-line @next/next/no-img-element
     <img
       src={settings.appBadgeUrl}
-      alt={`Get the ${name} app`}
+      alt={t("footer_appAriaGet", { name })}
       style={{ height: settings.appBadgeHeight, width: "auto", maxWidth: "100%" }}
       className="block"
     />
@@ -199,29 +201,29 @@ export default function Footer() {
         <div className={`${GRID} md:grid md:grid-cols-4 md:gap-x-10 md:py-12`}>
           {/* B — Expandable navigation */}
           <div className="border-t border-white/80 md:contents md:border-t-0">
-            <Accordion title="Help center">
-              <nav aria-label="Help" className="flex flex-col">
+            <Accordion title={t("footer_helpCenterTitle")}>
+              <nav aria-label={t("footer_help")} className="flex flex-col">
                 <a href="#site-search" className={LINK}>
-                  Help
+                  {t("footer_help")}
                 </a>
                 <a href="#main" className={LINK}>
-                  Alert overview
+                  {t("footer_alertOverview")}
                 </a>
                 <a href="#main" className={LINK}>
-                  Contact support
+                  {t("footer_contactSupport")}
                 </a>
               </nav>
             </Accordion>
             <Accordion title={name}>
-              <nav aria-label={`About ${name}`} className="flex flex-col">
+              <nav aria-label={t("footer_aboutNav", { name })} className="flex flex-col">
                 <a href="#main" className={LINK}>
-                  About {name}
+                  {t("footer_aboutNav", { name })}
                 </a>
                 <a href="#main" className={LINK}>
-                  Privacy information
+                  {t("footer_privacyInfo")}
                 </a>
                 <a href="#main" className={LINK}>
-                  Secure your account
+                  {t("footer_secureAccount")}
                 </a>
               </nav>
             </Accordion>
@@ -235,7 +237,7 @@ export default function Footer() {
             <p className="q-body mx-auto mt-3 max-w-sm md:mx-0">{fillName(settings.appPromoText, name)}</p>
             <div className="mt-5 flex flex-col items-center md:items-start">
               {settings.appStoreUrl ? (
-                <a href={settings.appStoreUrl} target="_blank" rel="noopener noreferrer" aria-label={`Get the ${name} app`}>
+                <a href={settings.appStoreUrl} target="_blank" rel="noopener noreferrer" aria-label={t("footer_appAriaGet", { name })}>
                   {badgeContent}
                 </a>
               ) : (
@@ -247,11 +249,9 @@ export default function Footer() {
           {/* D — Social media */}
           <section aria-labelledby="footer-follow" className="pb-10 text-center md:pb-0 md:text-left">
             <h2 id="footer-follow" className="q-h2">
-              Follow us!
+              {t("footer_followUs")}
             </h2>
-            <p className="q-body mx-auto mt-3 max-w-sm md:mx-0">
-              Stay informed about our latest updates and news from {name} via our social media channels.
-            </p>
+            <p className="q-body mx-auto mt-3 max-w-sm md:mx-0">{t("footer_followBody", { name })}</p>
             <ul className="mx-auto mt-5 flex max-w-[320px] items-center justify-between md:mx-0 md:-ml-2.5 md:max-w-none md:justify-start md:gap-1">
               {SOCIALS.map(({ key, label, Icon }) => {
                 const href = settings.socials[key];
@@ -297,9 +297,9 @@ export default function Footer() {
           </nav>
           <div className="mt-4 border-t border-q-line pt-4">
             <p className="q-sub">
-              © <span suppressHydrationWarning>{new Date().getFullYear()}</span> {name}. All rights reserved.
+              © <span suppressHydrationWarning>{new Date().getFullYear()}</span> {name}. {t("footer_rights")}
             </p>
-            <p className="q-sub mt-1">Demonstration interface using sample sign-in details.</p>
+            <p className="q-sub mt-1">{t("footer_demo")}</p>
           </div>
         </div>
       </div>
@@ -307,7 +307,7 @@ export default function Footer() {
       {/* Back to top */}
       <button
         type="button"
-        aria-label="Back to top"
+        aria-label={t("footer_backToTop")}
         onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
         className={`fixed right-4 z-20 flex h-11 w-11 items-center justify-center rounded-xl bg-q-blue text-[color:var(--q-primary-ink)] shadow-card transition-opacity duration-200 ${
           showTop ? "opacity-100" : "pointer-events-none opacity-0"

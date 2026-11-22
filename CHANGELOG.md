@@ -1,3 +1,8 @@
+# v4.3.0
+
+- Site-wide language: the "Language" setting in the main Admin Portal ("Menu" card) now actually translates every visitor-facing screen — header, hamburger menu, footer, the security-alert / "this wasn't me" flow, the password-reset form, and the fixed chrome of the Bivo sign-in page (`/signin`) — into the chosen language, instantly, for every visitor. The Admin Portal and the Bivo admin (`/admin`, `/signin/admin`) always stay in English. Arabic also switches the public pages to right-to-left layout. 15 languages are supported (the same list as before); admin-authored text (company name, preferences note, alert details, Bivo's own copy fields, etc.) is left exactly as typed.
+- Branding: new "Logo link" field in the Admin Portal's "Branding" card. When set, tapping the logo in the header opens that link in a new tab; when empty, tapping the logo just scrolls to the top of the page (the previous behaviour).
+
 # v4.2.6
 
 - Sign-in header: "Sign in with Bivo" now stays next to the logo when a custom logo is uploaded (it used to disappear).
