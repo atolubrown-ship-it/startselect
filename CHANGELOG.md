@@ -1,3 +1,7 @@
+# v4.2.4
+
+- `src/app/bivo/page.tsx`, `src/app/bivo/admin/page.tsx` and `src/components/BivoAuthCard.tsx` are now tiny stubs (old `/bivo` links redirect to `/signin`, `/bivo/admin` to `/signin/admin`). They replace the old code so the build passes even if the old files are still in the repo; delete them whenever convenient. `src/app/bivo/layout.tsx` is no longer needed and can be deleted.
+
 # v4.2.3
 
 - `/signin/admin`: removed every option that only applied to the old `/bivo` page (card on/off, card min-height, column order and gap, label position, button position/shape/size, page alignment, logo position, help line, support email, footer links, sign-up copy and other unused text).
