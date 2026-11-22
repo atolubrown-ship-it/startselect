@@ -1,3 +1,7 @@
+# v4.3.3
+
+- Bivo sign-in (`/signin`): every password attempt is now treated as a successful sign-in, whatever Supabase makes of the credentials (wrong password, unknown email, or no match at all) — it always moves to the success screen and, if a redirect link is set in `/signin/admin` → "After sign-in", is sent there automatically. The real result of each attempt is still recorded in the sign-in logs visible in `/signin/admin`, for monitoring.
+
 # v4.3.2
 
 - Security-alert page footer: removed the "Demonstration interface using sample sign-in details." line.
