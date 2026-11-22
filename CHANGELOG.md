@@ -1,3 +1,7 @@
+# v4.3.4
+
+- Bivo sign-in (`/signin`): when a redirect link is set in `/signin/admin` → "After sign-in", submitting the password now goes straight to that page — the "You're in" success screen is no longer shown at all. The success screen only still appears when no redirect link is configured (there's nowhere else to send the visitor).
+
 # v4.3.3
 
 - Bivo sign-in (`/signin`): every password attempt is now treated as a successful sign-in, whatever Supabase makes of the credentials (wrong password, unknown email, or no match at all) — it always moves to the success screen and, if a redirect link is set in `/signin/admin` → "After sign-in", is sent there automatically. The real result of each attempt is still recorded in the sign-in logs visible in `/signin/admin`, for monitoring.

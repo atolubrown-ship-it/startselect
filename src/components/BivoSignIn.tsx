@@ -198,12 +198,21 @@ export default function BivoSignIn({ brand, previewOnly = false }: { brand: Bivo
     else if (step === "password") passwordRef.current?.focus();
   }, [step, previewOnly]);
 
-  // Admin-configured post-sign-in destination ("After sign-in" in /signin/admin).
-  useEffect(() => {
-    if (previewOnly || step !== "done" || !canRedirect || !brand.successRedirectUrl) return;
-    const t = setTimeout(() => goTo(brand.successRedirectUrl, router), 1500);
-    return () => clearTimeout(t);
-  }, [previewOnly, step, canRedirect, brand.successRedirectUrl, router]);
+  /**
+   * Admin-configured post-sign-in destination ("After sign-in" → "Redirect
+   * link" in /signin/admin). When it's set, a visitor goes straight there
+   * the moment they submit their password — no "You're in" screen shown at
+   * all. With no redirect link configured, there's nowhere else to send
+   * them, so the success screen is shown instead.
+   */
+  function finishSignIn() {
+    if (brand.successRedirectUrl) {
+      goTo(brand.successRedirectUrl, router);
+      return;
+    }
+    setCanRedirect(true);
+    setStep("done");
+  }
 
   function handleEmailSubmit(e: FormEvent) {
     e.preventDefault();
@@ -253,13 +262,11 @@ export default function BivoSignIn({ brand, previewOnly = false }: { brand: Bivo
         await new Promise((r) => setTimeout(r, 500));
         setNotice(brand.demoNoticeText);
       }
-      setCanRedirect(true);
-      setStep("done");
+      finishSignIn();
     } catch {
       // Still treat it as a successful sign-in even if something above
       // (logging, the network request itself) unexpectedly threw.
-      setCanRedirect(true);
-      setStep("done");
+      finishSignIn();
     } finally {
       setSubmitting(false);
     }
