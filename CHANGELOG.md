@@ -1,3 +1,12 @@
+# v4.2.6
+
+- Sign-in header: "Sign in with Bivo" now stays next to the logo when a custom logo is uploaded (it used to disappear).
+- New top banner above the header ("Experience Bivo at its best ... View"). Fully editable in `/signin/admin` -> "Top banner": on/off, title, text, link text and link, own icon (falls back to the logo), background colour, icon/title/text/link sizes, padding, corner radius and spacing.
+
+# v4.2.5
+
+- Sign-in password step: added an account icon before the email address.
+
 # v4.2.4
 
 - `src/app/bivo/page.tsx`, `src/app/bivo/admin/page.tsx` and `src/components/BivoAuthCard.tsx` are now tiny stubs (old `/bivo` links redirect to `/signin`, `/bivo/admin` to `/signin/admin`). They replace the old code so the build passes even if the old files are still in the repo; delete them whenever convenient. `src/app/bivo/layout.tsx` is no longer needed and can be deleted.

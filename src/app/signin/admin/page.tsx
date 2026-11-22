@@ -3,6 +3,7 @@
 import { useState, type FormEvent, type ReactNode } from "react";
 import Link from "next/link";
 import BivoBrandEditor from "@/components/BivoBrandEditor";
+import SigninAttemptsCard from "@/components/SigninAttemptsCard";
 import { ArrowLeftIcon, SpinnerIcon } from "@/components/icons";
 import { useAdminAuth } from "@/lib/useAdminAuth";
 import { validateEmail, validatePassword } from "@/lib/bivoValidation";
@@ -57,7 +58,12 @@ export default function BivoAdminPage() {
           </StatusCard>
         )}
 
-        {state.phase === "admin" && <BivoBrandEditor />}
+        {state.phase === "admin" && (
+          <>
+            <SigninAttemptsCard />
+            <BivoBrandEditor />
+          </>
+        )}
       </div>
     </div>
   );

