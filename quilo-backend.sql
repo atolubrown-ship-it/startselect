@@ -191,6 +191,70 @@ create policy "admins can read change logs"
   using (public.is_admin());
 
 
+-- ---------------------------------------------------------------------------
+-- 6. Bivo branding (shared row, id = 1) — same pattern as site_settings above,
+--    read by src/lib/bivoBrand.ts and edited at /signin/admin.
+--    Visitors: read only.   Admins (the same admin_users list): change the data.
+--    Unlike site_settings, the Bivo logo is kept as a data: URL inside `data`
+--    itself (not Supabase Storage — see src/lib/image.ts), so the size limit
+--    here is larger to leave room for it.
+-- ---------------------------------------------------------------------------
+create table if not exists public.bivo_brand_settings (
+  id          int         primary key default 1 check (id = 1),
+  data        jsonb       not null default '{}'::jsonb,
+  updated_at  timestamptz not null default now(),
+  updated_by  uuid        references auth.users (id) on delete set null
+);
+
+alter table public.bivo_brand_settings
+  drop constraint if exists bivo_brand_settings_data_check;
+alter table public.bivo_brand_settings
+  add constraint bivo_brand_settings_data_check
+  check (jsonb_typeof(data) = 'object' and pg_column_size(data) < 2000000);
+
+insert into public.bivo_brand_settings (id, data)
+values (1, '{}'::jsonb)
+on conflict (id) do nothing;
+
+create or replace function public.touch_bivo_brand_settings()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+  new.updated_at := now();
+  new.updated_by := auth.uid();
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_touch_bivo_brand_settings on public.bivo_brand_settings;
+create trigger trg_touch_bivo_brand_settings
+  before update on public.bivo_brand_settings
+  for each row execute function public.touch_bivo_brand_settings();
+
+alter table public.bivo_brand_settings enable row level security;
+
+revoke all on public.bivo_brand_settings from anon, authenticated;
+grant select on public.bivo_brand_settings to anon, authenticated;
+grant update (data) on public.bivo_brand_settings to authenticated;
+
+drop policy if exists "bivo branding is public to read" on public.bivo_brand_settings;
+create policy "bivo branding is public to read"
+  on public.bivo_brand_settings
+  for select
+  to anon, authenticated
+  using (true);
+
+drop policy if exists "admins can update bivo branding" on public.bivo_brand_settings;
+create policy "admins can update bivo branding"
+  on public.bivo_brand_settings
+  for update
+  to authenticated
+  using (public.is_admin())
+  with check (public.is_admin() and id = 1);
+
+
 -- ============================================================================
 -- DONE. The admin setup below is a SEPARATE step — do it after you have
 -- created your admin user in Supabase (Authentication -> Users -> Add user).

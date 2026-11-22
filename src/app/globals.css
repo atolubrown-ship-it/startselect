@@ -98,3 +98,252 @@ html {
   outline: 2px solid var(--q-primary);
   outline-offset: 2px;
 }
+
+/* ============================================================================
+ * Bivo (/signin, /signin/admin) — scoped entirely under .bivo so none of this
+ * touches the rest of the site. Colours, spacing and sizing are CSS
+ * variables set at runtime from the admin-edited BivoBrand (see
+ * src/lib/bivoBrand.ts, src/app/signin/page.tsx and BivoBrandEditor.tsx) —
+ * the values below are only the first-paint defaults, before that JS runs.
+ * ========================================================================= */
+:root {
+  --bivo-primary: #1d4ed8;
+  --bivo-primary-ink: #ffffff;
+  --bivo-link: #1d4ed8;
+  --bivo-ink: #1b1f24;
+  --bivo-border: #dbe1e8;
+  --bivo-input-border: var(--bivo-border);
+  --bivo-input-border-width: 1px;
+  --bivo-input-border-radius: 12px;
+  --bivo-input-bg: #ffffff;
+  --bivo-input-text: #1b1f24;
+  --bivo-input-width: 100%;
+  --bivo-field-spacing: 20px;
+  --bivo-success: #1f9d6b;
+  --bivo-danger: #b3261e;
+  --bivo-danger-bg: #fdecea;
+  --bivo-bg-color: #ffffff;
+  --bivo-bg-image: none;
+  --bivo-page-max-width: 896px;
+  --bivo-page-px: 16px;
+  --bivo-page-py: 40px;
+  --bivo-column-gap: 48px;
+  --bivo-heading-size: 40px;
+  --bivo-input-height: 48px;
+  --bivo-font-family: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --bivo-font-size: 16px;
+  --bivo-font-weight: 400;
+  --bivo-card-padding: 32px;
+  --bivo-card-min-height: auto;
+  --bivo-btn-radius: 12px;
+  --bivo-btn-height: 48px;
+  --bivo-btn-justify: space-between;
+}
+
+.bivo {
+  color: var(--bivo-ink);
+  background-color: var(--bivo-bg-color);
+  background-image: var(--bivo-bg-image);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  font-family: var(--bivo-font-family);
+  font-size: var(--bivo-font-size);
+  font-weight: var(--bivo-font-weight);
+}
+
+/* Dims whatever text colour is already in effect (via currentColor), instead of a
+   fixed grey — so "muted" copy stays readable no matter what text colour the
+   admin picks (e.g. white text on a dark admin-chosen background). */
+.bivo-muted-text {
+  color: currentColor;
+  opacity: 0.62;
+}
+
+.bivo-font-display {
+  letter-spacing: -0.01em;
+}
+
+.bivo-mark {
+  background-color: var(--bivo-primary);
+}
+
+.bivo-card {
+  border: 1px solid var(--bivo-border);
+  border-radius: 20px;
+  background: var(--bivo-input-bg, #ffffff);
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+  padding: var(--bivo-card-padding, 32px);
+  min-height: var(--bivo-card-min-height, auto);
+}
+
+/*
+ * The admin dashboard's OWN chrome (cards, panels) at /signin/admin always uses
+ * this fixed, non-variable style instead of .bivo-card. The admin's live
+ * preview of the draft brand renders inside its own small wrapper with
+ * buildBivoCssVars() (src/lib/bivoBrand.ts) applied as a React inline style —
+ * those vars are never written to :root/document.documentElement, so they
+ * cascade only inside that preview wrapper and can never reach (or corrupt)
+ * this dashboard chrome, however extreme the colours/sizes being drafted are.
+ */
+.bivo-admin-card {
+  border: 1px solid #dbe1e8;
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+  padding: 24px;
+  color: #1b1f24;
+}
+@media (min-width: 640px) {
+  .bivo-admin-card {
+    padding: 32px;
+  }
+}
+
+.bivo-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: var(--bivo-btn-height, 48px);
+  padding: 0 20px;
+  border-radius: var(--bivo-btn-radius, 12px);
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, opacity 0.15s ease, color 0.15s ease;
+}
+.bivo-btn-primary {
+  background-color: var(--bivo-primary);
+  color: var(--bivo-primary-ink);
+}
+.bivo-btn-primary:hover {
+  opacity: 0.92;
+}
+.bivo-btn-primary:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.bivo-btn-outline {
+  border: 1px solid var(--bivo-border);
+  background: #ffffff;
+  color: var(--bivo-ink);
+}
+.bivo-btn-outline:hover {
+  background: #f3f4f6;
+}
+.bivo-btn-ghost {
+  height: auto;
+  padding: 0 4px;
+  background: transparent;
+  color: var(--bivo-ink);
+  opacity: 0.62;
+}
+.bivo-btn-ghost:hover {
+  opacity: 1;
+}
+
+.bivo-input {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  height: var(--bivo-input-height, 48px);
+  padding: 0 16px;
+  border-radius: var(--bivo-input-border-radius, 12px);
+  border-width: var(--bivo-input-border-width, 1px);
+  border-style: solid;
+  border-color: var(--bivo-input-border);
+  background: var(--bivo-input-bg, #ffffff);
+  color: var(--bivo-input-text, var(--bivo-ink));
+  font-size: 16px;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+.bivo-input:focus {
+  border-color: var(--bivo-primary);
+}
+.bivo-input[aria-invalid="true"] {
+  border-color: var(--bivo-danger);
+}
+.bivo-input-pr {
+  padding-right: 48px;
+}
+
+.bivo-field {
+  position: relative;
+  max-width: var(--bivo-input-width, 100%);
+}
+.bivo-floating-label {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 0 4px;
+  background: var(--bivo-input-bg, #ffffff);
+  color: var(--bivo-input-text, var(--bivo-ink));
+  opacity: 0.62;
+  font-size: 16px;
+  pointer-events: none;
+  transition: all 0.15s ease-out;
+}
+.bivo-input:focus + .bivo-floating-label,
+.bivo-input:not(:placeholder-shown) + .bivo-floating-label {
+  top: 0;
+  font-size: 12px;
+  color: var(--bivo-primary);
+  opacity: 1;
+}
+.bivo-top-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: currentColor;
+  opacity: 0.8;
+}
+
+.bivo-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--bivo-ink);
+}
+.bivo-error {
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--bivo-danger);
+}
+.bivo-link {
+  color: var(--bivo-link);
+}
+
+.bivo-success-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  border-radius: 14px;
+  padding: 14px 16px;
+  font-size: 15px;
+  color: var(--bivo-ink);
+  background: rgba(31, 157, 107, 0.1);
+}
+
+@keyframes bivo-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.bivo-animate-rise {
+  animation: bivo-rise 260ms ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .bivo-animate-rise {
+    animation: none;
+  }
+}

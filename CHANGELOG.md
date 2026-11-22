@@ -1,4 +1,60 @@
+# v4.2.5
+
+- Sign-in password step: added an account icon before the email address.
+
+# v4.2.4
+
+- `src/app/bivo/page.tsx`, `src/app/bivo/admin/page.tsx` and `src/components/BivoAuthCard.tsx` are now tiny stubs (old `/bivo` links redirect to `/signin`, `/bivo/admin` to `/signin/admin`). They replace the old code so the build passes even if the old files are still in the repo; delete them whenever convenient. `src/app/bivo/layout.tsx` is no longer needed and can be deleted.
+
+# v4.2.3
+
+- `/signin/admin`: removed every option that only applied to the old `/bivo` page (card on/off, card min-height, column order and gap, label position, button position/shape/size, page alignment, logo position, help line, support email, footer links, sign-up copy and other unused text).
+- `/signin/admin`: new "Size & spacing" cards covering every element of `/signin` — page, card, header/logo, headings, fields, links, checkbox, privacy/terms text, buttons, success screen and footer (sizes and gaps in px).
+- Old saved Bivo settings still load; removed options are ignored and new ones use defaults.
+
+# v4.2.2
+
+- Removed the `/bivo` page and `/bivo/admin`. The Bivo admin now lives at `/signin/admin` and controls only the `/signin` page.
+- `/signin` now loads its name, logo, colours and copy from that admin (it previously ignored it).
+- Sign-in page: removed the header back button; added a blue "Forgot email?" link under the email field; replaced the "Not your device?" text with "Before using this app, you can review iOS's privacy policy and terms of service." (blue links) on both the email and password steps; the password step has a "Show password" checkbox under the field and a "Forgot password?" link in place of Back; the Next button is now fully round.
+- Default Bivo button/link colour is now blue (#1d4ed8).
+
+# v4.2.1
+
+- Removed the Home item from the Secure Account navigation menu.
+- Removed the Back action from the Bivo password step; the primary submit action remains.
+- Added admin-editable Bivo copy for the signed-in identity, Continue action, redirect notice, and show/hide-password accessibility labels.
+- Removed the unused Back button editor field.
+
 # Changelog
+
+## 4.2.0
+- Removed the Home button (and its icon) from the Secure Account alert page. The security-alert back button is unaffected.
+- Removed the icon+email "back" chip from the Bivo sign-in page's password step. The plain-text Back button is kept, so sign-in navigation is unaffected.
+- Made the entire Bivo page editable from its own admin dashboard at `/bivo/admin`: branding (logo size/position, background image/colour, text/button/link/border colours, font family/size/weight), every piece of copy including validation/error messages, form appearance (field height/border width/radius/background/text colour/width, label position, field spacing, button size/shape/position), layout (page width/padding/alignment, column order, card on/off with padding/min-height), visibility toggles for the logo/subheading/switch-link/help-line, and up to three configurable footer links.
+- Added a live preview to the Bivo admin dashboard with desktop/mobile toggles, rendering the real sign-in component with the in-progress draft — scoped so it can never visually corrupt the dashboard's own chrome, however extreme the drafted colours/sizes are.
+- Added "Reset to default" alongside "Discard changes" and a clearer unsaved-changes / saved indicator.
+- Re-architected how Bivo's branding reaches the page: colours/fonts/sizing are now computed once (`buildBivoCssVars`) and applied as a React inline style scoped to each page's own wrapper, instead of being written to `document.documentElement`. This is what makes a safe, non-corrupting live preview possible, and it has no effect on how the public `/bivo` page looks.
+- Hardened logo/background image validation: an oversized upload is now rejected outright (with the existing on-screen error) instead of being silently truncated into a corrupted image.
+
+## 4.1.1
+- Hardened the configurable redirect URL validation against protocol-relative URLs, backslashes, and control characters.
+- Prevented the post-sign-in redirect from firing when sign-up requires email confirmation and no authenticated session exists.
+- Kept the admin editor's redirect validation consistent with the runtime sanitizer.
+
+## 4.1.0
+- Fixed Bivo branding (`/bivo/admin`) not actually changing anything on `/bivo`: the `.bivo-*` CSS classes and `--bivo-*` variables it writes were never defined anywhere, so colours, spacing and the logo had nothing to render through. Added the full stylesheet in `src/app/globals.css`.
+- Fixed Bivo branding failing to load/save: the `bivo_brand_settings` table it reads/writes didn't exist in `quilo-backend.sql`. Added it (section 6), mirroring `site_settings`'s RLS (admins only can write, everyone can read), with a larger size limit since the Bivo logo is stored inline as a data URL rather than in Storage.
+- Admin → Layout & spacing: new "Field border width" slider (0–3px) for the sign-in/sign-up form fields.
+- Admin → new "After sign-in" card: a redirect link (a path like `/`, or a full `https://` link) a visitor is sent to once they sign in or create an account. Leave it blank to keep the existing "Use another account" success screen.
+- Added the four icon exports (`ArrowLeftIcon`, `SpinnerIcon`, `UploadIcon`, `TrashIcon`) that `/bivo`, `/bivo/admin` and their components needed but `src/components/icons.tsx` didn't have yet.
+
+**If you already ran `quilo-backend.sql` before this version:** re-run it — it's safe to run again — so you get the new `bivo_brand_settings` table (section 6, near the end).
+
+## 4.0.0
+- Merged the "Bivo" sign-in app into this project, on Quilo's own Next.js/Tailwind stack instead of its original separate inline-style component (`src/components/BivoSignIn.tsx`, new route at `/signin`).
+- On the "This wasn't me" screen, "Sign in with Google" is now the one live provider button: it navigates to `/signin` (the Bivo sign-in app) instead of being a display-only demo. Facebook and Apple remain display-only.
+- Bivo's two-step email → password flow is a UI-only demo: no backend checks the password, the same "preview, nothing is stored" spirit as the password-reset form.
 
 ## 3.8.0
 - "This wasn't me" screen: the "Continue to password reset" link is replaced by a reset-password form (current password, new password with strength meter, confirm, show/hide eyes, "Change password" button).
