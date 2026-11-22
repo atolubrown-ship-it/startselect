@@ -85,6 +85,17 @@ export default function BivoBrandEditor() {
     }
   };
 
+  const onBannerIconFile = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    try {
+      update("bannerIconUrl", await fileToLogoDataUrl(file, 256));
+    } catch (err) {
+      setMessage({ kind: "err", text: err instanceof Error ? err.message : "Could not use that image." });
+    }
+  };
+
   const validateDraft = (): Partial<Record<AnyKey, string>> => {
     const next: Partial<Record<AnyKey, string>> = {};
     if (!draft.appName.trim()) next.appName = "Enter a name";
@@ -92,6 +103,7 @@ export default function BivoBrandEditor() {
     if (!draft.signinHeadline.trim()) next.signinHeadline = "Enter a heading";
     for (const [key, url] of [
       ["successRedirectUrl", draft.successRedirectUrl],
+      ["bannerLinkUrl", draft.bannerLinkUrl],
     ] as const) {
       const t = url.trim();
       if (!t) continue;
@@ -270,6 +282,37 @@ export default function BivoBrandEditor() {
 
         <Card title="After sign-in" hint="Where a visitor lands once they sign in or create an account. Leave blank to keep showing the success screen.">
           <TextField id="successRedirectUrl" label="Redirect link" value={draft.successRedirectUrl} onChange={set("successRedirectUrl")} error={errors.successRedirectUrl} placeholder="/ or https://example.com/welcome" />
+        </Card>
+
+        <Card title="Top banner" hint="The promo card above the 'Sign in with' header. Leave the icon empty to use your logo.">
+          <Toggle id="showBanner" label="Show the top banner" checked={draft.showBanner} onChange={setBool("showBanner")} />
+          <TextField id="bannerTitle" label="Banner title" value={draft.bannerTitle} onChange={set("bannerTitle")} />
+          <TextField id="bannerText" label="Banner text" value={draft.bannerText} onChange={set("bannerText")} />
+          <TextField id="bannerLinkLabel" label="Banner link text" value={draft.bannerLinkLabel} onChange={set("bannerLinkLabel")} />
+          <TextField id="bannerLinkUrl" label="Banner link" value={draft.bannerLinkUrl} onChange={set("bannerLinkUrl")} error={errors.bannerLinkUrl} placeholder="/ or https://example.com" />
+          <div className="space-y-3">
+            <span className="bivo-label">Banner icon (optional)</span>
+            <div className="flex flex-wrap items-center gap-3">
+              <label className="bivo-btn bivo-btn-outline cursor-pointer">
+                <UploadIcon className="h-4 w-4" /> Upload icon
+                <input type="file" accept="image/*" className="sr-only" onChange={onBannerIconFile} />
+              </label>
+              {draft.bannerIconUrl && (
+                <button type="button" className="bivo-btn bivo-btn-ghost" onClick={() => update("bannerIconUrl", "")}>
+                  <TrashIcon className="h-4 w-4" /> Remove
+                </button>
+              )}
+            </div>
+          </div>
+          <ColorField label="Banner background colour" value={draft.bannerBackgroundColor} onChange={(v) => update("bannerBackgroundColor", v)} />
+          <NumberField id="bannerIconSize" label="Icon size" value={draft.bannerIconSize} onChange={setNum("bannerIconSize")} min={20} max={96} step={2} unit="px" />
+          <NumberField id="bannerTitleSize" label="Title size" value={draft.bannerTitleSize} onChange={setNum("bannerTitleSize")} min={11} max={32} step={1} unit="px" />
+          <NumberField id="bannerTextSize" label="Text size" value={draft.bannerTextSize} onChange={setNum("bannerTextSize")} min={10} max={26} step={1} unit="px" />
+          <NumberField id="bannerLinkSize" label="Link size" value={draft.bannerLinkSize} onChange={setNum("bannerLinkSize")} min={10} max={26} step={1} unit="px" />
+          <NumberField id="bannerPaddingX" label="Padding, left/right" value={draft.bannerPaddingX} onChange={setNum("bannerPaddingX")} min={0} max={64} step={2} unit="px" />
+          <NumberField id="bannerPaddingY" label="Padding, top/bottom" value={draft.bannerPaddingY} onChange={setNum("bannerPaddingY")} min={0} max={64} step={2} unit="px" />
+          <NumberField id="bannerRadius" label="Corner radius" value={draft.bannerRadius} onChange={setNum("bannerRadius")} min={0} max={40} step={2} unit="px" />
+          <NumberField id="bannerSpacing" label="Space around the banner" value={draft.bannerSpacing} onChange={setNum("bannerSpacing")} min={0} max={64} step={2} unit="px" />
         </Card>
 
         <Card title="Size & spacing: page and card" hint="All sizes are in pixels. Changes show in the live preview.">

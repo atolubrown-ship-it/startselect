@@ -117,6 +117,26 @@ export type BivoBrand = {
   footerTextSize: number;
   footerSpacing: number;
 
+  // Top banner (promo card above the header)
+  showBanner: boolean;
+  bannerTitle: string;
+  bannerText: string;
+  bannerLinkLabel: string;
+  /** A path ("/") or full https:// link. Empty = the link text is shown but goes nowhere. */
+  bannerLinkUrl: string;
+  /** Own icon (data: URL or https link). Empty = the logo, or the generated mark. */
+  bannerIconUrl: string;
+  bannerBackgroundColor: string;
+  bannerIconSize: number;
+  bannerTitleSize: number;
+  bannerTextSize: number;
+  bannerLinkSize: number;
+  bannerPaddingX: number;
+  bannerPaddingY: number;
+  bannerRadius: number;
+  /** Space around the banner (above, below and at the sides). */
+  bannerSpacing: number;
+
   // Visibility toggles
   showLogo: boolean;
   showSubline: boolean;
@@ -201,6 +221,22 @@ export const DEFAULT_BIVO_BRAND: BivoBrand = {
 
   footerTextSize: 12,
   footerSpacing: 24,
+
+  showBanner: true,
+  bannerTitle: "Experience Bivo at its best",
+  bannerText: "Get the Bivo app for email that is smart, fast and organized.",
+  bannerLinkLabel: "View",
+  bannerLinkUrl: "",
+  bannerIconUrl: "",
+  bannerBackgroundColor: "#ffffff",
+  bannerIconSize: 40,
+  bannerTitleSize: 16,
+  bannerTextSize: 14,
+  bannerLinkSize: 14,
+  bannerPaddingX: 16,
+  bannerPaddingY: 16,
+  bannerRadius: 8,
+  bannerSpacing: 12,
 
   showLogo: true,
   showSubline: true,
@@ -397,6 +433,22 @@ export function sanitizeBivoBrand(input: unknown, fallback: BivoBrand = DEFAULT_
 
     footerTextSize: n("footerTextSize", 9, 20),
     footerSpacing: n("footerSpacing", 0, 80),
+
+    showBanner: bool(input.showBanner, fallback.showBanner),
+    bannerTitle: text(input.bannerTitle, fallback.bannerTitle, 80),
+    bannerText: text(input.bannerText, fallback.bannerText, 200),
+    bannerLinkLabel: text(input.bannerLinkLabel, fallback.bannerLinkLabel, 30),
+    bannerLinkUrl: safeRedirect(input.bannerLinkUrl, fallback.bannerLinkUrl),
+    bannerIconUrl: safeImage(input.bannerIconUrl, fallback.bannerIconUrl),
+    bannerBackgroundColor: hex(input.bannerBackgroundColor, fallback.bannerBackgroundColor),
+    bannerIconSize: n("bannerIconSize", 20, 96),
+    bannerTitleSize: n("bannerTitleSize", 11, 32),
+    bannerTextSize: n("bannerTextSize", 10, 26),
+    bannerLinkSize: n("bannerLinkSize", 10, 26),
+    bannerPaddingX: n("bannerPaddingX", 0, 64),
+    bannerPaddingY: n("bannerPaddingY", 0, 64),
+    bannerRadius: n("bannerRadius", 0, 40),
+    bannerSpacing: n("bannerSpacing", 0, 64),
 
     showLogo: bool(input.showLogo, fallback.showLogo),
     showSubline: bool(input.showSubline, fallback.showSubline),

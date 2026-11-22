@@ -272,19 +272,64 @@ export default function BivoSignIn({ brand, previewOnly = false }: { brand: Bivo
       style={cssVars}
       className={`bivo flex w-full flex-col ${previewOnly ? "min-h-[520px]" : "min-h-[100dvh]"}`}
     >
+      {brand.showBanner && (
+        <div style={{ padding: brand.bannerSpacing }}>
+          <div
+            className="flex items-start gap-4 border"
+            style={{
+              borderColor: "var(--bivo-border)",
+              backgroundColor: brand.bannerBackgroundColor,
+              borderRadius: brand.bannerRadius,
+              paddingLeft: brand.bannerPaddingX,
+              paddingRight: brand.bannerPaddingX,
+              paddingTop: brand.bannerPaddingY,
+              paddingBottom: brand.bannerPaddingY,
+            }}
+          >
+            {brand.bannerIconUrl || brand.logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- icon is a data: URL or an external https link
+              <img
+                src={brand.bannerIconUrl || brand.logoUrl}
+                alt=""
+                className="shrink-0 object-contain"
+                style={{ width: brand.bannerIconSize, height: brand.bannerIconSize }}
+              />
+            ) : (
+              <span className="shrink-0">
+                <BrandMark color={brand.buttonColor} size={brand.bannerIconSize} letter={letter} />
+              </span>
+            )}
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold" style={{ fontSize: brand.bannerTitleSize, lineHeight: 1.3 }}>
+                {brand.bannerTitle}
+              </p>
+              <p style={{ fontSize: brand.bannerTextSize, color: muted, marginTop: 4, lineHeight: 1.45 }}>{brand.bannerText}</p>
+              <div className="flex justify-end" style={{ marginTop: 12 }}>
+                <a
+                  href={previewOnly || !brand.bannerLinkUrl ? undefined : brand.bannerLinkUrl}
+                  className="font-semibold hover:underline"
+                  style={{ fontSize: brand.bannerLinkSize, color: "var(--bivo-link)" }}
+                >
+                  {brand.bannerLinkLabel}
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <header
         className="flex w-full items-center gap-2 border-b px-4 sm:px-6"
         style={{ borderColor: "var(--bivo-border)", paddingTop: brand.headerPaddingY, paddingBottom: brand.headerPaddingY }}
       >
-        {brand.showLogo && brand.logoUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element -- logo is a data: URL or an external https link
-          <img src={brand.logoUrl} alt={`${brand.appName} logo`} className="object-contain" style={{ height: brand.logoSize, maxWidth: 240 }} />
-        ) : (
-          <>
-            {brand.showLogo && <BrandMark color={brand.buttonColor} size={brand.logoSize} letter={letter} />}
-            <span style={{ fontSize: brand.headerTextSize, color: muted }}>Sign in with {brand.appName}</span>
-          </>
-        )}
+        {brand.showLogo &&
+          (brand.logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element -- logo is a data: URL or an external https link
+            <img src={brand.logoUrl} alt={`${brand.appName} logo`} className="object-contain" style={{ height: brand.logoSize, maxWidth: 240 }} />
+          ) : (
+            <BrandMark color={brand.buttonColor} size={brand.logoSize} letter={letter} />
+          ))}
+        <span style={{ fontSize: brand.headerTextSize, color: muted }}>Sign in with {brand.appName}</span>
       </header>
 
       <div
