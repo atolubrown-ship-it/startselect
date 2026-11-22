@@ -3,92 +3,55 @@ import { friendlyError } from "./remote";
 import { isHexColor, readableOn } from "./settings";
 
 /**
- * Everything the Bivo sign-in app at /bivo shows — branding, colours, every
- * piece of copy, every field/button/layout knob, visibility toggles and
- * footer links — stored as JSON in one shared row (`bivo_brand_settings.data`,
- * id = 1; see section 6 of quilo-backend.sql). Mirrors the shape of the main
- * site's `site_settings`: everyone can read, only an admin_users member can
- * save (enforced by RLS, not by this file).
+ * Everything the Bivo sign-in app at /signin shows — branding, colours, copy,
+ * and the size / spacing of every element — stored as JSON in one shared row
+ * (`bivo_brand_settings.data`, id = 1; see section 6 of quilo-backend.sql).
+ * Mirrors the shape of the main site's `site_settings`: everyone can read,
+ * only an admin_users member can save (enforced by RLS, not by this file).
  *
- * Edited entirely at /bivo/admin (BivoBrandEditor.tsx), independent of the
- * main site's /admin dashboard. sanitizeBivoBrand() below is deliberately
- * tolerant of missing/invalid keys — a brand saved by an older version of
- * this file (fewer fields) still loads fine, with the new fields filled
- * in from DEFAULT_BIVO_BRAND.
+ * Edited entirely at /signin/admin (BivoBrandEditor.tsx). sanitizeBivoBrand()
+ * below is deliberately tolerant of missing/invalid/obsolete keys — a brand
+ * saved by an older version of this file still loads fine, with new fields
+ * filled in from DEFAULT_BIVO_BRAND and removed fields simply ignored.
+ *
+ * All sizes and spacings are in px.
  */
 
-export type LogoPosition = "left" | "center";
-export type LabelPosition = "floating" | "top";
-export type ButtonSize = "sm" | "md" | "lg";
-export type ButtonShape = "rounded" | "pill" | "square";
-export type ButtonPosition = "left" | "right" | "between" | "center";
-export type PageAlign = "left" | "center" | "right";
-export type ColumnOrder = "brandFirst" | "formFirst";
 export type BivoFontFamily = "outfit" | "system" | "serif" | "mono";
 
 export type BivoBrand = {
   appName: string;
   logoUrl: string;
-  /** Logo size, px (square). */
-  logoSize: number;
-  logoPosition: LogoPosition;
 
-  /** Optional full-bleed page background image (data: URL or https link). Empty = none. */
   backgroundImageUrl: string;
   backgroundColor: string;
-  /** Default text colour for body copy (headings/labels keep their own colour logic). */
+  /** Default text colour for body copy. */
   textColor: string;
-  /** Controls every primary button and the logo-placeholder tile. */
+  /** Controls the Next button. */
   buttonColor: string;
-  /** Controls every hyperlink (the support-email link, footer links). */
+  /** Controls every hyperlink (Forgot email?, privacy policy, ...). */
   linkColor: string;
-  /** Generic border colour — the email chip, the card (if shown), the error banner border isn't included (uses its own danger colour). */
+  /** Border colour of the card, header line and fields. */
   borderColor: string;
 
   fontFamily: BivoFontFamily;
-  /** Base body text size, px. Headings and inputs keep their own size controls. */
-  fontSize: number;
   fontWeight: 400 | 500 | 600 | 700;
 
-  supportEmail: string;
-
-  // Sign-in
+  // Copy
   signinHeadline: string;
   signinSubline: string;
   signinPasswordTitle: string;
-  signinSubmitLabel: string;
   signinSwitchLabel: string;
   signinDoneTitle: string;
-  signinDoneMessage: string;
-
-  // Sign-up — "{appName}" and "{name}" are replaced automatically.
-  signupHeadline: string;
-  signupSublineTemplate: string;
-  signupPasswordTitle: string;
-  signupSubmitLabel: string;
-  signupSwitchLabel: string;
-  signupDoneTitle: string;
-  signupDoneMessageTemplate: string;
-
-  // Shared labels
-  nameLabel: string;
   emailLabel: string;
   passwordLabel: string;
   nextLabel: string;
-  backLabel: string;
   useAnotherAccountLabel: string;
   signedInAsTemplate: string;
   continueLabel: string;
   redirectingText: string;
   showPasswordLabel: string;
-  hidePasswordLabel: string;
   demoNoticeText: string;
-  confirmEmailNoticeText: string;
-
-  /** Small "Need help?" line near the bottom of the card. */
-  needHelpHeading: string;
-  /** Word before the support-email link, on its own line below needHelpHeading. */
-  contactLabel: string;
 
   // Validation / error copy
   genericErrorMessage: string;
@@ -97,158 +60,151 @@ export type BivoBrand = {
   passwordRequiredMessage: string;
   /** May contain "{min}", filled in with the minimum password length. */
   passwordTooShortMessage: string;
-  nameRequiredMessage: string;
 
-  /**
-   * Where a visitor lands after signing in or signing up. Empty = stay on the
-   * "done" screen with the "Use another account" button, same as before.
-   * A path starting with "/" (e.g. "/") or a full "https://" link.
-   */
+  /** Where a visitor lands after signing in. Empty = stay on the success screen. A path ("/") or full https:// link. */
   successRedirectUrl: string;
 
-  // Up to three optional footer links, each hidden until both fields are filled in.
-  footerLink1Label: string;
-  footerLink1Url: string;
-  footerLink2Label: string;
-  footerLink2Url: string;
-  footerLink3Label: string;
-  footerLink3Url: string;
-
-  // Layout & sizing (all px unless noted)
-  pageMaxWidth: number;
+  // Page & card
   pagePaddingX: number;
   pagePaddingY: number;
-  pageAlign: PageAlign;
-  columnGap: number;
-  columnOrder: ColumnOrder;
-  headingSize: number;
+  cardWidth: number;
+  cardPaddingX: number;
+  cardPaddingY: number;
+  cardRadius: number;
 
-  /** Wraps the sign-in content in a bordered, padded card instead of sitting on the bare page background. */
-  showCard: boolean;
-  cardPadding: number;
-  /** 0 = auto height. */
-  cardMinHeight: number;
+  // Header
+  logoSize: number;
+  headerPaddingY: number;
+  headerTextSize: number;
 
-  // Form appearance
+  // Headings
+  titleSize: number;
+  sublineSize: number;
+  /** Space between the heading and the subheading. */
+  titleSpacing: number;
+  /** Space between the subheading and the first field. */
+  sublineSpacing: number;
+
+  // Fields
   inputHeight: number;
-  /** Form field border thickness, 0–3px. */
+  inputTextSize: number;
+  labelSize: number;
   inputBorderWidth: number;
   inputBorderRadius: number;
   inputBackgroundColor: string;
   inputTextColor: string;
-  /** Field width as a percentage of the column it sits in. */
-  inputWidthPercent: number;
-  labelPosition: LabelPosition;
-  /** Vertical gap between stacked fields. */
+  /** Space between a field and the link / checkbox below it. */
   fieldSpacing: number;
-  buttonSize: ButtonSize;
-  buttonShape: ButtonShape;
-  /** How the Next/Back (or Sign in/Back) pair are laid out. */
-  buttonPosition: ButtonPosition;
+
+  // Links, checkbox, policy text
+  linkSize: number;
+  checkboxSize: number;
+  checkboxSpacing: number;
+  policyTextSize: number;
+  policySpacing: number;
+  messageTextSize: number;
+
+  // Button row
+  buttonHeight: number;
+  buttonTextSize: number;
+  buttonPaddingX: number;
+  buttonRowSpacing: number;
+
+  // Success screen
+  doneIconSize: number;
+
+  // Footer
+  footerTextSize: number;
+  footerSpacing: number;
 
   // Visibility toggles
   showLogo: boolean;
   showSubline: boolean;
   showSwitchLink: boolean;
-  showHelpLine: boolean;
 };
 
 export const DEFAULT_BIVO_BRAND: BivoBrand = {
   appName: "Bivo",
   logoUrl: "",
-  logoSize: 44,
-  logoPosition: "left",
 
   backgroundImageUrl: "",
   backgroundColor: "#ffffff",
-  textColor: "#1b1f24",
-  buttonColor: "#1f6b4f",
-  linkColor: "#1f6b4f",
-  borderColor: "#dbe1e8",
+  textColor: "#202124",
+  buttonColor: "#1d4ed8",
+  linkColor: "#1d4ed8",
+  borderColor: "#dadce0",
 
   fontFamily: "outfit",
-  fontSize: 16,
   fontWeight: 400,
-
-  supportEmail: "help@bivo.app",
 
   signinHeadline: "Sign in",
   signinSubline: "Use your Bivo account to continue",
   signinPasswordTitle: "Welcome back",
-  signinSubmitLabel: "Sign in",
   signinSwitchLabel: "Create account",
   signinDoneTitle: "You're in",
-  signinDoneMessage: "Signed in successfully.",
-
-  signupHeadline: "Create your account",
-  signupSublineTemplate: "Join {appName} in under a minute",
-  signupPasswordTitle: "Create a password",
-  signupSubmitLabel: "Create account",
-  signupSwitchLabel: "I have an account",
-  signupDoneTitle: "Account created",
-  signupDoneMessageTemplate: "Welcome to {appName}, {name}!",
-
-  nameLabel: "Full name",
   emailLabel: "Email",
   passwordLabel: "Password",
   nextLabel: "Next",
-  backLabel: "Back",
   useAnotherAccountLabel: "Use another account",
   signedInAsTemplate: "Signed in as {email}",
   continueLabel: "Continue",
   redirectingText: "Taking you there automatically…",
   showPasswordLabel: "Show password",
-  hidePasswordLabel: "Hide password",
   demoNoticeText: "Demo mode — connect Supabase to sign in real accounts.",
-  confirmEmailNoticeText: "Check your inbox to confirm your email address.",
-
-  needHelpHeading: "Need help?",
-  contactLabel: "Contact",
 
   genericErrorMessage: "Something went wrong. Try again.",
   emailRequiredMessage: "Enter an email address",
   emailInvalidMessage: "Enter a valid email address",
   passwordRequiredMessage: "Enter your password",
   passwordTooShortMessage: "Password must be at least {min} characters",
-  nameRequiredMessage: "Enter your name",
 
   successRedirectUrl: "",
 
-  footerLink1Label: "",
-  footerLink1Url: "",
-  footerLink2Label: "",
-  footerLink2Url: "",
-  footerLink3Label: "",
-  footerLink3Url: "",
-
-  pageMaxWidth: 896,
   pagePaddingX: 16,
-  pagePaddingY: 40,
-  pageAlign: "center",
-  columnGap: 48,
-  columnOrder: "brandFirst",
-  headingSize: 40,
+  pagePaddingY: 16,
+  cardWidth: 448,
+  cardPaddingX: 40,
+  cardPaddingY: 48,
+  cardRadius: 8,
 
-  showCard: false,
-  cardPadding: 32,
-  cardMinHeight: 0,
+  logoSize: 24,
+  headerPaddingY: 16,
+  headerTextSize: 16,
 
-  inputHeight: 48,
+  titleSize: 24,
+  sublineSize: 16,
+  titleSpacing: 12,
+  sublineSpacing: 32,
+
+  inputHeight: 56,
+  inputTextSize: 16,
+  labelSize: 16,
   inputBorderWidth: 1,
-  inputBorderRadius: 12,
+  inputBorderRadius: 4,
   inputBackgroundColor: "#ffffff",
-  inputTextColor: "#1b1f24",
-  inputWidthPercent: 100,
-  labelPosition: "floating",
-  fieldSpacing: 20,
-  buttonSize: "md",
-  buttonShape: "rounded",
-  buttonPosition: "between",
+  inputTextColor: "#202124",
+  fieldSpacing: 12,
+
+  linkSize: 14,
+  checkboxSize: 18,
+  checkboxSpacing: 16,
+  policyTextSize: 14,
+  policySpacing: 40,
+  messageTextSize: 13,
+
+  buttonHeight: 40,
+  buttonTextSize: 14,
+  buttonPaddingX: 28,
+  buttonRowSpacing: 40,
+
+  doneIconSize: 56,
+
+  footerTextSize: 12,
+  footerSpacing: 24,
 
   showLogo: true,
   showSubline: true,
   showSwitchLink: true,
-  showHelpLine: true,
 };
 
 /** Safe font-family stacks for the small admin-picked allow-list (never a raw admin-typed string). */
@@ -259,26 +215,15 @@ export const BIVO_FONT_STACKS: Record<BivoFontFamily, string> = {
   mono: 'ui-monospace, "SF Mono", Menlo, Consolas, monospace',
 };
 
-const BTN_RADIUS: Record<ButtonShape, string> = { rounded: "12px", pill: "999px", square: "6px" };
-const BTN_HEIGHT: Record<ButtonSize, string> = { sm: "40px", md: "48px", lg: "56px" };
-const BTN_JUSTIFY: Record<ButtonPosition, string> = { left: "flex-start", right: "flex-end", between: "space-between", center: "center" };
-
 /**
  * Every `--bivo-*` CSS custom property the public page and the admin's live
- * preview need, computed from one BivoBrand. Deliberately returned as a
- * plain string-keyed object (not a React type) so this file stays
- * framework-agnostic — callers apply it as `style={vars as React.CSSProperties}`.
- *
- * IMPORTANT: callers apply this as an inline `style` on the component's OWN
- * root element (BivoAuthCard, the /bivo page wrapper, or the admin preview
- * frame) — never on `document.documentElement`. CSS custom properties
- * cascade to descendants only, so scoping it this way means the admin's own
- * dashboard chrome (which never receives these vars) can never be corrupted
- * by whatever colours/sizes are being drafted, while the public page and the
- * live preview — which render these same values on purpose — pick them up
- * identically.
+ * preview need, computed from one BivoBrand. Callers apply it as an inline
+ * `style` on the component's OWN root element (BivoSignIn) — never on
+ * `document.documentElement` — so the admin dashboard's own chrome can never
+ * be changed by whatever is being drafted.
  */
 export function buildBivoCssVars(brand: BivoBrand): Record<string, string> {
+  const px = (n: number) => `${n}px`;
   return {
     "--bivo-primary": brand.buttonColor,
     "--bivo-primary-ink": readableOn(brand.buttonColor),
@@ -289,29 +234,13 @@ export function buildBivoCssVars(brand: BivoBrand): Record<string, string> {
     "--bivo-bg-image": brand.backgroundImageUrl ? `url("${brand.backgroundImageUrl}")` : "none",
 
     "--bivo-font-family": BIVO_FONT_STACKS[brand.fontFamily],
-    "--bivo-font-size": `${brand.fontSize}px`,
     "--bivo-font-weight": String(brand.fontWeight),
 
-    "--bivo-page-max-width": `${brand.pageMaxWidth}px`,
-    "--bivo-page-px": `${brand.pagePaddingX}px`,
-    "--bivo-page-py": `${brand.pagePaddingY}px`,
-    "--bivo-column-gap": `${brand.columnGap}px`,
-    "--bivo-heading-size": `${brand.headingSize}px`,
-
-    "--bivo-card-padding": `${brand.cardPadding}px`,
-    "--bivo-card-min-height": brand.cardMinHeight > 0 ? `${brand.cardMinHeight}px` : "auto",
-
-    "--bivo-input-height": `${brand.inputHeight}px`,
-    "--bivo-input-border-width": `${brand.inputBorderWidth}px`,
-    "--bivo-input-border-radius": `${brand.inputBorderRadius}px`,
+    "--bivo-input-height": px(brand.inputHeight),
+    "--bivo-input-border-width": px(brand.inputBorderWidth),
+    "--bivo-input-border-radius": px(brand.inputBorderRadius),
     "--bivo-input-bg": brand.inputBackgroundColor,
     "--bivo-input-text": brand.inputTextColor,
-    "--bivo-input-width": `${brand.inputWidthPercent}%`,
-    "--bivo-field-spacing": `${brand.fieldSpacing}px`,
-
-    "--bivo-btn-radius": BTN_RADIUS[brand.buttonShape],
-    "--bivo-btn-height": BTN_HEIGHT[brand.buttonSize],
-    "--bivo-btn-justify": BTN_JUSTIFY[brand.buttonPosition],
   };
 }
 
@@ -328,11 +257,6 @@ function text(v: unknown, fallback: string, max = 200): string {
   if (typeof v !== "string") return fallback;
   const t = v.trim();
   return t ? t.slice(0, max) : fallback;
-}
-
-/** Like text(), but an empty string is a valid value (for optional fields such as footer links). */
-function optText(v: unknown, fallback: string, max = 200): string {
-  return typeof v === "string" ? v.trim().slice(0, max) : fallback;
 }
 
 function hex(v: unknown, fallback: string): string {
@@ -390,28 +314,14 @@ function safeRedirect(v: unknown, fallback: string): string {
   return fallback;
 }
 
-/** Same rule as safeRedirect, for the optional footer links. */
-const safeFooterUrl = safeRedirect;
-
-const BUTTON_SIZES: readonly ButtonSize[] = ["sm", "md", "lg"];
-const BUTTON_SHAPES: readonly ButtonShape[] = ["rounded", "pill", "square"];
-const BUTTON_POSITIONS: readonly ButtonPosition[] = ["left", "right", "between", "center"];
-const PAGE_ALIGNS: readonly PageAlign[] = ["left", "center", "right"];
-const COLUMN_ORDERS: readonly ColumnOrder[] = ["brandFirst", "formFirst"];
-const FONT_FAMILIES: readonly BivoFontFamily[] = ["outfit", "system", "serif", "mono"];
-const LOGO_POSITIONS: readonly LogoPosition[] = ["left", "center"];
-const LABEL_POSITIONS: readonly LabelPosition[] = ["floating", "top"];
-const FONT_WEIGHTS: readonly number[] = [400, 500, 600, 700];
-
 /** Merge `input` over `fallback`, keeping only valid values — corrupted storage can never break the page. */
 export function sanitizeBivoBrand(input: unknown, fallback: BivoBrand = DEFAULT_BIVO_BRAND): BivoBrand {
   if (!isObj(input)) return fallback;
   const fontWeight = num(input.fontWeight, fallback.fontWeight, 400, 700);
+  const n = (key: keyof BivoBrand, min: number, max: number) => num(input[key], fallback[key] as number, min, max);
   return {
     appName: text(input.appName, fallback.appName, 40),
     logoUrl: safeImage(input.logoUrl, fallback.logoUrl),
-    logoSize: num(input.logoSize, fallback.logoSize, 24, 160),
-    logoPosition: oneOf(input.logoPosition, LOGO_POSITIONS, fallback.logoPosition),
 
     backgroundImageUrl: safeImage(input.backgroundImageUrl, fallback.backgroundImageUrl),
     backgroundColor: hex(input.backgroundColor, fallback.backgroundColor),
@@ -421,90 +331,81 @@ export function sanitizeBivoBrand(input: unknown, fallback: BivoBrand = DEFAULT_
     borderColor: hex(input.borderColor, fallback.borderColor),
 
     fontFamily: oneOf(input.fontFamily, FONT_FAMILIES, fallback.fontFamily),
-    fontSize: num(input.fontSize, fallback.fontSize, 13, 20),
     fontWeight: (FONT_WEIGHTS.includes(fontWeight) ? fontWeight : fallback.fontWeight) as BivoBrand["fontWeight"],
-
-    supportEmail: text(input.supportEmail, fallback.supportEmail, 100),
 
     signinHeadline: text(input.signinHeadline, fallback.signinHeadline, 60),
     signinSubline: text(input.signinSubline, fallback.signinSubline, 120),
     signinPasswordTitle: text(input.signinPasswordTitle, fallback.signinPasswordTitle, 60),
-    signinSubmitLabel: text(input.signinSubmitLabel, fallback.signinSubmitLabel, 30),
     signinSwitchLabel: text(input.signinSwitchLabel, fallback.signinSwitchLabel, 30),
     signinDoneTitle: text(input.signinDoneTitle, fallback.signinDoneTitle, 60),
-    signinDoneMessage: text(input.signinDoneMessage, fallback.signinDoneMessage, 100),
-
-    signupHeadline: text(input.signupHeadline, fallback.signupHeadline, 60),
-    signupSublineTemplate: text(input.signupSublineTemplate, fallback.signupSublineTemplate, 120),
-    signupPasswordTitle: text(input.signupPasswordTitle, fallback.signupPasswordTitle, 60),
-    signupSubmitLabel: text(input.signupSubmitLabel, fallback.signupSubmitLabel, 30),
-    signupSwitchLabel: text(input.signupSwitchLabel, fallback.signupSwitchLabel, 30),
-    signupDoneTitle: text(input.signupDoneTitle, fallback.signupDoneTitle, 60),
-    signupDoneMessageTemplate: text(input.signupDoneMessageTemplate, fallback.signupDoneMessageTemplate, 120),
-
-    nameLabel: text(input.nameLabel, fallback.nameLabel, 30),
     emailLabel: text(input.emailLabel, fallback.emailLabel, 30),
     passwordLabel: text(input.passwordLabel, fallback.passwordLabel, 30),
     nextLabel: text(input.nextLabel, fallback.nextLabel, 30),
-    backLabel: text(input.backLabel, fallback.backLabel, 30),
     useAnotherAccountLabel: text(input.useAnotherAccountLabel, fallback.useAnotherAccountLabel, 40),
     signedInAsTemplate: text(input.signedInAsTemplate, fallback.signedInAsTemplate, 100),
     continueLabel: text(input.continueLabel, fallback.continueLabel, 30),
     redirectingText: text(input.redirectingText, fallback.redirectingText, 100),
     showPasswordLabel: text(input.showPasswordLabel, fallback.showPasswordLabel, 40),
-    hidePasswordLabel: text(input.hidePasswordLabel, fallback.hidePasswordLabel, 40),
     demoNoticeText: text(input.demoNoticeText, fallback.demoNoticeText, 160),
-    confirmEmailNoticeText: text(input.confirmEmailNoticeText, fallback.confirmEmailNoticeText, 160),
-
-    needHelpHeading: text(input.needHelpHeading, fallback.needHelpHeading, 40),
-    contactLabel: text(input.contactLabel, fallback.contactLabel, 30),
 
     genericErrorMessage: text(input.genericErrorMessage, fallback.genericErrorMessage, 160),
     emailRequiredMessage: text(input.emailRequiredMessage, fallback.emailRequiredMessage, 100),
     emailInvalidMessage: text(input.emailInvalidMessage, fallback.emailInvalidMessage, 100),
     passwordRequiredMessage: text(input.passwordRequiredMessage, fallback.passwordRequiredMessage, 100),
     passwordTooShortMessage: text(input.passwordTooShortMessage, fallback.passwordTooShortMessage, 120),
-    nameRequiredMessage: text(input.nameRequiredMessage, fallback.nameRequiredMessage, 100),
 
     successRedirectUrl: safeRedirect(input.successRedirectUrl, fallback.successRedirectUrl),
 
-    footerLink1Label: optText(input.footerLink1Label, fallback.footerLink1Label, 30),
-    footerLink1Url: safeFooterUrl(input.footerLink1Url, fallback.footerLink1Url),
-    footerLink2Label: optText(input.footerLink2Label, fallback.footerLink2Label, 30),
-    footerLink2Url: safeFooterUrl(input.footerLink2Url, fallback.footerLink2Url),
-    footerLink3Label: optText(input.footerLink3Label, fallback.footerLink3Label, 30),
-    footerLink3Url: safeFooterUrl(input.footerLink3Url, fallback.footerLink3Url),
+    pagePaddingX: n("pagePaddingX", 0, 96),
+    pagePaddingY: n("pagePaddingY", 0, 160),
+    cardWidth: n("cardWidth", 280, 720),
+    cardPaddingX: n("cardPaddingX", 8, 96),
+    cardPaddingY: n("cardPaddingY", 8, 120),
+    cardRadius: n("cardRadius", 0, 40),
 
-    pageMaxWidth: num(input.pageMaxWidth, fallback.pageMaxWidth, 420, 1280),
-    pagePaddingX: num(input.pagePaddingX, fallback.pagePaddingX, 0, 96),
-    pagePaddingY: num(input.pagePaddingY, fallback.pagePaddingY, 0, 160),
-    pageAlign: oneOf(input.pageAlign, PAGE_ALIGNS, fallback.pageAlign),
-    columnGap: num(input.columnGap, fallback.columnGap, 0, 120),
-    columnOrder: oneOf(input.columnOrder, COLUMN_ORDERS, fallback.columnOrder),
-    headingSize: num(input.headingSize, fallback.headingSize, 20, 72),
+    logoSize: n("logoSize", 16, 120),
+    headerPaddingY: n("headerPaddingY", 0, 48),
+    headerTextSize: n("headerTextSize", 11, 28),
 
-    showCard: bool(input.showCard, fallback.showCard),
-    cardPadding: num(input.cardPadding, fallback.cardPadding, 0, 80),
-    cardMinHeight: num(input.cardMinHeight, fallback.cardMinHeight, 0, 1200),
+    titleSize: n("titleSize", 16, 56),
+    sublineSize: n("sublineSize", 11, 28),
+    titleSpacing: n("titleSpacing", 0, 48),
+    sublineSpacing: n("sublineSpacing", 0, 80),
 
-    inputHeight: num(input.inputHeight, fallback.inputHeight, 36, 72),
-    inputBorderWidth: num(input.inputBorderWidth, fallback.inputBorderWidth, 0, 3),
-    inputBorderRadius: num(input.inputBorderRadius, fallback.inputBorderRadius, 0, 28),
+    inputHeight: n("inputHeight", 36, 80),
+    inputTextSize: n("inputTextSize", 12, 28),
+    labelSize: n("labelSize", 11, 28),
+    inputBorderWidth: n("inputBorderWidth", 0, 3),
+    inputBorderRadius: n("inputBorderRadius", 0, 28),
     inputBackgroundColor: hex(input.inputBackgroundColor, fallback.inputBackgroundColor),
     inputTextColor: hex(input.inputTextColor, fallback.inputTextColor),
-    inputWidthPercent: num(input.inputWidthPercent, fallback.inputWidthPercent, 40, 100),
-    labelPosition: oneOf(input.labelPosition, LABEL_POSITIONS, fallback.labelPosition),
-    fieldSpacing: num(input.fieldSpacing, fallback.fieldSpacing, 4, 40),
-    buttonSize: oneOf(input.buttonSize, BUTTON_SIZES, fallback.buttonSize),
-    buttonShape: oneOf(input.buttonShape, BUTTON_SHAPES, fallback.buttonShape),
-    buttonPosition: oneOf(input.buttonPosition, BUTTON_POSITIONS, fallback.buttonPosition),
+    fieldSpacing: n("fieldSpacing", 0, 48),
+
+    linkSize: n("linkSize", 11, 24),
+    checkboxSize: n("checkboxSize", 12, 32),
+    checkboxSpacing: n("checkboxSpacing", 0, 48),
+    policyTextSize: n("policyTextSize", 10, 22),
+    policySpacing: n("policySpacing", 0, 96),
+    messageTextSize: n("messageTextSize", 10, 22),
+
+    buttonHeight: n("buttonHeight", 32, 72),
+    buttonTextSize: n("buttonTextSize", 11, 24),
+    buttonPaddingX: n("buttonPaddingX", 8, 80),
+    buttonRowSpacing: n("buttonRowSpacing", 0, 96),
+
+    doneIconSize: n("doneIconSize", 32, 120),
+
+    footerTextSize: n("footerTextSize", 9, 20),
+    footerSpacing: n("footerSpacing", 0, 80),
 
     showLogo: bool(input.showLogo, fallback.showLogo),
     showSubline: bool(input.showSubline, fallback.showSubline),
     showSwitchLink: bool(input.showSwitchLink, fallback.showSwitchLink),
-    showHelpLine: bool(input.showHelpLine, fallback.showHelpLine),
   };
 }
+
+const FONT_FAMILIES: readonly BivoFontFamily[] = ["outfit", "system", "serif", "mono"];
+const FONT_WEIGHTS: readonly number[] = [400, 500, 600, 700];
 
 const TABLE = "bivo_brand_settings";
 const TIMEOUT_MS = 8000;

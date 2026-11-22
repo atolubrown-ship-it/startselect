@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, type ChangeEvent, type CSSProperties, type FormEvent, type ReactNode } from "react";
-import BivoAuthCard from "@/components/BivoAuthCard";
+import BivoSignIn from "@/components/BivoSignIn";
 import BivoLogo from "@/components/BivoLogo";
 import { DeviceIcon, PhoneIcon, SpinnerIcon, TrashIcon, UploadIcon } from "@/components/icons";
 import { fileToLogoDataUrl } from "@/lib/image";
@@ -11,15 +11,7 @@ import {
   loadBivoBrand,
   saveBivoBrand,
   type BivoBrand,
-  type ButtonPosition,
-  type ButtonShape,
-  type ButtonSize,
-  type ColumnOrder,
-  type LabelPosition,
-  type LogoPosition,
-  type PageAlign,
 } from "@/lib/bivoBrand";
-import { validateEmail } from "@/lib/bivoValidation";
 import { isHexColor } from "@/lib/settings";
 
 type AnyKey = keyof BivoBrand;
@@ -32,7 +24,7 @@ const FONT_OPTIONS: { value: BivoBrand["fontFamily"]; label: string }[] = [
   { value: "mono", label: "Monospace" },
 ];
 
-/** The branding + copy editor shown at /bivo/admin once an admin is signed in. */
+/** The branding + copy editor shown at /signin/admin once an admin is signed in. */
 export default function BivoBrandEditor() {
   const [brand, setBrand] = useState<BivoBrand>(DEFAULT_BIVO_BRAND);
   const [draft, setDraft] = useState<BivoBrand>(DEFAULT_BIVO_BRAND);
@@ -98,13 +90,8 @@ export default function BivoBrandEditor() {
     if (!draft.appName.trim()) next.appName = "Enter a name";
     else if (draft.appName.trim().length > 40) next.appName = "Keep the name under 40 characters";
     if (!draft.signinHeadline.trim()) next.signinHeadline = "Enter a heading";
-    const supportErr = validateEmail(draft.supportEmail);
-    if (supportErr) next.supportEmail = supportErr;
     for (const [key, url] of [
       ["successRedirectUrl", draft.successRedirectUrl],
-      ["footerLink1Url", draft.footerLink1Url],
-      ["footerLink2Url", draft.footerLink2Url],
-      ["footerLink3Url", draft.footerLink3Url],
     ] as const) {
       const t = url.trim();
       if (!t) continue;
@@ -149,11 +136,11 @@ export default function BivoBrandEditor() {
     setMessage(null);
   };
 
-  // The live preview renders the REAL BivoAuthCard with the draft, scoped to its own
+  // The live preview renders the REAL BivoSignIn with the draft, scoped to its own
   // wrapper via buildBivoCssVars (never document.documentElement) — so the admin
   // dashboard's own chrome, outside that wrapper, never changes no matter what's
   // being drafted. previewOnly disables real sign-in/network calls and the
-  // auto-redirect inside the card.
+  // auto-redirect inside the sign-in.
   const previewVars = useMemo(() => buildBivoCssVars(draft) as CSSProperties, [draft]);
 
   if (!ready) {
@@ -170,7 +157,7 @@ export default function BivoBrandEditor() {
         <div className="bivo-card space-y-6">
           <div>
             <h1 className="bivo-font-display text-3xl font-semibold">Bivo branding</h1>
-            <p className="mt-1 text-sm bivo-muted-text">Everything on the Bivo sign-in page — branding, copy, layout and form styling — is controlled from here.</p>
+            <p className="mt-1 text-sm bivo-muted-text">Everything on the /signin page — branding, copy, and the size and spacing of every element — is controlled from here.</p>
           </div>
 
           {message && (
@@ -212,17 +199,6 @@ export default function BivoBrandEditor() {
               className="bivo-input h-11"
             />
           </div>
-          <NumberField id="logoSize" label="Logo size" value={draft.logoSize} onChange={setNum("logoSize")} min={24} max={160} step={4} unit="px" />
-          <SelectField<LogoPosition>
-            id="logoPosition"
-            label="Logo position"
-            value={draft.logoPosition}
-            onChange={(v) => update("logoPosition", v)}
-            options={[
-              { value: "left", label: "Left-aligned" },
-              { value: "center", label: "Centered" },
-            ]}
-          />
         </Card>
 
         <Card title="Colours & background" hint="Button text colour adjusts automatically for contrast against the button colour.">
@@ -252,56 +228,36 @@ export default function BivoBrandEditor() {
             onChange={(v) => update("fontFamily", v)}
             options={FONT_OPTIONS}
           />
-          <div className="grid grid-cols-2 gap-3">
-            <NumberField id="fontSize" label="Base text size" value={draft.fontSize} onChange={setNum("fontSize")} min={13} max={20} step={1} unit="px" />
-            <SelectField
-              id="fontWeight"
-              label="Text weight"
-              value={String(draft.fontWeight)}
-              onChange={(v) => update("fontWeight", Number(v) as BivoBrand["fontWeight"])}
-              options={[
-                { value: "400", label: "Regular" },
-                { value: "500", label: "Medium" },
-                { value: "600", label: "Semibold" },
-                { value: "700", label: "Bold" },
-              ]}
-            />
-          </div>
+          <SelectField
+            id="fontWeight"
+            label="Text weight"
+            value={String(draft.fontWeight)}
+            onChange={(v) => update("fontWeight", Number(v) as BivoBrand["fontWeight"])}
+            options={[
+              { value: "400", label: "Regular" },
+              { value: "500", label: "Medium" },
+              { value: "600", label: "Semibold" },
+              { value: "700", label: "Bold" },
+            ]}
+          />
         </Card>
 
         <Card title="Page content">
           <TextField id="signinHeadline" label="Sign-in heading" value={draft.signinHeadline} onChange={set("signinHeadline")} error={errors.signinHeadline} />
           <TextField id="signinSubline" label="Sign-in subheading" value={draft.signinSubline} onChange={set("signinSubline")} />
           <TextField id="signinPasswordTitle" label="Password step heading" value={draft.signinPasswordTitle} onChange={set("signinPasswordTitle")} />
-          <TextField id="signinSubmitLabel" label="Sign-in submit button" value={draft.signinSubmitLabel} onChange={set("signinSubmitLabel")} />
-          <TextField id="signinSwitchLabel" label={'"Switch to sign-up" link'} value={draft.signinSwitchLabel} onChange={set("signinSwitchLabel")} />
-          <TextField id="signinDoneTitle" label="Success heading" value={draft.signinDoneTitle} onChange={set("signinDoneTitle")} />
-          <TextField id="signinDoneMessage" label="Success message" value={draft.signinDoneMessage} onChange={set("signinDoneMessage")} />
-          <hr className="opacity-10" />
-          <p className="text-xs bivo-muted-text">Sign-up text — use {"{appName}"} and {"{name}"}, filled in automatically.</p>
-          <TextField id="signupHeadline" label="Sign-up heading" value={draft.signupHeadline} onChange={set("signupHeadline")} />
-          <TextField id="signupSublineTemplate" label="Sign-up subheading" value={draft.signupSublineTemplate} onChange={set("signupSublineTemplate")} />
-          <TextField id="signupPasswordTitle" label="Sign-up password step heading" value={draft.signupPasswordTitle} onChange={set("signupPasswordTitle")} />
-          <TextField id="signupSubmitLabel" label="Sign-up submit button" value={draft.signupSubmitLabel} onChange={set("signupSubmitLabel")} />
-          <TextField id="signupSwitchLabel" label={'"Switch to sign-in" link'} value={draft.signupSwitchLabel} onChange={set("signupSwitchLabel")} />
-          <TextField id="signupDoneTitle" label="Sign-up success heading" value={draft.signupDoneTitle} onChange={set("signupDoneTitle")} />
-          <TextField id="signupDoneMessageTemplate" label="Sign-up success message" value={draft.signupDoneMessageTemplate} onChange={set("signupDoneMessageTemplate")} />
-          <hr className="opacity-10" />
-          <TextField id="nameLabel" label="Name field label" value={draft.nameLabel} onChange={set("nameLabel")} />
+          <TextField id="signinSwitchLabel" label={'"Create account" link'} value={draft.signinSwitchLabel} onChange={set("signinSwitchLabel")} />
           <TextField id="emailLabel" label="Email field label" value={draft.emailLabel} onChange={set("emailLabel")} />
           <TextField id="passwordLabel" label="Password field label" value={draft.passwordLabel} onChange={set("passwordLabel")} />
           <TextField id="nextLabel" label={'"Next" button'} value={draft.nextLabel} onChange={set("nextLabel")} />
-          <TextField id="useAnotherAccountLabel" label={'"Use another account" button'} value={draft.useAnotherAccountLabel} onChange={set("useAnotherAccountLabel")} />
+          <TextField id="showPasswordLabel" label={'"Show password" checkbox'} value={draft.showPasswordLabel} onChange={set("showPasswordLabel")} />
+          <hr className="opacity-10" />
+          <TextField id="signinDoneTitle" label="Success heading" value={draft.signinDoneTitle} onChange={set("signinDoneTitle")} />
           <TextField id="signedInAsTemplate" label="Signed-in identity text (use {email})" value={draft.signedInAsTemplate} onChange={set("signedInAsTemplate")} />
           <TextField id="continueLabel" label="Continue button" value={draft.continueLabel} onChange={set("continueLabel")} />
           <TextField id="redirectingText" label="Automatic redirect message" value={draft.redirectingText} onChange={set("redirectingText")} />
-          <TextField id="showPasswordLabel" label="Show-password accessibility label" value={draft.showPasswordLabel} onChange={set("showPasswordLabel")} />
-          <TextField id="hidePasswordLabel" label="Hide-password accessibility label" value={draft.hidePasswordLabel} onChange={set("hidePasswordLabel")} />
+          <TextField id="useAnotherAccountLabel" label={'"Use another account" button'} value={draft.useAnotherAccountLabel} onChange={set("useAnotherAccountLabel")} />
           <TextField id="demoNoticeText" label="Demo-mode notice" value={draft.demoNoticeText} onChange={set("demoNoticeText")} />
-          <TextField id="confirmEmailNoticeText" label={'"Confirm your email" notice'} value={draft.confirmEmailNoticeText} onChange={set("confirmEmailNoticeText")} />
-          <TextField id="needHelpHeading" label="Help-line heading" value={draft.needHelpHeading} onChange={set("needHelpHeading")} />
-          <TextField id="contactLabel" label="Word before the support email" value={draft.contactLabel} onChange={set("contactLabel")} />
-          <TextField id="supportEmail" label="Support email" value={draft.supportEmail} onChange={set("supportEmail")} error={errors.supportEmail} />
         </Card>
 
         <Card title="Validation & error messages" hint={'"{min}" in the password message is replaced with the minimum length.'}>
@@ -310,119 +266,71 @@ export default function BivoBrandEditor() {
           <TextField id="emailInvalidMessage" label="Email invalid" value={draft.emailInvalidMessage} onChange={set("emailInvalidMessage")} />
           <TextField id="passwordRequiredMessage" label="Password required" value={draft.passwordRequiredMessage} onChange={set("passwordRequiredMessage")} />
           <TextField id="passwordTooShortMessage" label="Password too short" value={draft.passwordTooShortMessage} onChange={set("passwordTooShortMessage")} />
-          <TextField id="nameRequiredMessage" label="Name required" value={draft.nameRequiredMessage} onChange={set("nameRequiredMessage")} />
         </Card>
 
         <Card title="After sign-in" hint="Where a visitor lands once they sign in or create an account. Leave blank to keep showing the success screen.">
           <TextField id="successRedirectUrl" label="Redirect link" value={draft.successRedirectUrl} onChange={set("successRedirectUrl")} error={errors.successRedirectUrl} placeholder="/ or https://example.com/welcome" />
         </Card>
 
-        <Card title="Footer links" hint="Each link is hidden until both its label and URL are filled in.">
-          <TextField id="footerLink1Label" label="Link 1 label" value={draft.footerLink1Label} onChange={set("footerLink1Label")} />
-          <TextField id="footerLink1Url" label="Link 1 URL" value={draft.footerLink1Url} onChange={set("footerLink1Url")} error={errors.footerLink1Url} />
-          <TextField id="footerLink2Label" label="Link 2 label" value={draft.footerLink2Label} onChange={set("footerLink2Label")} />
-          <TextField id="footerLink2Url" label="Link 2 URL" value={draft.footerLink2Url} onChange={set("footerLink2Url")} error={errors.footerLink2Url} />
-          <TextField id="footerLink3Label" label="Link 3 label" value={draft.footerLink3Label} onChange={set("footerLink3Label")} />
-          <TextField id="footerLink3Url" label="Link 3 URL" value={draft.footerLink3Url} onChange={set("footerLink3Url")} error={errors.footerLink3Url} />
+        <Card title="Size & spacing: page and card" hint="All sizes are in pixels. Changes show in the live preview.">
+          <NumberField id="pagePaddingX" label="Page padding, left/right" value={draft.pagePaddingX} onChange={setNum("pagePaddingX")} min={0} max={96} step={2} unit="px" />
+          <NumberField id="pagePaddingY" label="Page padding, top/bottom" value={draft.pagePaddingY} onChange={setNum("pagePaddingY")} min={0} max={160} step={2} unit="px" />
+          <NumberField id="cardWidth" label="Card width" value={draft.cardWidth} onChange={setNum("cardWidth")} min={280} max={720} step={8} unit="px" />
+          <NumberField id="cardPaddingX" label="Card padding, left/right" value={draft.cardPaddingX} onChange={setNum("cardPaddingX")} min={8} max={96} step={2} unit="px" />
+          <NumberField id="cardPaddingY" label="Card padding, top/bottom" value={draft.cardPaddingY} onChange={setNum("cardPaddingY")} min={8} max={120} step={2} unit="px" />
+          <NumberField id="cardRadius" label="Card corner radius" value={draft.cardRadius} onChange={setNum("cardRadius")} min={0} max={40} step={2} unit="px" />
         </Card>
 
-        <Card title="Layout" hint="Controls the /bivo page itself. Sizes are in pixels.">
-          <NumberField id="pageMaxWidth" label="Content width" value={draft.pageMaxWidth} onChange={setNum("pageMaxWidth")} min={420} max={1280} step={8} unit="px" />
-          <div className="grid grid-cols-2 gap-3">
-            <NumberField id="pagePaddingX" label="Page padding, left/right" value={draft.pagePaddingX} onChange={setNum("pagePaddingX")} min={0} max={96} step={2} unit="px" />
-            <NumberField id="pagePaddingY" label="Page padding, top/bottom" value={draft.pagePaddingY} onChange={setNum("pagePaddingY")} min={0} max={160} step={2} unit="px" />
-          </div>
-          <SelectField<PageAlign>
-            id="pageAlign"
-            label="Page alignment"
-            value={draft.pageAlign}
-            onChange={(v) => update("pageAlign", v)}
-            options={[
-              { value: "left", label: "Left" },
-              { value: "center", label: "Center" },
-              { value: "right", label: "Right" },
-            ]}
-          />
-          <SelectField<ColumnOrder>
-            id="columnOrder"
-            label="Column order"
-            value={draft.columnOrder}
-            onChange={(v) => update("columnOrder", v)}
-            options={[
-              { value: "brandFirst", label: "Branding first, form second" },
-              { value: "formFirst", label: "Form first, branding second" },
-            ]}
-          />
-          <NumberField id="columnGap" label="Gap between columns" value={draft.columnGap} onChange={setNum("columnGap")} min={0} max={120} step={4} unit="px" />
-          <NumberField id="headingSize" label="Heading text size" value={draft.headingSize} onChange={setNum("headingSize")} min={20} max={72} step={2} unit="px" />
-          <Toggle id="showCard" label="Show a card around the sign-in content" checked={draft.showCard} onChange={setBool("showCard")} />
-          {draft.showCard && (
-            <>
-              <NumberField id="cardPadding" label="Card padding" value={draft.cardPadding} onChange={setNum("cardPadding")} min={0} max={80} step={4} unit="px" />
-              <NumberField id="cardMinHeight" label="Card minimum height (0 = auto)" value={draft.cardMinHeight} onChange={setNum("cardMinHeight")} min={0} max={1200} step={20} unit="px" />
-            </>
-          )}
+        <Card title="Size & spacing: header">
+          <NumberField id="logoSize" label="Logo size" value={draft.logoSize} onChange={setNum("logoSize")} min={16} max={120} step={2} unit="px" />
+          <NumberField id="headerTextSize" label="Header text size" value={draft.headerTextSize} onChange={setNum("headerTextSize")} min={11} max={28} step={1} unit="px" />
+          <NumberField id="headerPaddingY" label="Header padding, top/bottom" value={draft.headerPaddingY} onChange={setNum("headerPaddingY")} min={0} max={48} step={2} unit="px" />
         </Card>
 
-        <Card title="Form appearance">
-          <NumberField id="inputHeight" label="Field height" value={draft.inputHeight} onChange={setNum("inputHeight")} min={36} max={72} step={2} unit="px" />
+        <Card title="Size & spacing: headings">
+          <NumberField id="titleSize" label="Heading size" value={draft.titleSize} onChange={setNum("titleSize")} min={16} max={56} step={2} unit="px" />
+          <NumberField id="sublineSize" label="Subheading size" value={draft.sublineSize} onChange={setNum("sublineSize")} min={11} max={28} step={1} unit="px" />
+          <NumberField id="titleSpacing" label="Space between heading and subheading" value={draft.titleSpacing} onChange={setNum("titleSpacing")} min={0} max={48} step={2} unit="px" />
+          <NumberField id="sublineSpacing" label="Space before the first field" value={draft.sublineSpacing} onChange={setNum("sublineSpacing")} min={0} max={80} step={2} unit="px" />
+        </Card>
+
+        <Card title="Size & spacing: fields">
+          <NumberField id="inputHeight" label="Field height" value={draft.inputHeight} onChange={setNum("inputHeight")} min={36} max={80} step={2} unit="px" />
+          <NumberField id="inputTextSize" label="Field text size" value={draft.inputTextSize} onChange={setNum("inputTextSize")} min={12} max={28} step={1} unit="px" />
+          <NumberField id="labelSize" label="Field label size" value={draft.labelSize} onChange={setNum("labelSize")} min={11} max={28} step={1} unit="px" />
           <NumberField id="inputBorderWidth" label="Field border width (0–3)" value={draft.inputBorderWidth} onChange={setNum("inputBorderWidth")} min={0} max={3} step={1} unit="px" />
-          <NumberField id="inputBorderRadius" label="Field border radius" value={draft.inputBorderRadius} onChange={setNum("inputBorderRadius")} min={0} max={28} step={2} unit="px" />
+          <NumberField id="inputBorderRadius" label="Field corner radius" value={draft.inputBorderRadius} onChange={setNum("inputBorderRadius")} min={0} max={28} step={2} unit="px" />
           <ColorField label="Field background colour" value={draft.inputBackgroundColor} onChange={(v) => update("inputBackgroundColor", v)} />
           <ColorField label="Field text colour" value={draft.inputTextColor} onChange={(v) => update("inputTextColor", v)} />
-          <NumberField id="inputWidthPercent" label="Field width" value={draft.inputWidthPercent} onChange={setNum("inputWidthPercent")} min={40} max={100} step={5} unit="%" />
-          <SelectField<LabelPosition>
-            id="labelPosition"
-            label="Label position"
-            value={draft.labelPosition}
-            onChange={(v) => update("labelPosition", v)}
-            options={[
-              { value: "floating", label: "Floating (inside the field)" },
-              { value: "top", label: "Above the field" },
-            ]}
-          />
-          <NumberField id="fieldSpacing" label="Gap between stacked fields" value={draft.fieldSpacing} onChange={setNum("fieldSpacing")} min={4} max={40} step={2} unit="px" />
-          <SelectField<ButtonSize>
-            id="buttonSize"
-            label="Button size"
-            value={draft.buttonSize}
-            onChange={(v) => update("buttonSize", v)}
-            options={[
-              { value: "sm", label: "Small" },
-              { value: "md", label: "Medium" },
-              { value: "lg", label: "Large" },
-            ]}
-          />
-          <SelectField<ButtonShape>
-            id="buttonShape"
-            label="Button shape"
-            value={draft.buttonShape}
-            onChange={(v) => update("buttonShape", v)}
-            options={[
-              { value: "rounded", label: "Rounded" },
-              { value: "pill", label: "Pill" },
-              { value: "square", label: "Square" },
-            ]}
-          />
-          <SelectField<ButtonPosition>
-            id="buttonPosition"
-            label="Button row position"
-            value={draft.buttonPosition}
-            onChange={(v) => update("buttonPosition", v)}
-            options={[
-              { value: "left", label: "Left" },
-              { value: "right", label: "Right" },
-              { value: "between", label: "Spread apart" },
-              { value: "center", label: "Centered" },
-            ]}
-          />
+          <NumberField id="fieldSpacing" label="Space between a field and what is below it" value={draft.fieldSpacing} onChange={setNum("fieldSpacing")} min={0} max={48} step={2} unit="px" />
         </Card>
 
-        <Card title="Visibility" hint="Hide individual visual elements without removing their text.">
+        <Card title="Size & spacing: links, checkbox and text">
+          <NumberField id="linkSize" label="Link text size" value={draft.linkSize} onChange={setNum("linkSize")} min={11} max={24} step={1} unit="px" />
+          <NumberField id="checkboxSize" label="Checkbox size" value={draft.checkboxSize} onChange={setNum("checkboxSize")} min={12} max={32} step={2} unit="px" />
+          <NumberField id="checkboxSpacing" label="Space above the checkbox" value={draft.checkboxSpacing} onChange={setNum("checkboxSpacing")} min={0} max={48} step={2} unit="px" />
+          <NumberField id="policyTextSize" label="Privacy / terms text size" value={draft.policyTextSize} onChange={setNum("policyTextSize")} min={10} max={22} step={1} unit="px" />
+          <NumberField id="policySpacing" label="Space above the privacy / terms text" value={draft.policySpacing} onChange={setNum("policySpacing")} min={0} max={96} step={2} unit="px" />
+          <NumberField id="messageTextSize" label="Error and notice text size" value={draft.messageTextSize} onChange={setNum("messageTextSize")} min={10} max={22} step={1} unit="px" />
+        </Card>
+
+        <Card title="Size & spacing: buttons">
+          <NumberField id="buttonHeight" label="Button height" value={draft.buttonHeight} onChange={setNum("buttonHeight")} min={32} max={72} step={2} unit="px" />
+          <NumberField id="buttonTextSize" label="Button text size" value={draft.buttonTextSize} onChange={setNum("buttonTextSize")} min={11} max={24} step={1} unit="px" />
+          <NumberField id="buttonPaddingX" label="Button padding, left/right" value={draft.buttonPaddingX} onChange={setNum("buttonPaddingX")} min={8} max={80} step={2} unit="px" />
+          <NumberField id="buttonRowSpacing" label="Space above the button row" value={draft.buttonRowSpacing} onChange={setNum("buttonRowSpacing")} min={0} max={96} step={2} unit="px" />
+        </Card>
+
+        <Card title="Size & spacing: success screen and footer">
+          <NumberField id="doneIconSize" label="Success icon size" value={draft.doneIconSize} onChange={setNum("doneIconSize")} min={32} max={120} step={2} unit="px" />
+          <NumberField id="footerTextSize" label="Footer text size" value={draft.footerTextSize} onChange={setNum("footerTextSize")} min={9} max={20} step={1} unit="px" />
+          <NumberField id="footerSpacing" label="Space above the footer" value={draft.footerSpacing} onChange={setNum("footerSpacing")} min={0} max={80} step={2} unit="px" />
+        </Card>
+
+        <Card title="Visibility" hint="Hide individual elements without removing their text.">
           <Toggle id="showLogo" label="Show the logo" checked={draft.showLogo} onChange={setBool("showLogo")} />
           <Toggle id="showSubline" label="Show the subheading" checked={draft.showSubline} onChange={setBool("showSubline")} />
-          <Toggle id="showSwitchLink" label={'Show the "switch mode" link'} checked={draft.showSwitchLink} onChange={setBool("showSwitchLink")} />
-          <Toggle id="showHelpLine" label="Show the help line" checked={draft.showHelpLine} onChange={setBool("showHelpLine")} />
+          <Toggle id="showSwitchLink" label={'Show the "Create account" link'} checked={draft.showSwitchLink} onChange={setBool("showSwitchLink")} />
         </Card>
 
         <div className="bivo-admin-card flex flex-wrap justify-end gap-3">
@@ -473,11 +381,11 @@ export default function BivoBrandEditor() {
             className="flex min-h-[560px] flex-col justify-center overflow-auto px-4 py-6"
             style={{
               ...previewVars,
-              alignItems: draft.pageAlign === "left" ? "flex-start" : draft.pageAlign === "right" ? "flex-end" : "center",
+              alignItems: "center",
             }}
           >
             <div style={{ transform: preview === "mobile" ? "scale(0.92)" : undefined, width: "100%", display: "flex", justifyContent: "center" }}>
-              <BivoAuthCard brand={draft} previewOnly />
+              <BivoSignIn brand={draft} previewOnly />
             </div>
           </div>
         </div>

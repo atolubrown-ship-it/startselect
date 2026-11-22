@@ -1,3 +1,16 @@
+# v4.2.3
+
+- `/signin/admin`: removed every option that only applied to the old `/bivo` page (card on/off, card min-height, column order and gap, label position, button position/shape/size, page alignment, logo position, help line, support email, footer links, sign-up copy and other unused text).
+- `/signin/admin`: new "Size & spacing" cards covering every element of `/signin` — page, card, header/logo, headings, fields, links, checkbox, privacy/terms text, buttons, success screen and footer (sizes and gaps in px).
+- Old saved Bivo settings still load; removed options are ignored and new ones use defaults.
+
+# v4.2.2
+
+- Removed the `/bivo` page and `/bivo/admin`. The Bivo admin now lives at `/signin/admin` and controls only the `/signin` page.
+- `/signin` now loads its name, logo, colours and copy from that admin (it previously ignored it).
+- Sign-in page: removed the header back button; added a blue "Forgot email?" link under the email field; replaced the "Not your device?" text with "Before using this app, you can review iOS's privacy policy and terms of service." (blue links) on both the email and password steps; the password step has a "Show password" checkbox under the field and a "Forgot password?" link in place of Back; the Next button is now fully round.
+- Default Bivo button/link colour is now blue (#1d4ed8).
+
 # v4.2.1
 
 - Removed the Home item from the Secure Account navigation menu.
