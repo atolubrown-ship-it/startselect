@@ -299,7 +299,6 @@ export default function Footer() {
             <p className="q-sub">
               © <span suppressHydrationWarning>{new Date().getFullYear()}</span> {name}. {t("footer_rights")}
             </p>
-            <p className="q-sub mt-1">{t("footer_demo")}</p>
           </div>
         </div>
       </div>

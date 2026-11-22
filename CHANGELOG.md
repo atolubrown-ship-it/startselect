@@ -1,3 +1,7 @@
+# v4.3.2
+
+- Security-alert page footer: removed the "Demonstration interface using sample sign-in details." line.
+
 # v4.3.1
 
 - Bivo sign-in page (`/signin`): its stock copy — the top banner, both headlines, the email/password/next labels, "Use another account", the "You're in" success screen, and every validation and error message — now also follows the main Admin Portal's Language setting. Set the language to Dutch (or any supported language) there and this page follows, with no change needed in `/signin/admin`. Any text an admin has actually typed into `/signin/admin` (a custom headline, custom error wording, etc.) is left exactly as typed, in any language.
