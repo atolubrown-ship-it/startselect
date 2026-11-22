@@ -1,3 +1,7 @@
+# v4.3.1
+
+- Bivo sign-in page (`/signin`): its stock copy — the top banner, both headlines, the email/password/next labels, "Use another account", the "You're in" success screen, and every validation and error message — now also follows the main Admin Portal's Language setting. Set the language to Dutch (or any supported language) there and this page follows, with no change needed in `/signin/admin`. Any text an admin has actually typed into `/signin/admin` (a custom headline, custom error wording, etc.) is left exactly as typed, in any language.
+
 # v4.3.0
 
 - Site-wide language: the "Language" setting in the main Admin Portal ("Menu" card) now actually translates every visitor-facing screen — header, hamburger menu, footer, the security-alert / "this wasn't me" flow, the password-reset form, and the fixed chrome of the Bivo sign-in page (`/signin`) — into the chosen language, instantly, for every visitor. The Admin Portal and the Bivo admin (`/admin`, `/signin/admin`) always stay in English. Arabic also switches the public pages to right-to-left layout. 15 languages are supported (the same list as before); admin-authored text (company name, preferences note, alert details, Bivo's own copy fields, etc.) is left exactly as typed.

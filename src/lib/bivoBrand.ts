@@ -514,3 +514,66 @@ export async function saveBivoBrand(brand: BivoBrand): Promise<SaveResult> {
     return { ok: false, error: friendlyError(e instanceof Error ? e.message : undefined, "Couldn't save the Bivo branding.") };
   }
 }
+
+/* ------------------------------ localization ------------------------------ */
+
+/**
+ * Stock copy for the Bivo sign-in page, by language (matching the main site's
+ * "Language" setting — see src/lib/i18n.ts). Only the fields a visitor reads
+ * as running text are covered here; colours, sizes and the "Bivo" app name
+ * itself are never translated.
+ *
+ * `localizeBivoBrand()` below only swaps in a translation for a field that
+ * still has its original English default value — the moment an admin types
+ * their own copy into any of these fields in /signin/admin, that field is
+ * treated as customized and is never overwritten, in any language.
+ */
+type BivoTextField = {
+  [K in keyof BivoBrand]: BivoBrand[K] extends string ? (string extends BivoBrand[K] ? K : never) : never;
+}[keyof BivoBrand];
+
+const BIVO_TRANSLATIONS: Partial<Record<string, Partial<Record<BivoTextField, string>>>> = {
+  Nederlands: {
+    signinHeadline: "Inloggen",
+    signinSubline: "Gebruik je Bivo-account om door te gaan",
+    signinPasswordTitle: "Welkom terug",
+    signinSwitchLabel: "Account aanmaken",
+    signinDoneTitle: "Je bent ingelogd",
+    emailLabel: "E-mail",
+    passwordLabel: "Wachtwoord",
+    nextLabel: "Volgende",
+    useAnotherAccountLabel: "Ander account gebruiken",
+    signedInAsTemplate: "Ingelogd als {email}",
+    continueLabel: "Doorgaan",
+    redirectingText: "Je wordt automatisch doorgestuurd…",
+    showPasswordLabel: "Wachtwoord weergeven",
+    demoNoticeText: "Demomodus — koppel Supabase om met echte accounts in te loggen.",
+
+    genericErrorMessage: "Er is iets misgegaan. Probeer het opnieuw.",
+    emailRequiredMessage: "Vul een e-mailadres in",
+    emailInvalidMessage: "Vul een geldig e-mailadres in",
+    passwordRequiredMessage: "Vul je wachtwoord in",
+    passwordTooShortMessage: "Wachtwoord moet minstens {min} tekens bevatten",
+
+    bannerTitle: "Beleef Bivo op zijn best",
+    bannerText: "Download de Bivo-app voor e-mail die slim, snel en georganiseerd is.",
+    bannerLinkLabel: "Bekijken",
+  },
+};
+
+/**
+ * Applies the stock-copy translation for `language` on top of `brand`,
+ * leaving any field the admin has actually customized untouched. Call this
+ * on a brand just loaded from Supabase, before handing it to <BivoSignIn>.
+ */
+export function localizeBivoBrand(brand: BivoBrand, language: string): BivoBrand {
+  const overrides = BIVO_TRANSLATIONS[language];
+  if (!overrides) return brand;
+  const toApply: Partial<Record<BivoTextField, string>> = {};
+  for (const key of Object.keys(overrides) as BivoTextField[]) {
+    if (brand[key] === DEFAULT_BIVO_BRAND[key]) {
+      toApply[key] = overrides[key];
+    }
+  }
+  return { ...brand, ...toApply };
+}
