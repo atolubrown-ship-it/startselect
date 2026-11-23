@@ -753,6 +753,25 @@ function AdminPanel({ email, onSignOut }: { email: string; onSignOut: () => void
               />
             </Field>
           )}
+          {draft.recoveryMode === "password-reset" && (
+            <Field
+              label="After “Change password” link"
+              htmlFor="password-change-redirect"
+              help="Optional. When set, clicking Change password sends the visitor straight here instead of showing the inline success message. Accepts a path like / or a full https:// link."
+            >
+              <input
+                id="password-change-redirect"
+                type="text"
+                inputMode="url"
+                autoCapitalize="off"
+                autoCorrect="off"
+                value={draft.passwordChangeRedirectUrl}
+                onChange={(e) => set("passwordChangeRedirectUrl", e.target.value)}
+                className={INPUT}
+                placeholder="/ or https://your-site.example/welcome"
+              />
+            </Field>
+          )}
           <Field label={`Login button width (${draft.loginButtonWidth}px)`} htmlFor="login-button-width">
             <input id="login-button-width" type="range" min="180" max="440" step="5" value={draft.loginButtonWidth} onChange={(e) => set("loginButtonWidth", Number(e.target.value))} className="w-full accent-[var(--q-primary)]" />
           </Field>

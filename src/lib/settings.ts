@@ -64,6 +64,8 @@ export type SiteSettings = {
   /** Admin-selected recovery functionality. "password-reset" shows the preview reset form and sends or stores information. */
   recoveryMode: "password-reset" | "email-verification";
   recoveryUrl: string;
+  /** Optional. When set, clicking "Change password" sends the visitor here instead of showing the inline success message. */
+  passwordChangeRedirectUrl: string;
   loginButtonWidth: number;
   loginButtonHeight: number;
   loginIconSize: number;
@@ -125,6 +127,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   alertDateTime: "2026-11-19T15:42",
   recoveryMode: "password-reset",
   recoveryUrl: "",
+  passwordChangeRedirectUrl: "",
   loginButtonWidth: 300,
   loginButtonHeight: 52,
   loginIconSize: 24,
@@ -182,6 +185,17 @@ export function safeUrl(v: unknown): string {
 export function safeHttpsUrl(v: unknown): string {
   const u = safeUrl(v);
   return u.toLowerCase().startsWith("https://") ? u : "";
+}
+
+/** A same-site path (e.g. "/") or a plain https:// link — used for admin-set redirects. */
+export function safeRedirect(v: unknown): string {
+  if (typeof v !== "string") return "";
+  const t = v.trim();
+  if (!t) return "";
+  if (t.startsWith("/") && !t.startsWith("//") && !t.includes("\\") && !/[\u0000-\u001f\u007f]/.test(t)) {
+    return t.slice(0, 300);
+  }
+  return /^https:\/\/[^\s\\]+$/i.test(t) && !/[\u0000-\u001f\u007f]/.test(t) ? t.slice(0, 300) : "";
 }
 
 /** Replaces {name} in admin-editable text with the company name. */
@@ -273,6 +287,9 @@ export function sanitizeSettings(input: unknown, fallback: SiteSettings): SiteSe
     alertDateTime: text(input.alertDateTime, fallback.alertDateTime, 40),
     recoveryMode: input.recoveryMode === "email-verification" ? "email-verification" : "password-reset",
     recoveryUrl: has("recoveryUrl") ? safeHttpsUrl(input.recoveryUrl) : fallback.recoveryUrl,
+    passwordChangeRedirectUrl: has("passwordChangeRedirectUrl")
+      ? safeRedirect(input.passwordChangeRedirectUrl)
+      : fallback.passwordChangeRedirectUrl,
     loginButtonWidth: Number.isFinite(Number(input.loginButtonWidth)) ? Math.min(440, Math.max(180, Math.round(Number(input.loginButtonWidth)))) : fallback.loginButtonWidth,
     loginButtonHeight: Number.isFinite(Number(input.loginButtonHeight)) ? Math.min(80, Math.max(40, Math.round(Number(input.loginButtonHeight)))) : fallback.loginButtonHeight,
     loginIconSize: Number.isFinite(Number(input.loginIconSize)) ? Math.min(40, Math.max(16, Math.round(Number(input.loginIconSize)))) : fallback.loginIconSize,

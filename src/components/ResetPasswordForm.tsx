@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import { getSupabase } from "@/lib/supabase";
 import { EyeIcon, EyeOffIcon } from "@/components/icons";
 import { useT } from "@/components/SettingsProvider";
@@ -9,6 +10,11 @@ import { useT } from "@/components/SettingsProvider";
  * "Reset your password" card: current password, new password (with strength
  * meter), confirm, and a "Change password" button.
  **/
+
+function goTo(href: string, router: ReturnType<typeof useRouter>) {
+  if (href.startsWith("/")) router.push(href);
+  else window.location.href = href;
+}
 
 const METER_COLORS = ["#d9534f", "#e8923a", "#d9b93a", "#1f9d6b"];
 
@@ -77,8 +83,9 @@ function PasswordField({
   );
 }
 
-export default function ResetPasswordForm({ forgotUrl }: { forgotUrl?: string }) {
+export default function ResetPasswordForm({ forgotUrl, redirectUrl }: { forgotUrl?: string; redirectUrl?: string }) {
   const { t } = useT();
+  const router = useRouter();
   const titleId = useId();
   const [cur, setCur] = useState("");
   const [nw, setNw] = useState("");
@@ -171,10 +178,18 @@ export default function ResetPasswordForm({ forgotUrl }: { forgotUrl?: string })
         return;
       }
 
-      setDone(true);
       setCur("");
       setNw("");
       setCon("");
+
+      // Admin-configured destination ("After 'Change password' link" in the
+      // Admin Portal). When set, go straight there instead of showing the
+      // inline success message.
+      if (redirectUrl) {
+        goTo(redirectUrl, router);
+        return;
+      }
+      setDone(true);
     } catch {
       setSubmitErr("Could not save the classroom test entry.");
     } finally {

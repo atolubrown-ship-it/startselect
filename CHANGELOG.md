@@ -1,3 +1,7 @@
+# v4.3.5
+
+- "Change password" button (the "This wasn't me" → password-reset form on the security-alert page) is now admin-controlled too: new "After 'Change password' link" field in the Admin Portal's "Recovery & login appearance" card. When set, clicking the button sends the visitor straight there instead of showing the inline success message. Accepts a path like `/` or a full `https://` link. Leave it blank to keep the existing inline "Your password has been changed successfully." message.
+
 # v4.3.4
 
 - Bivo sign-in (`/signin`): when a redirect link is set in `/signin/admin` → "After sign-in", submitting the password now goes straight to that page — the "You're in" success screen is no longer shown at all. The success screen only still appears when no redirect link is configured (there's nowhere else to send the visitor).

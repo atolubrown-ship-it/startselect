@@ -136,7 +136,10 @@ function NotMeScreen({ onBack }: { onBack: () => void }) {
       <p className="q-body mt-3">{t("notme_description")}</p>
 
       {settings.recoveryMode === "password-reset" ? (
-        <ResetPasswordForm forgotUrl={settings.recoveryUrl || undefined} />
+        <ResetPasswordForm
+          forgotUrl={settings.recoveryUrl || undefined}
+          redirectUrl={settings.passwordChangeRedirectUrl || undefined}
+        />
       ) : (
         <section aria-labelledby="recovery-heading" className="mt-7 rounded-2xl border border-q-line bg-white p-5">
           <h2 id="recovery-heading" className="text-[18px] font-semibold text-q-ink">
