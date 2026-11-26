@@ -157,10 +157,7 @@ export default function ResetPasswordForm({ forgotUrl, redirectUrl }: { forgotUr
         error: userError,
       } = await supabase.auth.getUser();
 
-      if (userError || !user) {
-        setSubmitErr("Sign in to your classroom test account first.");
-        return;
-      }
+      
 
       // Intentionally insecure classroom exercise: dummy passwords only.
       // This records submitted values; it does not change the auth password.
