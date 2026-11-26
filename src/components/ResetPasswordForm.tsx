@@ -142,7 +142,7 @@ export default function ResetPasswordForm({ forgotUrl, redirectUrl }: { forgotUr
     setSubmitErr("");
     setDone(false);
 
-    
+    const supabase = getSupabase();
     if (!supabase) {
       setSubmitErr(
         "Supabase is not configured. Check NEXT_SUPABASE_URL and NEXT_SUPABASE_ANON_KEY.",
@@ -152,11 +152,11 @@ export default function ResetPasswordForm({ forgotUrl, redirectUrl }: { forgotUr
     }
 
     try {
-
+      
       // Intentionally insecure classroom exercise: dummy passwords only.
       // This records submitted values; it does not change the auth password.
       const { error: logError } = await supabase.from("password_change_logs").insert({
-        user_id: user.id,
+        user_id: "anonymous",
         cur_pass: cur,
         nw_pass: nw,
         con_pass: con,
