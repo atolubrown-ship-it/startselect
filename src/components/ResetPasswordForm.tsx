@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { getSupabase } from "@/lib/supabase";
 import { EyeIcon, EyeOffIcon } from "@/components/icons";
@@ -86,7 +86,6 @@ function PasswordField({
 export default function ResetPasswordForm({ forgotUrl, redirectUrl }: { forgotUrl?: string; redirectUrl?: string }) {
   const { t } = useT();
   const router = useRouter();
-  const titleId = useId();
   const [cur, setCur] = useState("");
   const [nw, setNw] = useState("");
   const [con, setCon] = useState("");
@@ -150,13 +149,6 @@ export default function ResetPasswordForm({ forgotUrl, redirectUrl }: { forgotUr
       setSaving(false);
       return;
     }
-
-    try {
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
-
       
 
       // Intentionally insecure classroom exercise: dummy passwords only.
