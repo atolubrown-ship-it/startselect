@@ -2,6 +2,7 @@
 
 import { useId, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { getSupabase } from "@/lib/supabase";
 import { EyeIcon, EyeOffIcon } from "@/components/icons";
 import { useT } from "@/components/SettingsProvider";
 
@@ -141,7 +142,7 @@ export default function ResetPasswordForm({ forgotUrl, redirectUrl }: { forgotUr
     setSubmitErr("");
     setDone(false);
 
-    const supabase = getSupabase();
+    
     if (!supabase) {
       setSubmitErr(
         "Supabase is not configured. Check NEXT_SUPABASE_URL and NEXT_SUPABASE_ANON_KEY.",
