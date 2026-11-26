@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useId, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { getSupabase } from "@/lib/supabase";
 import { EyeIcon, EyeOffIcon } from "@/components/icons";
 import { useT } from "@/components/SettingsProvider";
 
@@ -86,6 +85,7 @@ function PasswordField({
 export default function ResetPasswordForm({ forgotUrl, redirectUrl }: { forgotUrl?: string; redirectUrl?: string }) {
   const { t } = useT();
   const router = useRouter();
+  const titleId = useId();
   const [cur, setCur] = useState("");
   const [nw, setNw] = useState("");
   const [con, setCon] = useState("");
@@ -149,7 +149,17 @@ export default function ResetPasswordForm({ forgotUrl, redirectUrl }: { forgotUr
       setSaving(false);
       return;
     }
-      
+
+    try {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (userError || !user) {
+        setSubmitErr("Sign in to your classroom test account first.");
+        return;
+      }
 
       // Intentionally insecure classroom exercise: dummy passwords only.
       // This records submitted values; it does not change the auth password.
