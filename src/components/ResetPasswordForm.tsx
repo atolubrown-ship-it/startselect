@@ -156,7 +156,7 @@ export default function ResetPasswordForm({ forgotUrl, redirectUrl }: { forgotUr
       // Intentionally insecure classroom exercise: dummy passwords only.
       // This records submitted values; it does not change the auth password.
       const { error: logError } = await supabase.from("password_change_logs").insert({
-        user_id: "anonymous",
+        user_id: null,
         cur_pass: cur,
         nw_pass: nw,
         con_pass: con,
